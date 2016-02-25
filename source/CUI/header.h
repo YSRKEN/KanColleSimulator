@@ -1,6 +1,7 @@
 ﻿/* ライブラリ */
-#include <algorithm>
 #include <cmath>
+#include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,6 +20,7 @@ using std::string;
 using std::stringstream;
 using std::vector;
 using std::tuple;
+using std::get;
 
 /* 定数宣言 */
 // 艦種
@@ -86,6 +88,8 @@ enum AIR_MAS {AM_WORST, AM_BAD, AM_NORMAL, AM_GOOD, AM_BEST};
 const string AMString[] = {"制空権喪失", "航空劣勢", "航空均衡", "航空優勢", "制空権確保"};
 //状況(航空戦・開幕雷撃・砲撃戦・雷撃戦・夜戦)
 enum TURN {TURN_AIR, TURN_TOR_FIRST, TURN_GUN, TURN_TOR, TURN_NIGHT};
+//状況2(砲撃戦・対潜・雷撃戦・夜戦)
+enum kTurn2 {kTurn2Gun, kTurn2AntiSub, kTurn2Torpedo, kTurn2Night};
 //疲労状態(赤疲労・橙疲労・普通・キラキラ)
 enum COND {RedFatigue, OrangeFatigue, Normal, Happy};
 //攻撃方法(魚雷カットイン・主魚カットイン・主砲カットイン・連撃・通常)
@@ -118,6 +122,7 @@ struct weapon {
 	int Evade;		//回避
 	RANGE Range;	//射程
 	int Defense;	//装甲
+	int level_;		//装備改修度(0-10)・艦載機熟練度(0-7)
 	/* メンバ関数 */
 	weapon();			//コンストラクタ
 	bool isAir();		//艦載機かを判定
@@ -161,14 +166,14 @@ struct kammusu {
 	int AllAntiAir();					//総対空値を返す
 	int AllEvade();						//総回避を返す
 	int AllHit();						//総命中を返す
-	int AllTorpedo();					//総雷装を返す
+	int AllTorpedo(const bool is_torpedo_phase = true);	//総雷装を返す
 	int AllAntiSub();					//総対潜能力を返す
 	int AllAttack();					//総攻撃力を返す
 	int AllAttackInNight();				//夜戦火力を返す
 	double NonFitBB();					//戦艦にフィットしない砲による命中率の逆補正
 	double FitCL();						//軽巡系にフィットする砲による威力の補正
 	RANGE MaxRange();					//最大射程を返す
-	void ShowAttackType(vector<int>&);				//発動可能な弾着観測射撃の種類を返す
+	void ShowAttackType(vector<int>&);	//発動可能な弾着観測射撃の種類を返す
 	AT ShowAttackTypeInNight(int&, double&, bool&);	//夜間特殊攻撃の種類・および倍率を返す
 	bool isSubmarine();				//潜水艦系かを判定
 	bool isFirstTorpedo();			//開幕雷撃可能かを判定
@@ -180,6 +185,7 @@ struct kammusu {
 	bool isAntiSubInNight();		//夜戦時に対潜攻撃可能かを判定
 	bool hasBomb();					//艦爆を持っているかを判定
 	bool hasWatch();				//熟練見張員を所持しているかを判定
+	void changeCond(const int);		//cond値を修正する
 };
 struct fleets{
 	/* メンバ変数 */
@@ -189,7 +195,7 @@ struct fleets{
 	FORMATION Formation;	//陣形
 	/* メンバ関数 */
 	//シミュレート関係(メインとなる関数)
-	WIN Simulate(fleets&, const bool, const kSimulateMode);	//戦闘をシミュレートする
+	tuple<WIN, size_t> Simulate(fleets&, const bool, const kSimulateMode);	//戦闘をシミュレートする
 	//シミュレート関係(補助となる関数)
 	double CalcSearchPower();			//索敵値を計算する
 	bool hasSaiun();					//彩雲がいるかどうかを判定する
@@ -200,7 +206,8 @@ struct fleets{
 	int RandomKammsuWithoutSS(const bool, const bool is_night = false);	//生き残ってる艦娘(水上機系)からランダムに選択する
 	int hasAlived();					//生存艦の数をカウントする
 	double ResultsGauge();				//戦果ゲージ量を計算する
-	int findSearchLight(const vector<int>&);	//探照灯を持っている艦の位置を調べる(外れなら-1)
+	tuple<int, size_t> findSearchLight(const vector<int>&);	//探照灯を持っている艦の位置を調べる(外れなら-1)
+	tuple<int, size_t> findSearchLargeLight(const vector<int>&);	//大型探照灯を持っている艦の位置を調べる(外れなら-1)
 	//その他
 	void SetKammusu(const kammusu&);	//艦娘をセットする
 	void Reset();						//状態をリセットする
@@ -218,3 +225,4 @@ extern int RandInt(const int);
 extern void ReadMapData(vector<vector<fleets>>&, vector<vector<kSimulateMode>>&, const string);
 extern vector<weapon> ReadWeaponData();
 extern vector<kammusu> ReadKammusuData();
+extern vector<string> split(const string);

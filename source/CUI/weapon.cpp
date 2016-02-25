@@ -1,7 +1,7 @@
-#include "header.h"
+ï»¿#include "header.h"
 
 weapon::weapon() {
-	Name = "–¢‘•”õ";
+	Name = "æœªè£…å‚™";
 	Type = Type_None;
 	Attack = 0;
 	Torpedo = 0;
@@ -13,9 +13,10 @@ weapon::weapon() {
 	Evade = 0;
 	Range = NoneRange;
 	Defense = 0;
+	level_ = 0;
 }
 
-/* ŠÍÚ‹@‚©‚ğ”»’è */
+/* è‰¦è¼‰æ©Ÿã‹ã‚’åˆ¤å®š */
 bool weapon::isAir() {
 	if((Type == Type_PF)
 	|| (Type == Type_PBF)
@@ -34,7 +35,7 @@ bool weapon::isAir() {
 	}
 }
 
-/* q‹óí‚ÉQ‰Á‚Å‚«‚é‚©‚ğ”»’è */
+/* èˆªç©ºæˆ¦ã«å‚åŠ ã§ãã‚‹ã‹ã‚’åˆ¤å®š */
 bool weapon::isAirWar() {
 	if((Type == Type_PF)
 	|| (Type == Type_PBF)
@@ -47,7 +48,7 @@ bool weapon::isAirWar() {
 	}
 }
 
-/* ŠÍã’ã@‹@‚©‚ğ”»’è */
+/* è‰¦ä¸Šåµå¯Ÿæ©Ÿã‹ã‚’åˆ¤å®š */
 bool weapon::isAirPS() {
 	if((Type == Type_PS)
 	|| (Type == Type_PSS)) {
@@ -57,7 +58,7 @@ bool weapon::isAirPS() {
 	}
 }
 
-/* ‘Î‹ó–C‰Î‚ÅŒ‚‚¿—‚Æ‚¹‚é‚©‚ğ”»’è */
+/* å¯¾ç©ºç ²ç«ã§æ’ƒã¡è½ã¨ã›ã‚‹ã‹ã‚’åˆ¤å®š */
 bool weapon::isAirWar2() {
 	if((Type == Type_PBF)
 	|| (Type == Type_PB)
@@ -69,7 +70,7 @@ bool weapon::isAirWar2() {
 	}
 }
 
-/* ‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è */
+/* å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š */
 bool weapon::isAntiSub(){
 	if((Type == Type_PBF)
 	|| (Type == Type_PB)
@@ -84,7 +85,7 @@ bool weapon::isAntiSub(){
 	return false;
 }
 
-/* ‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è(qíEq„E…•ê) */
+/* å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š(èˆªæˆ¦ãƒ»èˆªå·¡ãƒ»æ°´æ¯) */
 bool weapon::isAntiSub1(){
 	if((Type == Type_WB)
 	|| (Type == Type_ASPP)
@@ -94,7 +95,7 @@ bool weapon::isAntiSub1(){
 	return false;
 }
 
-/* ‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è(Œy‹ó•ê) */
+/* å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š(è»½ç©ºæ¯) */
 bool weapon::isAntiSub2(){
 	if((Type == Type_PBF)
 	|| (Type == Type_PB)
@@ -104,7 +105,7 @@ bool weapon::isAntiSub2(){
 	return false;
 }
 
-/* ‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è(…—‹Œn) */
+/* å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š(æ°´é›·ç³») */
 bool weapon::isAntiSub3(){
 	if((Type == Type_DP)
 	|| (Type == Type_Sonar)){

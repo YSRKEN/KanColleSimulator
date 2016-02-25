@@ -1,11 +1,4 @@
-﻿/* 残り作業：
- * ・メニューボタンの反映
- * ・KanColleSimとの連携(ファイルを投げる機能)
- * ・Readmeの作成(例外処理の次に大変かも)
- * ・例外処理(一番面倒かも。ファイル読み込み・保存・数値等データ編集・シミュ実行など多岐に渡るから)
-*/
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -481,18 +474,27 @@ namespace KanColleSimGUI
 			FleetsListBox.Items.Clear();
 			FKammusuComboBox.SelectedIndex = -1;
 			FKammusuComboBox.Text = "(艦娘を選択)";
+
 			FSlot1ComboBox.SelectedIndex = -1;
 			FSlot1ComboBox.Text = "(装備を選択)";
 			FAir1TextBox.Text = "0";
+			FLevel1comboBox.SelectedIndex = -1;
+
 			FSlot2ComboBox.SelectedIndex = -1;
 			FSlot2ComboBox.Text = "(装備を選択)";
 			FAir2TextBox.Text = "0";
+			FLevel2comboBox.SelectedIndex = -1;
+
 			FSlot3ComboBox.SelectedIndex = -1;
 			FSlot3ComboBox.Text = "(装備を選択)";
 			FAir3TextBox.Text = "0";
+			FLevel3comboBox.SelectedIndex = -1;
+
 			FSlot4ComboBox.SelectedIndex = -1;
 			FSlot4ComboBox.Text = "(装備を選択)";
 			FAir4TextBox.Text = "0";
+			FLevel4comboBox.SelectedIndex = -1;
+
 			FHPTextBox.Text = "0";
 			FcondTextBox.Text = "49";
 			FAmmoTextBox.Text = "100";
@@ -538,24 +540,28 @@ namespace KanColleSimGUI
 					FleetsData[i].Weapons[0] = FSlot1ComboBox.SelectedIndex;
 					FleetsData[i].Airs[0] = int.Parse(FAir1TextBox.Text);
 					if (FleetsData[i].Weapons[0] == 0) FleetsData[i].Airs[0] = 0;
+					FleetsData[i].Levels[0] = FLevel1comboBox.SelectedIndex;
 				}
 				if (FleetsData[i].Slots > 1)
 				{
 					FleetsData[i].Weapons[1] = FSlot2ComboBox.SelectedIndex;
 					FleetsData[i].Airs[1] = int.Parse(FAir2TextBox.Text);
 					if (FleetsData[i].Weapons[1] == 0) FleetsData[i].Airs[1] = 0;
+					FleetsData[i].Levels[1] = FLevel2comboBox.SelectedIndex;
 				}
 				if (FleetsData[i].Slots > 2)
 				{
 					FleetsData[i].Weapons[2] = FSlot3ComboBox.SelectedIndex;
 					FleetsData[i].Airs[2] = int.Parse(FAir3TextBox.Text);
 					if (FleetsData[i].Weapons[2] == 0) FleetsData[i].Airs[2] = 0;
+					FleetsData[i].Levels[2] = FLevel3comboBox.SelectedIndex;
 				}
 				if (FleetsData[i].Slots > 3)
 				{
 					FleetsData[i].Weapons[3] = FSlot4ComboBox.SelectedIndex;
 					FleetsData[i].Airs[3] = int.Parse(FAir4TextBox.Text);
 					if (FleetsData[i].Weapons[3] == 0) FleetsData[i].Airs[3] = 0;
+					FleetsData[i].Levels[3] = FLevel4comboBox.SelectedIndex;
 				}
 				FleetsData[i].HP = int.Parse(FHPTextBox.Text);
 				FleetsData[i].cond = int.Parse(FcondTextBox.Text);
@@ -574,24 +580,28 @@ namespace KanColleSimGUI
 				NewKammusu.Weapons[0] = FSlot1ComboBox.SelectedIndex;
 				NewKammusu.Airs[0] = int.Parse(FAir1TextBox.Text);
 				if (NewKammusu.Weapons[0] == 0) NewKammusu.Airs[0] = 0;
+				NewKammusu.Levels[0] = FLevel1comboBox.SelectedIndex;
 			}
 			if (NewKammusu.Slots > 1)
 			{
 				NewKammusu.Weapons[1] = FSlot2ComboBox.SelectedIndex;
 				NewKammusu.Airs[1] = int.Parse(FAir2TextBox.Text);
 				if (NewKammusu.Weapons[1] == 0) NewKammusu.Airs[1] = 0;
+				NewKammusu.Levels[1] = FLevel2comboBox.SelectedIndex;
 			}
 			if (NewKammusu.Slots > 2)
 			{
 				NewKammusu.Weapons[2] = FSlot3ComboBox.SelectedIndex;
 				NewKammusu.Airs[2] = int.Parse(FAir3TextBox.Text);
 				if (NewKammusu.Weapons[2] == 0) NewKammusu.Airs[2] = 0;
+				NewKammusu.Levels[2] = FLevel3comboBox.SelectedIndex;
 			}
 			if (NewKammusu.Slots > 3)
 			{
 				NewKammusu.Weapons[3] = FSlot4ComboBox.SelectedIndex;
 				NewKammusu.Airs[3] = int.Parse(FAir4TextBox.Text);
 				if (NewKammusu.Weapons[3] == 0) NewKammusu.Airs[3] = 0;
+				NewKammusu.Levels[3] = FLevel4comboBox.SelectedIndex;
 			}
 			NewKammusu.HP = int.Parse(FHPTextBox.Text);
 			NewKammusu.cond = int.Parse(FcondTextBox.Text);
@@ -644,12 +654,20 @@ namespace KanColleSimGUI
 				FKammusuComboBox.SelectedIndex = FleetsData[i].Number - 1;
 				FSlot1ComboBox.SelectedIndex = FleetsData[i].Weapons[0];
 				FAir1TextBox.Text = FleetsData[i].Airs[0].ToString();
+				FLevel1comboBox.SelectedIndex = FleetsData[i].Levels[0];
+				
 				FSlot2ComboBox.SelectedIndex = FleetsData[i].Weapons[1];
 				FAir2TextBox.Text = FleetsData[i].Airs[1].ToString();
+				FLevel2comboBox.SelectedIndex = FleetsData[i].Levels[1];
+
 				FSlot3ComboBox.SelectedIndex = FleetsData[i].Weapons[2];
 				FAir3TextBox.Text = FleetsData[i].Airs[2].ToString();
+				FLevel3comboBox.SelectedIndex = FleetsData[i].Levels[2];
+
 				FSlot4ComboBox.SelectedIndex = FleetsData[i].Weapons[3];
 				FAir4TextBox.Text = FleetsData[i].Airs[3].ToString();
+				FLevel4comboBox.SelectedIndex = FleetsData[i].Levels[3];
+
 				FHPTextBox.Text = FleetsData[i].HP.ToString();
 				FcondTextBox.Text = FleetsData[i].cond.ToString();
 				FAmmoTextBox.Text = FleetsData[i].Ammo.ToString();
@@ -675,21 +693,25 @@ namespace KanColleSimGUI
 								FSlot1ComboBox.Enabled = true;
 								FAir1TextBox.Enabled = true;
 								FAir1TextBox.Text = dr[i]["艦1"].ToString();
+								FLevel1comboBox.Enabled = true;
 								break;
 							case 1:
 								FSlot2ComboBox.Enabled = true;
 								FAir2TextBox.Enabled = true;
 								FAir2TextBox.Text = dr[i]["艦2"].ToString();
+								FLevel2comboBox.Enabled = true;
 								break;
 							case 2:
 								FSlot3ComboBox.Enabled = true;
 								FAir3TextBox.Enabled = true;
 								FAir3TextBox.Text = dr[i]["艦3"].ToString();
+								FLevel3comboBox.Enabled = true;
 								break;
 							case 3:
 								FSlot4ComboBox.Enabled = true;
 								FAir4TextBox.Enabled = true;
 								FAir4TextBox.Text = dr[i]["艦4"].ToString();
+								FLevel4comboBox.Enabled = true;
 								break;
 						}
 					}
@@ -700,18 +722,22 @@ namespace KanColleSimGUI
 							case 0:
 								FSlot1ComboBox.Enabled = false;
 								FAir1TextBox.Enabled = false;
+								FLevel1comboBox.Enabled = false;
 								break;
 							case 1:
 								FSlot2ComboBox.Enabled = false;
 								FAir2TextBox.Enabled = false;
+								FLevel2comboBox.Enabled = false;
 								break;
 							case 2:
 								FSlot3ComboBox.Enabled = false;
 								FAir3TextBox.Enabled = false;
+								FLevel3comboBox.Enabled = false;
 								break;
 							case 3:
 								FSlot4ComboBox.Enabled = false;
 								FAir4TextBox.Enabled = false;
+								FLevel4comboBox.Enabled = false;
 								break;
 						}
 					}
@@ -1057,6 +1083,19 @@ namespace KanColleSimGUI
 					FleetsData[k].Airs[3] = int.Parse(Info[6]);
 					if (FleetsData[k].Airs[3] < 0) FleetsData[k].Airs[3] = int.Parse(dr["艦4"].ToString());
 					++Step;
+					continue;
+				}
+				//改修/熟練度
+				if ((Step >= 2 + Members * 2) && (Step < 2 + Members * 3))
+				{
+					string[] levels = ReadLines[i].Split(',');
+					int slots = FleetsData[Step - 2 - Members * 2].Slots;
+					for (int j = 0; j < slots; ++j)
+					{
+						FleetsData[Step - 2 - Members * 2].Levels[j] = int.Parse(levels[j]);
+					}
+					++Step;
+					continue;
 				}
 			}
 			//画面に反映する
@@ -1100,9 +1139,9 @@ namespace KanColleSimGUI
 			/* バージョン情報表示 */
 			string VerInfo = "";
 			VerInfo += SoftName + "\n";
-			VerInfo += "バージョン：0.7\n";
+			VerInfo += "バージョン：0.8\n";
 			VerInfo += "作成者：YSR\n";
-			VerInfo += "最終更新日：2016/02/17\n";
+			VerInfo += "最終更新日：2016/02/22\n";
 			VerInfo += "連絡先：ysr.ken@gmail.com";
 			MessageBox.Show(VerInfo, SoftName);
 		}
@@ -1378,6 +1417,17 @@ namespace KanColleSimGUI
 				}
 				SaveData.Append("\n");
 			}
+			SaveData.Append("#各装備の改修状態\n");
+			SaveData.Append("#主砲等は0～10、艦載機は0～7で分類している\n");
+			for (int i = 0; i < FleetsData.Count; ++i)
+			{
+				for (int j = 0; j < FleetsData[i].Slots; ++j)
+				{
+					if (j != 0) SaveData.Append(",");
+					SaveData.Append(FleetsData[i].Levels[j].ToString());
+				}
+				SaveData.Append("\n");
+			}
 			return SaveData.ToString();
 		}
 
@@ -1389,6 +1439,7 @@ namespace KanColleSimGUI
 		public int Slots;
 		public int[] Weapons = new int[MainForm.MaxSlots];
 		public int[] Airs = new int[MainForm.MaxSlots];
+		public int[] Levels = new int[MainForm.MaxSlots];
 		public int HP;
 		public int cond;
 		public int Ammo;
@@ -1400,6 +1451,7 @@ namespace KanColleSimGUI
 			{
 				Weapons[i] = 0;
 				Airs[i] = 0;
+				Levels[i] = 0;
 			}
 			HP = 0;
 			cond = 49;

@@ -57,11 +57,13 @@ int kammusu::AllEvade() {
 
 /* 総命中を返す */
 int kammusu::AllHit() {
-	int HSum = 0;
-	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-		HSum += itWeapon->Hit;
+	double HSum = 0;
+	for(auto &it : Weapons){
+		HSum += it.Hit;
+		//命中補正(試験実装)
+		HSum += 1.5 * sqrt(it.level_);
 	}
-	return HSum;
+	return static_cast<int>(HSum);
 }
 
 /* 疲労状態を返す */
@@ -114,12 +116,22 @@ bool kammusu::isFirstTorpedo(){
 }
 
 /* 総雷装を返す */
-int kammusu::AllTorpedo() {
-	int TSum = Torpedo;
-	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-		TSum += itWeapon->Torpedo;
+int kammusu::AllTorpedo(const bool is_torpedo_phase) {
+	double TSum = Torpedo;
+	for (auto &it : Weapons) {
+		TSum += it.Torpedo;
+		if (is_torpedo_phase) {
+			switch (it.Type) {
+			case Type_Torpedo:
+			case Type_AAG:
+				TSum += 1.2 * sqrt(it.level_);
+				break;
+			default:
+				break;
+			}
+		}
 	}
-	return TSum;
+	return static_cast<int>(TSum);
 }
 
 /* 昼戦で攻撃可能かを判定 */
@@ -189,57 +201,93 @@ bool kammusu::isAntiSub(){
 int kammusu::AllAntiSub(){
 	int BaseAS = AntiSub;	//素の対潜
 	int WeaponAS = 0;		//装備対潜
+	double AddAS = 0.0;		//改修強化値
 	bool hasDP = false, hasSonar = false;
-	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-		WeaponAS += itWeapon->AntiSub;
-		if(itWeapon->Type == Type_DP) hasDP = true;
-		if(itWeapon->Type == Type_Sonar) hasSonar = true;
-		if((itWeapon->Type == Type_PS)
-		|| (itWeapon->Type == Type_PSS)
-		|| (itWeapon->Type == Type_WS)
-		|| (itWeapon->Type == Type_WSN)){
-			//偵察機の場合は装備対潜ではなく素の対潜に追加される？
-			WeaponAS -= itWeapon->AntiSub;
-			BaseAS += itWeapon->AntiSub;
+	for(auto &it : Weapons) {
+		WeaponAS += it.AntiSub;
+		switch (it.Type) {
+		case Type_DP:
+			hasDP = true;
+			AddAS += sqrt(it.level_);
+			break;
+		case Type_Sonar:
+			hasSonar = true;
+			AddAS += sqrt(it.level_);
+			break;
+		case Type_PS:
+		case Type_PSS:
+		case Type_WS:
+		case Type_WSN:
+		case Type_LargeS:
+		case Type_SmallS:
+			//偵察機・電探の場合は装備対潜ではなく素の対潜に追加される
+			WeaponAS -= it.AntiSub;
+			BaseAS += it.AntiSub;
+		default:
+			break;
 		}
 	}
 	//攻撃力を計算
-	int AntiSubPower = BaseAS / 5 + WeaponAS * 2;
-	//攻撃別補正
+	double AntiSubPower = sqrt(BaseAS) * 2 + 1.5 * WeaponAS + AddAS;
+	//艦種別補正
 	if(hasDP || hasSonar){
 		//爆雷やソナーによる攻撃の場合
-		AntiSubPower += 25;
+		AntiSubPower += 13;
 	} else{
 		//航空機による攻撃の場合
-		AntiSubPower += 10;
+		AntiSubPower += 8;
 	}
 	//シナジー補正
 	if(hasDP && hasSonar) AntiSubPower = static_cast<int>(AntiSubPower * 1.15);
-	return AntiSubPower;
+	return  static_cast<int>(AntiSubPower);
 }
 
-/* 総攻撃力を返す */
+/* 総攻撃力(砲撃戦火力)を返す */
 int kammusu::AllAttack(){
-	int BaseAttack = 0;
+	double BaseAttack = 0.0;
 	if((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL) || (Kind == SC_AF) || (Kind == SC_FT)){
 		// 空母系
 		// (完全に0じゃない限りあるものとして扱うという謎仕様)
 		int AllTorpedo = 0, AllBomb = 0;
-		for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-			AllTorpedo += itWeapon->Torpedo;
-			AllBomb += itWeapon->Bomb;
+		double gamma = 0.0;
+		for(auto &it : Weapons) {
+			AllTorpedo += it.Torpedo;
+			AllBomb += it.Bomb;
+			if (it.Type == Type_SubGun) gamma += sqrt(it.level_);
 		}
-		BaseAttack = static_cast<int>((Attack + AllTorpedo) * 1.5 + AllBomb * 2 + 55);
-
+		BaseAttack = static_cast<int>((Attack + AllTorpedo + static_cast<int>(1.3 * AllBomb) + gamma) * 1.5 + 55);
 	} else{
 		// 非空母系
 		BaseAttack += Attack;
-		for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-			BaseAttack += itWeapon->Attack;
+		for(auto &it : Weapons) {
+			BaseAttack += it.Attack;
+			//改修による効果も加算する
+			switch (it.Type) {
+			case Type_Gun:	// 主砲は大口径主砲か否かによって分類する
+				if (it.Range >= LongRange) {
+					BaseAttack += 1.5 * sqrt(it.level_);
+				}
+				else {
+					BaseAttack += sqrt(it.level_);
+				}
+				break;
+			case Type_SubGun:	//副砲
+			case Type_AAG:		//対空機銃
+			case Type_AAD:		//高射装置
+			case Type_SLight:	//探照灯
+				BaseAttack += sqrt(it.level_);
+				break;
+			case Type_Sonar:	//ソナー
+			case Type_DP:		//爆雷
+				BaseAttack += 0.75 * sqrt(it.level_);
+				break;
+			default:
+				break;
+			}
 		}
 		BaseAttack += 5;
 	}
-	return BaseAttack;
+	return static_cast<int>(BaseAttack);
 }
 
 /* 雷撃可能かを判定　*/
@@ -314,12 +362,23 @@ bool kammusu::hasBomb() {
 
 /* 夜戦火力を返す */
 int kammusu::AllAttackInNight(){
-	int BaseAttack = Attack + Torpedo;
-	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-		BaseAttack += itWeapon->Attack;
-		BaseAttack += itWeapon->Torpedo;
+	double BaseAttack = Attack + Torpedo;
+	for (auto &it : Weapons) {
+		BaseAttack += it.Attack;
+		BaseAttack += it.Torpedo;
+		switch (it.Type) {
+		case Type_Gun:		// 主砲
+		case Type_SubGun:	//副砲
+		case Type_Torpedo:	//魚雷
+		case Type_AAD:		//高射装置
+		case Type_SLight:	//探照灯
+			BaseAttack += sqrt(it.level_);
+			break;
+		default:
+			break;
+		}
 	}
-	return BaseAttack;
+	return static_cast<int>(BaseAttack);
 }
 
 /* 偵察機を持っているかを判定 */
@@ -336,7 +395,6 @@ bool kammusu::isSearchAir(){
 void kammusu::ShowAttackType(vector<int> &isAttackType){
 	// 各装備の数を数える
 	int GunCount = 0, SubGunCount = 0, APCount = 0, RadarCount = 0;
-	AT AttackType = NormalAttack;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
 		if(itWeapon->Type == Type_Gun)     ++GunCount;
 		if(itWeapon->Type == Type_SubGun) ++SubGunCount;
@@ -493,4 +551,11 @@ double kammusu::FitCL() {
 		if (it.Name == "15.2cm連装砲改") ++light_gun_double;
 	}
 	return sqrt(light_gun_single) + 2.0 * sqrt(light_gun_double);
+}
+
+/* cond値を修正する */
+void kammusu::changeCond(const int new_cond) {
+	cond += new_cond;
+	if (cond < 0) cond = 0;
+	if (cond > 100) cond = 100;
 }

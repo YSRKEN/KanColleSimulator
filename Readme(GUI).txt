@@ -1,8 +1,8 @@
-KanColleSimulator(KCS) Ver.0.6
+KanColleSimulator(KCS) Ver.0.8
 ※等幅フォントで閲覧することを推奨します
 
 【最終更新日時】
-　2016/02/13 18:56
+　2016/02/22
 
 【製作者】
 　おーぷん2ch：◆RoVKHyEYUtVB
@@ -94,8 +94,6 @@ KanColleSimulator(KCS) Ver.0.6
 【注意事項】
 ※Readme(CUI).txtからの追加分です
 　・例外処理はロクに考えていませんのでご了承ください
-　・よくソフトをダウンロードしてくれた。残念だが、開幕夜戦対応はまだしていない。
-　騙して悪いが趣味なんでな。しばらく待ってもらおう。
 
 【参考】
 ※Readme(CUI).txtからの追加分です

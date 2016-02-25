@@ -111,6 +111,10 @@
 			this.label24 = new System.Windows.Forms.Label();
 			this.KammusuListBox = new System.Windows.Forms.ListBox();
 			this.FleetsTab = new System.Windows.Forms.TabPage();
+			this.FLevel4comboBox = new System.Windows.Forms.ComboBox();
+			this.FLevel3comboBox = new System.Windows.Forms.ComboBox();
+			this.FLevel2comboBox = new System.Windows.Forms.ComboBox();
+			this.FLevel1comboBox = new System.Windows.Forms.ComboBox();
 			this.FAllSearchTextBox = new System.Windows.Forms.TextBox();
 			this.label43 = new System.Windows.Forms.Label();
 			this.FAllAntiAirTextBox = new System.Windows.Forms.TextBox();
@@ -181,6 +185,7 @@
 			this.Read3Button = new System.Windows.Forms.Button();
 			this.Fleets3ListBox = new System.Windows.Forms.ListBox();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
+			this.label45 = new System.Windows.Forms.Label();
 			this.MenuStrip.SuspendLayout();
 			this.TabControl.SuspendLayout();
 			this.WeaponTab.SuspendLayout();
@@ -1059,6 +1064,11 @@
 			// 
 			// FleetsTab
 			// 
+			this.FleetsTab.Controls.Add(this.label45);
+			this.FleetsTab.Controls.Add(this.FLevel4comboBox);
+			this.FleetsTab.Controls.Add(this.FLevel3comboBox);
+			this.FleetsTab.Controls.Add(this.FLevel2comboBox);
+			this.FleetsTab.Controls.Add(this.FLevel1comboBox);
 			this.FleetsTab.Controls.Add(this.FAllSearchTextBox);
 			this.FleetsTab.Controls.Add(this.label43);
 			this.FleetsTab.Controls.Add(this.FAllAntiAirTextBox);
@@ -1101,6 +1111,86 @@
 			this.FleetsTab.TabIndex = 2;
 			this.FleetsTab.Text = "艦隊データ";
 			this.FleetsTab.UseVisualStyleBackColor = true;
+			// 
+			// FLevel4comboBox
+			// 
+			this.FLevel4comboBox.FormattingEnabled = true;
+			this.FLevel4comboBox.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "MAX"});
+			this.FLevel4comboBox.Location = new System.Drawing.Point(357, 120);
+			this.FLevel4comboBox.Name = "FLevel4comboBox";
+			this.FLevel4comboBox.Size = new System.Drawing.Size(29, 20);
+			this.FLevel4comboBox.TabIndex = 78;
+			// 
+			// FLevel3comboBox
+			// 
+			this.FLevel3comboBox.FormattingEnabled = true;
+			this.FLevel3comboBox.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "MAX"});
+			this.FLevel3comboBox.Location = new System.Drawing.Point(357, 94);
+			this.FLevel3comboBox.Name = "FLevel3comboBox";
+			this.FLevel3comboBox.Size = new System.Drawing.Size(29, 20);
+			this.FLevel3comboBox.TabIndex = 77;
+			// 
+			// FLevel2comboBox
+			// 
+			this.FLevel2comboBox.FormattingEnabled = true;
+			this.FLevel2comboBox.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "MAX"});
+			this.FLevel2comboBox.Location = new System.Drawing.Point(357, 68);
+			this.FLevel2comboBox.Name = "FLevel2comboBox";
+			this.FLevel2comboBox.Size = new System.Drawing.Size(29, 20);
+			this.FLevel2comboBox.TabIndex = 76;
+			// 
+			// FLevel1comboBox
+			// 
+			this.FLevel1comboBox.FormattingEnabled = true;
+			this.FLevel1comboBox.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "MAX"});
+			this.FLevel1comboBox.Location = new System.Drawing.Point(357, 43);
+			this.FLevel1comboBox.Name = "FLevel1comboBox";
+			this.FLevel1comboBox.Size = new System.Drawing.Size(29, 20);
+			this.FLevel1comboBox.TabIndex = 75;
 			// 
 			// FAllSearchTextBox
 			// 
@@ -1287,7 +1377,7 @@
 			// 
 			// FAir4TextBox
 			// 
-			this.FAir4TextBox.Location = new System.Drawing.Point(326, 121);
+			this.FAir4TextBox.Location = new System.Drawing.Point(311, 120);
 			this.FAir4TextBox.Name = "FAir4TextBox";
 			this.FAir4TextBox.Size = new System.Drawing.Size(40, 19);
 			this.FAir4TextBox.TabIndex = 10;
@@ -1295,7 +1385,7 @@
 			// 
 			// FAir3TextBox
 			// 
-			this.FAir3TextBox.Location = new System.Drawing.Point(326, 95);
+			this.FAir3TextBox.Location = new System.Drawing.Point(311, 94);
 			this.FAir3TextBox.Name = "FAir3TextBox";
 			this.FAir3TextBox.Size = new System.Drawing.Size(40, 19);
 			this.FAir3TextBox.TabIndex = 8;
@@ -1303,7 +1393,7 @@
 			// 
 			// FAir2TextBox
 			// 
-			this.FAir2TextBox.Location = new System.Drawing.Point(326, 69);
+			this.FAir2TextBox.Location = new System.Drawing.Point(311, 68);
 			this.FAir2TextBox.Name = "FAir2TextBox";
 			this.FAir2TextBox.Size = new System.Drawing.Size(40, 19);
 			this.FAir2TextBox.TabIndex = 6;
@@ -1311,7 +1401,7 @@
 			// 
 			// FAir1TextBox
 			// 
-			this.FAir1TextBox.Location = new System.Drawing.Point(326, 43);
+			this.FAir1TextBox.Location = new System.Drawing.Point(311, 42);
 			this.FAir1TextBox.Name = "FAir1TextBox";
 			this.FAir1TextBox.Size = new System.Drawing.Size(40, 19);
 			this.FAir1TextBox.TabIndex = 4;
@@ -1320,7 +1410,7 @@
 			// label33
 			// 
 			this.label33.AutoSize = true;
-			this.label33.Location = new System.Drawing.Point(323, 20);
+			this.label33.Location = new System.Drawing.Point(298, 20);
 			this.label33.Name = "label33";
 			this.label33.Size = new System.Drawing.Size(53, 12);
 			this.label33.TabIndex = 41;
@@ -1376,7 +1466,7 @@
 			this.FSlot4ComboBox.FormattingEnabled = true;
 			this.FSlot4ComboBox.Location = new System.Drawing.Point(199, 120);
 			this.FSlot4ComboBox.Name = "FSlot4ComboBox";
-			this.FSlot4ComboBox.Size = new System.Drawing.Size(121, 20);
+			this.FSlot4ComboBox.Size = new System.Drawing.Size(106, 20);
 			this.FSlot4ComboBox.TabIndex = 9;
 			this.FSlot4ComboBox.Text = "(装備を選択)";
 			// 
@@ -1395,7 +1485,7 @@
 			this.FSlot3ComboBox.FormattingEnabled = true;
 			this.FSlot3ComboBox.Location = new System.Drawing.Point(199, 94);
 			this.FSlot3ComboBox.Name = "FSlot3ComboBox";
-			this.FSlot3ComboBox.Size = new System.Drawing.Size(121, 20);
+			this.FSlot3ComboBox.Size = new System.Drawing.Size(106, 20);
 			this.FSlot3ComboBox.TabIndex = 7;
 			this.FSlot3ComboBox.Text = "(装備を選択)";
 			this.FSlot3ComboBox.SelectedIndexChanged += new System.EventHandler(this.FSlot3ComboBox_SelectedIndexChanged);
@@ -1405,7 +1495,7 @@
 			this.FSlot2ComboBox.FormattingEnabled = true;
 			this.FSlot2ComboBox.Location = new System.Drawing.Point(199, 68);
 			this.FSlot2ComboBox.Name = "FSlot2ComboBox";
-			this.FSlot2ComboBox.Size = new System.Drawing.Size(121, 20);
+			this.FSlot2ComboBox.Size = new System.Drawing.Size(106, 20);
 			this.FSlot2ComboBox.TabIndex = 5;
 			this.FSlot2ComboBox.Text = "(装備を選択)";
 			this.FSlot2ComboBox.SelectedIndexChanged += new System.EventHandler(this.FSlot2ComboBox_SelectedIndexChanged);
@@ -1425,7 +1515,7 @@
 			this.FSlot1ComboBox.FormattingEnabled = true;
 			this.FSlot1ComboBox.Location = new System.Drawing.Point(199, 42);
 			this.FSlot1ComboBox.Name = "FSlot1ComboBox";
-			this.FSlot1ComboBox.Size = new System.Drawing.Size(121, 20);
+			this.FSlot1ComboBox.Size = new System.Drawing.Size(106, 20);
 			this.FSlot1ComboBox.TabIndex = 3;
 			this.FSlot1ComboBox.Text = "(装備を選択)";
 			this.FSlot1ComboBox.SelectedIndexChanged += new System.EventHandler(this.FSlot1ComboBox_SelectedIndexChanged);
@@ -1479,7 +1569,8 @@
             "100",
             "1000",
             "10000",
-            "100000"});
+            "100000",
+            "110000"});
 			this.BattleCountComboBox.Location = new System.Drawing.Point(65, 74);
 			this.BattleCountComboBox.Name = "BattleCountComboBox";
 			this.BattleCountComboBox.Size = new System.Drawing.Size(91, 20);
@@ -1690,7 +1781,8 @@
             "100",
             "1000",
             "10000",
-            "100000"});
+            "100000",
+            "110000"});
 			this.BattleCountComboBox2.Location = new System.Drawing.Point(89, 49);
 			this.BattleCountComboBox2.Name = "BattleCountComboBox2";
 			this.BattleCountComboBox2.Size = new System.Drawing.Size(91, 20);
@@ -1799,6 +1891,15 @@
 			this.Fleets3ListBox.Name = "Fleets3ListBox";
 			this.Fleets3ListBox.Size = new System.Drawing.Size(91, 76);
 			this.Fleets3ListBox.TabIndex = 0;
+			// 
+			// label45
+			// 
+			this.label45.AutoSize = true;
+			this.label45.Location = new System.Drawing.Point(355, 19);
+			this.label45.Name = "label45";
+			this.label45.Size = new System.Drawing.Size(17, 12);
+			this.label45.TabIndex = 79;
+			this.label45.Text = "☆";
 			// 
 			// MainForm
 			// 
@@ -1995,6 +2096,11 @@
         private System.Windows.Forms.GroupBox groupBox5;
         private System.Windows.Forms.Button Read3Button;
         private System.Windows.Forms.ListBox Fleets3ListBox;
-    }
+		private System.Windows.Forms.ComboBox FLevel1comboBox;
+		private System.Windows.Forms.ComboBox FLevel4comboBox;
+		private System.Windows.Forms.ComboBox FLevel3comboBox;
+		private System.Windows.Forms.ComboBox FLevel2comboBox;
+		private System.Windows.Forms.Label label45;
+	}
 }
 

@@ -7,12 +7,12 @@ using std::fstream;
 void ShowListStart(fleets**, const bool isShow = true);
 void SearchPhase(fleets**, bool*, const bool isShow = true);
 BP BPSelect(fleets**);
-AIR_MAS AirWarPhase(fleets**, const bool*, double*, const bool isShow = true);
-void FirstTorpedoPhase(fleets**, const BP, const double*, const bool isShow = true);
-void FirePhase(fleets**, const BP, const AIR_MAS, const double*, const bool isShow = true);
-void FirePhase2(fleets**, const BP, const AIR_MAS, const double*, const bool isShow = true);
-void TorpedoPhase(fleets**, const BP, const double*, const bool isShow = true);
-void NightPhase(fleets**, const BP, const double*, const bool, const bool isShow = true);
+AIR_MAS AirWarPhase(fleets**, const bool*, double[], vector<size_t>&, const bool isShow = true);
+void FirstTorpedoPhase(fleets**, const BP, const double[], vector<size_t>&, const bool isShow = true);
+void FirePhase(fleets**, const BP, const AIR_MAS, const double[], vector<size_t>&, const bool isShow = true);
+void FirePhase2(fleets**, const BP, const AIR_MAS, const double[], vector<size_t>&, const bool isShow = true);
+void TorpedoPhase(fleets**, const BP, const double[], vector<size_t>&, const bool isShow = true);
+void NightPhase(fleets**, const BP, const double[], vector<size_t>&, const bool, const bool isShow = true);
 WIN ShowListEnd(fleets**, const bool, const BP, const bool isShow = true);
 //補助
 int RoundUp5(int);
@@ -33,8 +33,10 @@ SPEED ToSpeed(const string);
 /* ---------------------- */
 
 /* 戦闘をシミュレートする */
-WIN fleets::Simulate(fleets &Enemy, const bool isShow, const kSimulateMode simulate_mode) {
+tuple<WIN, size_t> fleets::Simulate(fleets &Enemy, const bool isShow, const kSimulateMode simulate_mode) {
 	fleets* Fleets[] = {this, &Enemy};
+	bool is_night_game = false;	//夜戦に突入したらtrue
+	vector<size_t> all_damage(this->Members,0);
 	/* 0. 情報表示 */
 	ShowListStart(Fleets, isShow);
 	/* 1. 索敵フェイズ */
@@ -46,27 +48,28 @@ WIN fleets::Simulate(fleets &Enemy, const bool isShow, const kSimulateMode simul
 	if (simulate_mode != kModeN) {
 		/* 2. 航空戦フェイズ */
 		double AllAttackPlus[BattleSize];
-		AIR_MAS AirWarResult = AirWarPhase(Fleets, isSearchSuccess, AllAttackPlus, isShow);
+		AIR_MAS AirWarResult = AirWarPhase(Fleets, isSearchSuccess, AllAttackPlus, all_damage, isShow);
 		if (isExit(Fleets)) goto Exit;
 		/* 3. 開幕雷撃フェイズ */
-		FirstTorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
+		FirstTorpedoPhase(Fleets, BattlePosition, AllAttackPlus, all_damage, isShow);
 		if (isExit(Fleets)) goto Exit;
 		/* 4. 交戦形態フェイズ */
 		if (isShow) cout << "【交戦形態フェイズ】\n";
 		if (isShow) cout << "　交戦形態：" << BPString[BattlePosition] << "\n";
 		isShowBP = true;
 		/* 5. 砲撃戦フェイズ */
-		FirePhase(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
+		FirePhase(Fleets, BattlePosition, AirWarResult, AllAttackPlus, all_damage, isShow);
 		if (isExit(Fleets)) goto Exit;
 		/* 5.5. 砲撃戦フェイズ(二巡目) */
-		FirePhase2(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
+		FirePhase2(Fleets, BattlePosition, AirWarResult, AllAttackPlus, all_damage, isShow);
 		if (isExit(Fleets)) goto Exit;
 		/* 6. 雷撃戦フェイズ */
-		TorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
+		TorpedoPhase(Fleets, BattlePosition, AllAttackPlus, all_damage, isShow);
 		if (isExit(Fleets)) goto Exit;
 		/* 7. 夜戦フェイズ */
 		if (simulate_mode == kModeDN) {
-			NightPhase(Fleets, BattlePosition, AllAttackPlus, false, isShow);
+			is_night_game = true;
+			NightPhase(Fleets, BattlePosition, AllAttackPlus, all_damage, false, isShow);
 			if (isExit(Fleets)) goto Exit;
 		}
 	}
@@ -75,13 +78,21 @@ WIN fleets::Simulate(fleets &Enemy, const bool isShow, const kSimulateMode simul
 		if (simulate_mode == kModeN) {
 			double AllAttackPlus[BattleSize];
 			AllAttackPlus[0] = AllAttackPlus[1] = 1.0;
-			NightPhase(Fleets, BattlePosition, AllAttackPlus, true, isShow);
+			NightPhase(Fleets, BattlePosition, AllAttackPlus, all_damage, true, isShow);
 			if (isExit(Fleets)) goto Exit;
 		}
 	}
 Exit:
 	/* X. 結果表示 */
 	WIN WinReason = ShowListEnd(Fleets, isShowBP, BattlePosition, isShow);
+	/*if (!isShow) {
+		for (auto &it : all_damage) {
+			cout << it << " ";
+		}
+		cout << "\n";
+	}*/
+	auto max_iter = std::max_element(all_damage.begin(), all_damage.end());
+	size_t mvp_index = std::distance(all_damage.begin(), max_iter);
 
 	/* 弾薬補正 */
 	for (auto &it : this->Kammusues) {
@@ -89,8 +100,49 @@ Exit:
 		if (it.Ammo < 0) it.Ammo = 0;
 	}
 
+	/* cond補正 */
+	//艦隊全体に掛かるもの
+	int cond_change = 0;
+	switch(simulate_mode){
+	case kModeD:
+		cond_change -= 3;
+		break;
+	case kModeN:
+		cond_change -= 2;
+		break;
+	case kModeDN:
+		cond_change -= 3;
+		if (is_night_game) cond_change -= 2;
+		break;
+	}
+	switch (WinReason) {
+	case WIN_SS:
+		cond_change += 4;
+		break;
+	case WIN_S:
+		cond_change += 4;
+		break;
+	case WIN_A:
+		cond_change += 3;
+		break;
+	case WIN_B:
+		cond_change += 2;
+		break;
+	case WIN_C:
+		cond_change += 1;
+		break;
+	case WIN_D:
+		break;
+	}
+	for (auto& it : Fleets[FriendSide]->Kammusues) {
+		it.changeCond(cond_change);
+	}
+	//個別に適用されるもの
+	Fleets[FriendSide]->Kammusues[0].changeCond(3);
+	Fleets[FriendSide]->Kammusues[mvp_index].changeCond(10);
+
 	if(isShow) cout << "\n";
-	return WinReason;
+	return tuple<WIN, int>(WinReason, mvp_index);
 }
 
 /* 情報表示 */
@@ -141,22 +193,34 @@ BP BPSelect(fleets **Fleets) {
 }
 
 /* 航空戦フェイズ */
-AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAttackPlus[], const bool isShow) {
+AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAttackPlus[], vector<size_t> &all_damage, const bool isShow) {
 	if(isShow) cout << "【航空戦フェイズ】\n";
 	/* 制空状態の決定 */
 	if(isShow) cout << "○制空権の決定\n";
 	// 制空値の計算
 	int AntiAirScore[BattleSize];
 	bool hasAir[BattleSize];
+	int bonus_all[] = { 0,1,1,2,2,2,2,3 }, bonus_pf[] = { 0,0,2,5,9,14,14,22 }, bonus_wb[] = {0,0,1,1,1,3,3,6};
 	for(int i = 0; i < BattleSize; ++i) {
 		AntiAirScore[i] = 0;
 		hasAir[i] = false;
 		if(!isSearchSuccess[i]) continue;	//索敵失敗時は制空値0
-		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
-			for(int j = 0; j < itKammusu->Slots; ++j) {
-				if((itKammusu->Weapons[j].isAirWar()) && (itKammusu->Airs[j] != 0)) hasAir[i] = true;
-				if(itKammusu->Weapons[j].isAirWar()) {
-					AntiAirScore[i] += static_cast<int>(itKammusu->Weapons[j].AntiAir * sqrt(itKammusu->Airs[j]));
+		for(auto &it : Fleets[i]->Kammusues) {
+			for(int j = 0; j < it.Slots; ++j) {
+				weapon &weapon_temp = it.Weapons[j];
+				if((weapon_temp.isAirWar()) && (it.Airs[j] != 0)) hasAir[i] = true;
+				if(weapon_temp.isAirWar()) {
+					AntiAirScore[i] += static_cast<int>(weapon_temp.AntiAir * sqrt(it.Airs[j]));
+					switch (weapon_temp.Type) {
+					case Type_PF:
+						AntiAirScore[i] += bonus_pf[weapon_temp.level_] + bonus_all[weapon_temp.level_];
+						break;
+					case Type_WB:
+						AntiAirScore[i] += bonus_wb[weapon_temp.level_] + bonus_all[weapon_temp.level_];
+						break;
+					default:
+						break;
+					}
 				}
 			}
 		}
@@ -352,24 +416,27 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 					int Target = all_unsub[RandInt(all_unsub.size())];
 					int BaseAttack;
 					switch(MovedKammusu->Weapons[k].Type) {
-						case Type_PB:
-						case Type_PBF:
-						case Type_WB:
-							//爆撃は等倍ダメージ
-							BaseAttack = static_cast<int>(MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
-							break;
-						case Type_PA:
-							//雷撃は150％か80％かがランダムで決まる
-							if(RandInt(2) == 0) {
-								BaseAttack = static_cast<int>(1.5 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
-							} else {
-								BaseAttack = static_cast<int>(0.8 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
-
-							}
-							break;
+					case Type_PB:
+					case Type_PBF:
+					case Type_WB:
+						//爆撃は等倍ダメージ
+						BaseAttack = static_cast<int>(MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
+						break;
+					case Type_PA:
+						//雷撃は150％か80％かがランダムで決まる
+						if(RandInt(2) == 0) {
+							BaseAttack = static_cast<int>(1.5 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
+						} else {
+							BaseAttack = static_cast<int>(0.8 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
+						}
+						break;
+					default:
+						BaseAttack = 0;
+						break;
 					}
 					int Damage = AttackAction(Fleets[i], Fleets[OtherSide], j, Target, BaseAttack,
 						BP_SAME, AllAttackPlus[i], TURN_AIR, isShow);
+					if (i == 0) all_damage[j] += Damage;
 					AllDamage[Target] += Damage;
 					isTarget[Target] = true;
 				}
@@ -404,7 +471,7 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 }
 
 /* 開幕雷撃フェイズ */
-void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isShow) {
+void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], vector<size_t> &all_damage, const bool isShow) {
 	if(isShow) cout << "【開幕雷撃フェイズ】\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		int OtherSide = BattleSize - i - 1;
@@ -419,6 +486,7 @@ void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double Al
 					int BaseAttack = MovedKammusu->AllTorpedo() + 5;
 					int Damage = AttackAction(Fleets[i], Fleets[OtherSide], j, Target, BaseAttack,
 						BattlePosition, AllAttackPlus[i], TURN_TOR_FIRST, isShow);
+					if (i == 0) all_damage[j] += Damage;
 					AllDamage[Target] += Damage;
 					isTarget[Target] = true;
 				}
@@ -452,7 +520,7 @@ void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double Al
 }
 
 /* 砲撃戦フェイズ */
-void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarResult, const double AllAttackPlus[], const bool isShow) {
+void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarResult, const double AllAttackPlus[], vector<size_t> &all_damage, const bool isShow) {
 	if(isShow) cout << "【砲撃戦フェイズ】\n";
 	/* 攻撃順を策定 */
 	vector< vector<int> >ShotList(BattleSize);
@@ -509,6 +577,7 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 			if(isAntiSubAttack){
 				int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 					BattlePosition, AllAttackPlus[j], TURN_GUN, isShow);
+				if (j == 0) all_damage[ShotList[j][i]] += Damage;
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 				if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 				if(TargetKammusu->HP > Damage) {
@@ -563,32 +632,32 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 									if(isAttackType[i]){
 										if(APKind == APKind_){
 											switch(i){
-												case 0:
-													//主主カットイン
-													if(isShow) cout << "<<主主カットインが発生！>>\n";
-													Multiple = 1.5;
-													break;
-												case 1:
-													//主徹カットイン
-													if(isShow) cout << "<<主徹カットインが発生！>>\n";
-													Multiple = 1.3;
-													break;
-												case 2:
-													//主電カットイン
-													if(isShow) cout << "<<主電カットインが発生！>>\n";
-													Multiple = 1.2;
-													break;
-												case 3:
-													//主副カットイン
-													if(isShow) cout << "<<主副カットインが発生！>>\n";
-													Multiple = 1.1;
-													break;
-												case 4:
-													//連撃
-													if(isShow) cout << "<<連撃が発生！>>\n";
-													AttackCount = 2;
-													Multiple = 1.2;
-													break;
+											case 0:
+												//主主カットイン
+												if(isShow) cout << "<<主主カットインが発生！>>\n";
+												Multiple = 1.5;
+												break;
+											case 1:
+												//主徹カットイン
+												if(isShow) cout << "<<主徹カットインが発生！>>\n";
+												Multiple = 1.3;
+												break;
+											case 2:
+												//主電カットイン
+												if(isShow) cout << "<<主電カットインが発生！>>\n";
+												Multiple = 1.2;
+												break;
+											case 3:
+												//主副カットイン
+												if(isShow) cout << "<<主副カットインが発生！>>\n";
+												Multiple = 1.1;
+												break;
+											case 4:
+												//連撃
+												if(isShow) cout << "<<連撃が発生！>>\n";
+												AttackCount = 2;
+												Multiple = 1.2;
+												break;
 											}
 											isSpecialAttack = true;
 											break;
@@ -605,6 +674,7 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 				for(int k = 0; k < AttackCount; ++k){
 					int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 						BattlePosition, AllAttackPlus[j], TURN_GUN, isShow, Multiple, isSpecialAttack);
+					if (j == 0) all_damage[ShotList[j][i]] += Damage;
 					kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 					if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 					if(TargetKammusu->HP > Damage) {
@@ -630,7 +700,7 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 }
 
 /* 砲撃戦フェイズ(二巡目) */
-void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarResult, const double AllAttackPlus[], const bool isShow) {
+void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarResult, const double AllAttackPlus[], vector<size_t> &all_damage, const bool isShow) {
 	if(isShow) cout << "【砲撃戦フェイズ(二巡目)】\n";
 	/* 最低1隻以上戦艦が存在するかを判定する */
 	bool hasBB = false;
@@ -685,6 +755,7 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 			if(isAntiSubAttack){
 				int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 					BattlePosition, AllAttackPlus[j], TURN_GUN, isShow);
+				if (j == 0) all_damage[ShotList[j][i]] += Damage;
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 				if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 				if(TargetKammusu->HP > Damage) {
@@ -739,32 +810,32 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 									if(isAttackType[i]){
 										if(APKind == APKind_){
 											switch(i){
-												case 0:
-													//主主カットイン
-													if(isShow) cout << "<<主主カットインが発生！>>\n";
-													Multiple = 1.5;
-													break;
-												case 1:
-													//主徹カットイン
-													if(isShow) cout << "<<主徹カットインが発生！>>\n";
-													Multiple = 1.3;
-													break;
-												case 2:
-													//主電カットイン
-													if(isShow) cout << "<<主電カットインが発生！>>\n";
-													Multiple = 1.2;
-													break;
-												case 3:
-													//主副カットイン
-													if(isShow) cout << "<<主副カットインが発生！>>\n";
-													Multiple = 1.1;
-													break;
-												case 4:
-													//連撃
-													if(isShow) cout << "<<連撃が発生！>>\n";
-													AttackCount = 2;
-													Multiple = 1.2;
-													break;
+											case 0:
+												//主主カットイン
+												if(isShow) cout << "<<主主カットインが発生！>>\n";
+												Multiple = 1.5;
+												break;
+											case 1:
+												//主徹カットイン
+												if(isShow) cout << "<<主徹カットインが発生！>>\n";
+												Multiple = 1.3;
+												break;
+											case 2:
+												//主電カットイン
+												if(isShow) cout << "<<主電カットインが発生！>>\n";
+												Multiple = 1.2;
+												break;
+											case 3:
+												//主副カットイン
+												if(isShow) cout << "<<主副カットインが発生！>>\n";
+												Multiple = 1.1;
+												break;
+											case 4:
+												//連撃
+												if(isShow) cout << "<<連撃が発生！>>\n";
+												AttackCount = 2;
+												Multiple = 1.2;
+												break;
 											}
 											isSpecialAttack = true;
 											break;
@@ -781,6 +852,7 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 				for(int k = 0; k < AttackCount; ++k){
 					int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 						BattlePosition, AllAttackPlus[j], TURN_GUN, isShow, Multiple, isSpecialAttack);
+					if (j == 0) all_damage[ShotList[j][i]] += Damage;
 					kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 					if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 					if(TargetKammusu->HP > Damage) {
@@ -806,7 +878,7 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 }
 
 /* 雷撃戦フェイズ */
-void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isShow) {
+void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], vector<size_t> &all_damage, const bool isShow) {
 	if(isShow) cout << "【雷撃戦フェイズ】\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		int OtherSide = BattleSize - i - 1;
@@ -821,6 +893,7 @@ void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAtta
 					int BaseAttack = MovedKammusu->AllTorpedo() + 5;
 					int Damage = AttackAction(Fleets[i], Fleets[OtherSide], j, Target, BaseAttack,
 						BattlePosition, AllAttackPlus[i], TURN_TOR, isShow);
+					if (i == 0) all_damage[j] += Damage;
 					AllDamage[Target] += Damage;
 					isTarget[Target] = true;
 				}
@@ -854,7 +927,7 @@ void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAtta
 }
 
 /* 夜戦フェイズ */
-void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isNightGame, const bool isShow) {
+void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], vector<size_t> &all_damage, const bool isNightGame, const bool isShow) {
 	if(isShow) cout << "【夜戦フェイズ】\n";
 	for(unsigned int i = 0; i < MaxKanmusu; ++i) {
 		for(int j = 0; j < BattleSize; ++j) {
@@ -894,6 +967,7 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 					Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack,
 						BattlePosition, AllAttackPlus[j], TURN_NIGHT, isShow);
 				}
+				if (j == 0) all_damage[i] += Damage;
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 				if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 				if(TargetKammusu->HP > Damage) {
@@ -936,8 +1010,15 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 					case CutinAttackG:
 						if (luck > 55) luck = 55;
 						break;
+					default:
+						luck = 0;
 					}
-					double CutinPer = sqrt(70 * luck);
+					double CutinPer;
+					if (AttackType == CutinAttackG) {
+						CutinPer = sqrt(50 * luck);
+					}else {
+						CutinPer = sqrt(70 * luck);
+					}
 					//配置補正
 					if (i == 0) CutinPer += 12.5;
 					//損傷補正
@@ -964,19 +1045,25 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 				}
 				// 攻撃処理
 				switch(AttackType){
-					case CutinAttackT:
-						if(isShow) cout << "<<魚雷カットインが発生！>>\n";
-						break;
-					case CutinAttackG:
-						if(isShow) cout << "<<主砲カットインが発生！>>\n";
-						break;
-					case DoubleAttack:
-						if(isShow) cout << "<<連撃が発生！>>\n";
-						break;
+				case CutinAttackT:
+					if(isShow) cout << "<<魚雷カットインが発生！>>\n";
+					break;
+				case CutinAttackG:
+					if(isShow) cout << "<<主砲カットインが発生！>>\n";
+					break;
+				case CutinAttackGT:
+					if (isShow) cout << "<<主魚カットインが発生！>>\n";
+					break;
+				case DoubleAttack:
+					if(isShow) cout << "<<連撃が発生！>>\n";
+					break;
+				default:
+					break;
 				}
 				for(int k = 0; k < AttackCount; ++k){
 					int Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack, BattlePosition,
 						AllAttackPlus[j], TURN_NIGHT, isShow, Multiple, isSpecialAttack);
+					if (j == 0) all_damage[i] += Damage;
 					kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 					if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 					if(TargetKammusu->HP > Damage) {
@@ -1042,21 +1129,21 @@ WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, c
 			//A勝利かを判定
 			bool isMajorWin = false;
 			switch(Fleets[EnemySide]->Members){
-				case 2:
-					if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
-					break;
-				case 3:
-					if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
-					break;
-				case 4:
-					if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
-					break;
-				case 5:
-					if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
-					break;
-				case 6:
-					if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
-					break;
+			case 2:
+				if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
+				break;
+			case 3:
+				if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
+				break;
+			case 4:
+				if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
+				break;
+			case 5:
+				if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
+				break;
+			case 6:
+				if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
+				break;
 			}
 			if(isMajorWin){
 				if(isShow) cout << "勝利A\n";
@@ -1085,21 +1172,21 @@ WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, c
 	//敵の轟沈数で分岐
 	bool isMajorWin = false;
 	switch(Fleets[EnemySide]->Members) {
-		case 2:
-			if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
-			break;
-		case 3:
-			if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
-			break;
-		case 4:
-			if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
-			break;
-		case 5:
-			if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
-			break;
-		case 6:
-			if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
-			break;
+	case 2:
+		if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
+		break;
+	case 3:
+		if(AlivedKammusues[EnemySide] <= 1) isMajorWin = true;
+		break;
+	case 4:
+		if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
+		break;
+	case 5:
+		if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
+		break;
+	case 6:
+		if(AlivedKammusues[EnemySide] <= 2) isMajorWin = true;
+		break;
 	}
 	if(isMajorWin) {
 		//自軍の戦果ゲージが相手の2.5倍以上の場合B勝利
@@ -1171,30 +1258,32 @@ double fleets::CalcSearchPower() {
 		Search += sqrt(itKammusu->Search) * 1.6841056;
 		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
 			switch(itWeapon->Type) {
-				case Type_PB:	//艦爆
-					Search += itWeapon->Search * 1.0376255;
-					break;
-				case Type_WB:	//水爆
-					Search += itWeapon->Search * 1.7787282;
-					break;
-				case Type_PA:	//艦攻
-					Search += itWeapon->Search * 1.3677954;
-					break;
-				case Type_PS:	//艦偵
-					Search += itWeapon->Search * 1.6592780;
-					break;
-				case Type_WS:	//水偵
-					Search += itWeapon->Search * 2.0000000;
-					break;
-				case Type_SmallS:	//小型電探
-					Search += itWeapon->Search * 1.0045358;
-					break;
-				case Type_LargeS:	//大型電探
-					Search += itWeapon->Search * 0.9906638;
-					break;
-				case Type_SLight:	//探照灯
-					Search += itWeapon->Search * 0.9067950;
-					break;
+			case Type_PB:	//艦爆
+				Search += itWeapon->Search * 1.0376255;
+				break;
+			case Type_WB:	//水爆
+				Search += itWeapon->Search * 1.7787282;
+				break;
+			case Type_PA:	//艦攻
+				Search += itWeapon->Search * 1.3677954;
+				break;
+			case Type_PS:	//艦偵
+				Search += itWeapon->Search * 1.6592780;
+				break;
+			case Type_WS:	//水偵
+				Search += itWeapon->Search * 2.0000000;
+				break;
+			case Type_SmallS:	//小型電探
+				Search += itWeapon->Search * 1.0045358;
+				break;
+			case Type_LargeS:	//大型電探
+				Search += itWeapon->Search * 0.9906638;
+				break;
+			case Type_SLight:	//探照灯
+				Search += itWeapon->Search * 0.9067950;
+				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -1307,6 +1396,7 @@ int fleets::RandomKammsuWithSS(){
 }
 
 /* 生き残ってる艦娘(水上艦)からランダムに選択する */
+//has_bombがtrueだと陸上棲姫を避けるようになり、is_nightがtrueだと探照灯の効果を考慮する
 int fleets::RandomKammsuWithoutSS(const bool has_bomb, const bool is_night){
 	//生存艦をリストアップ
 	vector<int> AlivedList;
@@ -1326,18 +1416,36 @@ int fleets::RandomKammsuWithoutSS(const bool has_bomb, const bool is_night){
 	}
 	else {
 		// 夜戦なら探照灯を考慮する
-		int index = findSearchLight(AlivedList);
-		if (is_night && index != -1) {
-			const double search_light_per = 20;	//探照灯点灯時の誘引率(％)
-			if (CheckPercent(search_light_per)) {
-				return index;
+		tuple<int, size_t> index1 = findSearchLargeLight(AlivedList);
+		tuple<int, size_t> index2 = findSearchLight(AlivedList);
+		if (is_night && (get<0>(index1) != -1 || get<0>(index2) != -1)) {
+			const double search_light_per1 = 30;	//大型探照灯点灯時の誘引率(％)
+			const double search_light_per2 = 20;	//探照灯点灯時の誘引率(％)
+			if (get<0>(index1) != -1) {
+				//大型探照灯
+				if (CheckPercent(search_light_per1 + Kammusues[get<0>(index1)].Weapons[get<1>(index1)].level_)) {
+					return get<0>(index1);
+				}
+				else {
+					vector<int> AlivedList2;
+					for (auto &i : AlivedList) {
+						if (i != get<0>(index1)) AlivedList2.push_back(i);
+					}
+					return AlivedList2[RandInt(AlivedList2.size())];
+				}
 			}
 			else {
-				vector<int> AlivedList2;
-				for (auto &i : AlivedList) {
-					if (i != index) AlivedList2.push_back(i);
+				//探照灯
+				if (CheckPercent(search_light_per2 + Kammusues[get<0>(index2)].Weapons[get<1>(index2)].level_)) {
+					return get<0>(index2);
 				}
-				return AlivedList2[RandInt(AlivedList2.size())];
+				else {
+					vector<int> AlivedList2;
+					for (auto &i : AlivedList) {
+						if (i != get<0>(index2)) AlivedList2.push_back(i);
+					}
+					return AlivedList2[RandInt(AlivedList2.size())];
+				}
 			}
 		}
 		else {
@@ -1347,14 +1455,23 @@ int fleets::RandomKammsuWithoutSS(const bool has_bomb, const bool is_night){
 }
 
 /* 探照灯を持っている艦の位置を調べる(外れなら-1) */
-int fleets::findSearchLight(const vector<int> &AlivedList) {
+tuple<int, size_t> fleets::findSearchLight(const vector<int> &AlivedList) {
 	for (auto &i : AlivedList) {
-		for (auto &it : Kammusues[i].Weapons) {
-			if (it.Type == Type_SLight) return i;
+		for (int j = 0; j < Kammusues[i].Slots; ++j){
+			if (Kammusues[i].Weapons[j].Type == Type_SLight) return tuple<int, size_t>(i, j);
 		}
 	}
-	return -1;
+	return tuple<int, size_t>(-1, 0);
 }
+tuple<int, size_t> fleets::findSearchLargeLight(const vector<int> &AlivedList) {
+	for (auto &i : AlivedList) {
+		for (int j = 0; j < Kammusues[i].Slots; ++j) {
+			if (Kammusues[i].Weapons[j].Name == "96式150cm探照灯") return tuple<int, size_t>(i, j);
+		}
+	}
+	return tuple<int, size_t>(-1, 0);
+}
+
 
 /* 与えるダメージ量を計算する */
 int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, const int BaseAttack,
@@ -1415,6 +1532,15 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 
 	/* キャップ前補正 */
 	if(Turn != TURN_AIR) {
+		//先に、対陸上棲姫向けに雷装値を無効化しておく
+		if (((Turn == TURN_GUN) || (Turn == TURN_NIGHT)) && TargetK->Kind == SC_AF) {
+			if(((HunterK->Kind == SC_ACV) || (HunterK->Kind == SC_CV) || HunterK->Kind == SC_CVL) || (HunterK->Kind == SC_AF) || (HunterK->Kind == SC_FT)) {
+				Damage -= 1.5 * HunterK->AllTorpedo(false);
+			}
+			else {
+				Damage -= HunterK->AllTorpedo(false);
+			}
+		}
 		//交戦形態
 		if (Turn != TURN_NIGHT) {
 			switch (BattlePosition) {
@@ -1430,36 +1556,40 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 			case BP_T_MINUS:
 				Damage *= 0.6;
 				break;
+			default:
+				break;
 			}
 		}
 		//攻撃側陣形
 		if(Turn != TURN_NIGHT) {
 			switch(Friend->Formation) {
-				case FOR_TRAIL:
-					if(isAttackToSub) Damage *= 0.45; else Damage *= 1.0;
-					break;
-				case FOR_SUBTRAIL:
-					if(isAttackToSub) Damage *= 0.60; else Damage *= 0.8;
-					break;
-				case FOR_CIRCLE:
-					if(isAttackToSub) Damage *= 0.90; else Damage *= 0.7;
-					break;
-				case FOR_ECHELON:
-					if(isAttackToSub) Damage *= 0.75; else Damage *= 0.6;
-					break;
-				case FOR_ABREAST:
-					if(isAttackToSub) Damage *= 1.00; else Damage *= 0.6;
-					break;
+			case FOR_TRAIL:
+				if(isAttackToSub) Damage *= 0.45; else Damage *= 1.0;
+				break;
+			case FOR_SUBTRAIL:
+				if(isAttackToSub) Damage *= 0.60; else Damage *= 0.8;
+				break;
+			case FOR_CIRCLE:
+				if(isAttackToSub) Damage *= 0.90; else Damage *= 0.7;
+				break;
+			case FOR_ECHELON:
+				if(isAttackToSub) Damage *= 0.75; else Damage *= 0.6;
+				break;
+			case FOR_ABREAST:
+				if(isAttackToSub) Damage *= 1.00; else Damage *= 0.6;
+				break;
 			}
 		}
 		//損傷状態
 		switch(HunterK->ShowDamage()) {
-			case MiddleDamage:
-				Damage *= 0.7;
-				break;
-			case HeavyDamage:
-				Damage *= 0.4;
-				break;
+		case MiddleDamage:
+			Damage *= 0.7;
+			break;
+		case HeavyDamage:
+			Damage *= 0.4;
+			break;
+		default:
+			break;
 		}
 		//三式弾特効
 		if(((Turn == TURN_GUN) || (Turn == TURN_NIGHT)) && TargetK->Kind == SC_AF){
@@ -1518,16 +1648,50 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		}
 	}
 	//クリティカル補正
+	bool cl_flg = false;
+	double cl_per_plus = 0.0;	//熟練艦載機によるCL2率上昇(試験実装)
+	for (auto &it : HunterK->Weapons) {
+		switch (it.Type) {
+		case Type_PA:
+		case Type_PB:
+		case Type_PBF:
+		case Type_WB:
+			cl_per_plus += 0.05 * it.level_ / 7;
+		default:
+			break;
+		}
+	}
 	if(Turn == TURN_AIR) {
-		if(Rand(mt) < 0.025) {
+		if(Rand(mt) < 0.025 + cl_per_plus) {
 			Damage *= 1.5;
+			cl_flg = true;
 		}
 	} else if(Turn == TURN_NIGHT){	//夜戦時におけるクリティカル補正(試験実装)
-		if(Rand(mt) < 0.30) {
+		if(Rand(mt) < 0.30 + cl_per_plus) {
 			Damage *= 1.5;
+			cl_flg = true;
 		}
-	}else if(Rand(mt) < 0.24 * HitValue / (HitValue + 0.75)) {
+	}else if(Rand(mt) < 0.24 * HitValue / (HitValue + 0.75) + cl_per_plus) {
 		Damage *= 1.5;
+		cl_flg = true;
+	}
+	//熟練艦載機によるダメージ補正
+	if (cl_flg) {
+		double multi_cv = 1.0;
+		for (int i = 0; i < HunterK->Slots; ++i) {
+			weapon &weapon_temp = HunterK->Weapons[i];
+			switch (weapon_temp.Type) {
+			case Type_PA:
+			case Type_PB:
+			case Type_PBF:
+			case Type_WB:
+				multi_cv += 0.1 * weapon_temp.level_ / 7;
+				if(i == 0) multi_cv += 0.1 * weapon_temp.level_ / 7;
+			default:
+				break;
+			}
+		}
+		Damage *= multi_cv;
 	}
 	//触接補正
 	Damage *= AllAttackPlus;
@@ -1667,17 +1831,13 @@ void fleets::ReadData(const string Filename){
 			++Step;
 		}else if (Step < 2 + Members){
 			//装備(カンマ区切り)
-			string temp;
-			stringstream sin(GetLine);
-			vector<string> WList;
-			while (getline(sin, temp, ',')){
-				WList.push_back(temp);
-			}
-			for (unsigned int i = 0; i < WList.size(); ++i){
+			int set = Step - 2;
+			vector<string> WList = split(GetLine);
+			for (size_t i = 0; i < WList.size(); ++i){
 				int Number = ToInt(WList[i]) - 1;
 				if (Number < 0) break;
-				if (static_cast<int>(i) >= Kammusues[Step - 2].Slots) break;
-				Kammusues[Step - 2].Weapons[i] = WeaponList[Number];
+				if (i >= (size_t)Kammusues[set].Slots) break;
+				Kammusues[set].Weapons[i] = WeaponList[Number];
 			}
 			++Step;
 		} else if(Step < 2 + Members * 2) {
@@ -1709,6 +1869,14 @@ void fleets::ReadData(const string Filename){
 						Kammusues[Set].Airs[i - 3] = Number;
 					}
 				}
+			}
+			++Step;
+		}else if (Step < 2 + Members * 3) {
+			int set = Step - 2 - Members * 2;
+			//装備改修度・艦載機熟練度
+			vector<string> weapon_level_list = split(GetLine);
+			for (int i = 0; i < Kammusues[set].Slots; ++i) {
+				Kammusues[set].Weapons[i].level_ = std::stoi(weapon_level_list[i]);
 			}
 			++Step;
 		}

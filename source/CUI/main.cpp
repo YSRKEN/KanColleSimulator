@@ -1,30 +1,6 @@
 ﻿/* ---------------------------- */
-/*  艦これシミュレータ Ver.0.6  */
+/*  艦これシミュレータ Ver.0.8  */
 /* ---------------------------- */
-
-/*
-   最終更新日時：2016/02/10
-   製作者：@YSRKEN
-   コマンドライン引数：
-     「KanColleSim 試行回数 艦隊データ(先攻) 艦隊データ(後攻) 陣形(先攻) 陣形(後攻)」
-     ・試行回数……シミュレートする回数(自然数)。「1」を指定すると、戦闘の途中経過も表示されるが、
-                   2以上を指定すると途中経過表示が無くなり、代わりに複数回のシミュレートにおける
-                   艦娘の残り耐久(平均)と、戦闘結果(完全勝利S～敗北D)の割合が表示される。
-     ・艦隊データ……サンプルをfleet1.txt～fleet3.txtに示した。先攻はその名の通り、
-                     相手に先に攻撃する方になる。仕様上、先攻の方が有利ではある。
-                     ちなみに後攻に限り、「*.map」を読み込むとマップモードとなる。
-     ・陣形……単縦陣・複縦陣・輪形陣・梯形陣・単横陣から1つ選択。マップモードだと後攻は無視され、
-               自陣形は対潜マスは単横陣・開幕夜戦は指定・通常は単縦陣となる。
-     なお、コマンドライン引数は5つとも全て指定する必要がある。
-   呼び出し例：
-     「KanColleSim 10000 fleet1.txt fleet2.txt 単縦陣 単縦陣」
-     「KanColleSim 10000 fleet1.txt 1-5_high.map 梯形陣 ほげ」
-   注意：
-   ・kammusu.txtとweapon.txtは毎回必ず読み込まれるので注意
-   ・入力にエラーがある場合その旨をエラーメッセージとして知らせる
-   ・勿論kammusu.txtとweapon.txt、および艦隊データは自由に編集できるが
-   くれぐれも文法ミスがないように！
-*/
 
 #include "header.h"
 #include <chrono>
@@ -74,7 +50,8 @@ int main(const int argc, const char *argv[]) {
 			/* 第1→第2艦隊への攻撃 */
 			if (BattleCount == 1) {
 				// 1回のみ
-				FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeDN);
+				auto result = FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeDN);
+				cout << "MVP艦：" << FleetsData[FriendSide].Kammusues[get<1>(result)].Name << "\n";
 			}
 			else {
 				// 複数回(統計モード)
@@ -88,13 +65,18 @@ int main(const int argc, const char *argv[]) {
 					HeavyDamageCount[i].resize(FleetsData[i].Members, 0);
 					LostCount[i].resize(FleetsData[i].Members, 0);
 				}
+				int kill_boss_count = 0;
 				//複数回試行して集計する
 				vector<int> WinReason(WIN_Size, 0);
+				vector<int> MVPKammusu(MaxKanmusu, 0);
+				auto start_time = std::chrono::system_clock::now();
 				for (int n = 0; n < BattleCount; ++n) {
 					for (int i = 0; i < BattleSize; ++i) {
 						FleetsData_[i] = FleetsData[i];
 					}
-					++WinReason[FleetsData_[FriendSide].Simulate(FleetsData_[EnemySide], false, kModeDN)];
+					auto result = FleetsData_[FriendSide].Simulate(FleetsData_[EnemySide], false, kModeDN);
+					++WinReason[get<0>(result)];
+					++MVPKammusu[get<1>(result)];
 					for (int i = 0; i < BattleSize; ++i) {
 						for (int j = 0; j < FleetsData[i].Members; ++j) {
 							if (FleetsData_[i].Kammusues[j].ShowDamage() == HeavyDamage) {
@@ -106,9 +88,12 @@ int main(const int argc, const char *argv[]) {
 							HPSum[i][j] += FleetsData_[i].Kammusues[j].HP;
 						}
 					}
+					if (FleetsData_[EnemySide].Kammusues[0].HP == 0) ++kill_boss_count;
 				}
+				auto end_time = std::chrono::system_clock::now();
 				//結果を表示する
 				cout << "【結果表示】\n";
+				cout << "処理時間：" << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << "[us]\n";
 				for (int i = 0; i < BattleSize; ++i) {
 					cout << "○" << Position[i] << "\n";
 					for (int j = 0; j < FleetsData[i].Members; ++j) {
@@ -117,7 +102,13 @@ int main(const int argc, const char *argv[]) {
 							<< 1.0 * HPSum[i][j] / BattleCount << "/" << FleetsData[i].Kammusues[j].MaxHP
 							<< "(" << DMString[FleetsData[i].Kammusues[j].ShowDamage()] << ") ";
 						cout << "大破率：" << (100.0 * HeavyDamageCount[i][j] / BattleCount) << "％ ";
-						cout << "撃沈率：" << (100.0 * LostCount[i][j] / BattleCount) << "％\n";
+						cout << "撃沈率：" << (100.0 * LostCount[i][j] / BattleCount) << "％";
+						if (i == FriendSide) {
+							cout << " MVP率：" << (100.0 * MVPKammusu[j] / BattleCount) << "％\n";
+						}
+						else {
+							cout << "\n";
+						}
 					}
 				}
 				double WinPer = 100.0 * (WinReason[WIN_SS] + WinReason[WIN_S] + WinReason[WIN_A] + WinReason[WIN_B]) / BattleCount;
@@ -125,6 +116,7 @@ int main(const int argc, const char *argv[]) {
 				for (int i = WIN_Size - 1; i >= 0; --i) {
 					cout << "　" << WINString[i] << "：" << WinReason[i] << "回(" << 100.0 * WinReason[i] / BattleCount << "％)\n";
 				}
+				cout << "\n旗艦撃破：" << kill_boss_count << "回(" << (100.0 * kill_boss_count / BattleCount) << "％)\n";
 			}
 		}
 		else {	// マップモード
@@ -197,7 +189,9 @@ int main(const int argc, const char *argv[]) {
 				rsize_t areas = MapData.size(), members = MyFleetsData.Members;
 				vector<vector<int>> WinReason(areas, vector<int>(WIN_Size, 0));
 				vector<vector<int>> LossReason(areas - 1, vector<int>(members, 0));
+				int kill_boss_count = 0;
 				//複数回試行して集計する
+				auto start_time = std::chrono::system_clock::now();
 				for (int n = 0; n < BattleCount; ++n) {
 					FleetsData[0] = MyFleetsData;
 					for (rsize_t i = 0; i < areas; ++i) {
@@ -215,7 +209,7 @@ int main(const int argc, const char *argv[]) {
 							FleetsData[FriendSide].Formation = night_formation;
 						}
 						// シミュレート(勝利判定をカウント)
-						++WinReason[i][FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, MapSim[i][j])];
+						++WinReason[i][get<0>(FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, MapSim[i][j]))];
 						// 誰も大破していないかを調べる
 						if (i != areas - 1) {
 							bool loss_flg = false;
@@ -223,16 +217,27 @@ int main(const int argc, const char *argv[]) {
 								if (FleetsData[FriendSide].Kammusues[j].ShowDamage() >= HeavyDamage) {
 									++LossReason[i][j];
 									loss_flg = true;
+									break;
 								}
 							}
 							if (loss_flg) {
 								break;
 							}
 						}
+						else {
+							if (FleetsData[EnemySide].Kammusues[0].HP == 0) ++kill_boss_count;
+						}
 					}
+					/*if (((n + 1) % 100) == 0) {
+						cout << (n + 1) << "\t";
+						cout << (WinReason[0][WIN_SS] + WinReason[0][WIN_S] + WinReason[0][WIN_A] + WinReason[0][WIN_B]) << "\t";
+						cout << kill_boss_count << "\n";
+					}*/
 				}
+				auto end_time = std::chrono::system_clock::now();
 				// 結果を出力する
 				cout << "【結果表示】\n";
+				cout << "処理時間：" << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << "[us]\n";
 				vector<int> sum(areas, 0);
 				for (rsize_t i = 0; i < areas; ++i) {
 					for (auto &it : WinReason[i]) {
@@ -253,6 +258,64 @@ int main(const int argc, const char *argv[]) {
 						cout << "　" << WINString[j] << "：" << WinReason[i][j] << "回(" << (100.0 * WinReason[i][j] / sum[i]) << "％)\n";
 					}
 				}
+				cout << "\nボス旗艦撃破：" << kill_boss_count << "回(" << (100.0 * kill_boss_count / BattleCount) << "％)\n";
+				/*rsize_t areas = MapData.size(), members = MyFleetsData.Members;
+				vector<int> data; for (int i = 0; i < 6; ++i) data.push_back(i);
+				vector<vector<int>> data2;
+				do {
+					data2.push_back(data);
+				} while (next_permutation(data.begin(), data.end()));
+				vector<rsize_t> win_count(720, 0), kill_boss_count(720, 0);
+				auto start_time = std::chrono::system_clock::now();
+				#pragma omp parallel for
+				for (int x = 0; x < 720; ++x) {
+					fleets MyFleetsData2 = MyFleetsData;
+					for (int i = 0; i < 6; ++i) {
+						MyFleetsData2.Kammusues[i] = MyFleetsData.Kammusues[data2[x][i]];
+					}
+					fleets FleetsData[BattleSize];
+					for (int n = 0; n < BattleCount; ++n) {
+						FleetsData[0] = MyFleetsData2;
+						for (rsize_t i = 0; i < areas; ++i) {
+							rsize_t j = RandInt(MapData[i].size());
+							FleetsData[1] = MapData[i][j];
+							FleetsData[FriendSide].Formation = FOR_TRAIL;
+							if (FleetsData[EnemySide].Kammusues[0].isSubmarine()) {
+								FleetsData[FriendSide].Formation = FOR_ABREAST;
+							}
+							if (MapSim[i][j] == kModeN) {
+								FleetsData[FriendSide].Formation = night_formation;
+							}
+							// シミュレート(勝利判定をカウント)
+							WIN reason = get<0>(FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, MapSim[i][j]));
+							if (reason >= WIN_B) ++win_count[x];
+							// 誰も大破していないかを調べる
+							if (i != areas - 1) {
+								bool loss_flg = false;
+								for (rsize_t j = 0; j < members; ++j) {
+									if (FleetsData[FriendSide].Kammusues[j].ShowDamage() >= HeavyDamage) {
+										loss_flg = true;
+										break;
+									}
+								}
+								if (loss_flg) {
+									break;
+								}
+							}
+							else {
+								if (FleetsData[EnemySide].Kammusues[0].HP == 0) ++kill_boss_count[x];
+							}
+						}
+					}
+				}
+				auto end_time = std::chrono::system_clock::now();
+				for (int x = 0; x < 720; ++x) {
+					for (int i = 0; i < 6; ++i) {
+						cout << MyFleetsData.Kammusues[data2[x][i]].Name.substr(0, 2);
+					}
+					cout << "," << win_count[x] << "," << kill_boss_count[x] << "\n";
+				}
+				cout << "処理時間：" << std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time).count() << "[us]\n";*/
 			}
 		}
 	}
