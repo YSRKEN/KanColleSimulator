@@ -1,0 +1,8 @@
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\bin\Debug\KanColleSimGUI.exe.config
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\bin\Debug\KanColleSimGUI.exe
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\bin\Debug\KanColleSimGUI.pdb
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\obj\Debug\KanColleSimGUI.MainForm.resources
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\obj\Debug\KanColleSimGUI.Properties.Resources.resources
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\obj\Debug\KanColleSimGUI.csproj.GenerateResource.Cache
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\obj\Debug\KanColleSimGUI.exe
+F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KanColleSimGUI\obj\Debug\KanColleSimGUI.pdb
