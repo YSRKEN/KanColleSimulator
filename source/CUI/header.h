@@ -46,11 +46,13 @@ enum SC{
 	SC_AF,		//陸上棲姫
 	SC_FT,		//護衛要塞
 	SC_CP,		//練習巡洋艦
+	SC_AO,		//給油艦
+	SC_CVS,		//飛行艇母艦
 	SC_Other	//その他(揚陸艦とか工作艦とか潜水母艦とかはどう扱うのん？)
 };
 // 種別
 // 艦偵の彩雲・水偵の夜偵が特別扱いなのに注意
-enum TYPE{
+enum TYPE {
 	Type_None,		//無し
 	Type_Gun,		//主砲(徹甲弾含む)
 	Type_SubGun,	//副砲
@@ -75,12 +77,13 @@ enum TYPE{
 	Type_Sonar,		//ソナー
 	Type_SLight,	//探照灯
 	Type_LightB,	//照明弾
+	Type_DaiteiChan,	//二式大艇
 	Type_Other		//その他(大発とか)
 };
 //陣形(単縦陣・複縦陣・輪形陣・梯形陣・単横陣)
 enum FORMATION {FOR_TRAIL, FOR_SUBTRAIL, FOR_CIRCLE, FOR_ECHELON, FOR_ABREAST};
 const string FORString[] = {"単縦陣", "複縦陣", "輪形陣", "梯形陣", "単横陣"};
-const double AntiAirBonusPer[] = {1.0, 1.2, 1.6, 1.0, 1.0};
+const double AntiAirBonusPer[] = {0.77, 0.91, 1.2, 0.77, 0.77, 1.0, 1.2, 1.6, 1.0, 1.0};	//通常・深海の陣形防空補正定数
 //交戦形態(同航戦・反航戦・T字有利・T字不利) BPはBattlePositionの意
 enum BP{BP_SAME, BP_DIFF, BP_T_PLUS, BP_T_MINUS};
 const string BPString[] = {"同航戦", "反航戦", "T字有利", "T字不利"};
@@ -126,7 +129,7 @@ struct weapon {
 	int Evade;		//回避
 	RANGE Range;	//射程
 	int Defense;	//装甲
-	int level_;		//装備改修度(0-10)・艦載機熟練度(0-7)
+	int level_;		//装備改修度(0-10)・艦載機熟練度(0-7,内部熟練度だと負数になる)
 	/* メンバ関数 */
 	weapon();			//コンストラクタ
 	bool isAir();		//艦載機かを判定
@@ -167,7 +170,7 @@ struct kammusu {
 	string Label(const int pos = -1);	//簡易的な肩書きを返す
 	COND ShowCond();					//疲労状態を返す
 	DAMAGE ShowDamage();				//損害状況を示す
-	int AllAntiAir();					//総対空値を返す
+	double AllAntiAir();				//総対空値を返す
 	int AllEvade();						//総回避を返す
 	int AllHit();						//総命中を返す
 	int AllTorpedo(const bool is_torpedo_phase = true);	//総雷装を返す
@@ -191,6 +194,9 @@ struct kammusu {
 	bool hasWatch();				//熟練見張員を所持しているかを判定
 	void changeCond(const int);		//cond値を修正する
 	void clear_weapons();			//装備欄をクリアする
+	size_t getAAC();				//対空カットインの種類を判別する
+	double getAACPer(const size_t);	//対空カットインの発動率を計算する
+	bool hasPA();					//艦攻を持っているかを判定
 };
 struct fleets{
 	/* メンバ変数 */

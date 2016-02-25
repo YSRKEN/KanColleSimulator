@@ -1093,6 +1093,37 @@ namespace KanColleSimGUI
 					for (int j = 0; j < slots; ++j)
 					{
 						FleetsData[Step - 2 - Members * 2].Levels[j] = int.Parse(levels[j]);
+						if(FleetsData[Step - 2 - Members * 2].Levels[j] < 0) {
+							int level_ = FleetsData[Step - 2 - Members * 2].Levels[j], level = 0;
+							if (level_ <= -100) {
+								level = 7;
+							}
+							else if (level_ <= -85)
+							{
+								level = 6;
+							}
+							else if (level_ <= -70)
+							{
+								level = 5;
+							}
+							else if (level_ <= -55)
+							{
+								level = 4;
+							}
+							else if (level_ <= -40)
+							{
+								level = 3;
+							}
+							else if (level_ <= -25)
+							{
+								level = 2;
+							}
+							else if (level_ <= -10)
+							{
+								level = 1;
+							}
+							FleetsData[Step - 2 - Members * 2].Levels[j] = level;
+						}
 					}
 					++Step;
 					continue;
@@ -1253,10 +1284,12 @@ namespace KanColleSimGUI
 		private void CalcAllAntiAir()
 		{
 			int AAASum = 0;
+			double[] bonus_all = { 0, 1, 1, 2, 2, 2, 2, 3 }, bonus_pf = { 0, 0, 2, 5, 9, 14, 14, 22 }, bonus_wb = { 0, 0, 1, 1, 1, 3, 3, 6 };
 			for (int i = 0; i < FleetsData.Count; ++i)
 			{
 				for (int j = 0; j < FleetsData[i].Slots; ++j)
 				{
+					double AAASum_temp = 0.0;
 					int weapon = FleetsData[i].Weapons[j];
 					if (weapon >= 1)
 					{
@@ -1267,8 +1300,20 @@ namespace KanColleSimGUI
 						|| (type == "水上爆撃機")
 						|| (type == "艦上攻撃機"))
 						{
-							AAASum += (int)(int.Parse(WeaponData.Rows[weapon - 1]["対空"].ToString()) * Math.Sqrt(FleetsData[i].Airs[j]));
+							AAASum_temp = double.Parse(WeaponData.Rows[weapon - 1]["対空"].ToString()) * Math.Sqrt(FleetsData[i].Airs[j]);
+							if(FleetsData[i].Levels[j] >= 8) {
+								FleetsData[i].Levels[j] = 7;
+								DrawFleetsData();
+							}
 						}
+						if (type == "艦上戦闘機") {
+							AAASum_temp += bonus_pf[FleetsData[i].Levels[j]];
+						}
+						if (type == "水上爆撃機") {
+							AAASum_temp += bonus_wb[FleetsData[i].Levels[j]];
+						}
+						AAASum_temp += bonus_all[FleetsData[i].Levels[j]];
+						AAASum += (int)(AAASum_temp);
 					}
 				}
 			}

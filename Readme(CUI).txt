@@ -1,8 +1,8 @@
-KanColleSimulator(KCS) Ver.0.85
+KanColleSimulator(KCS) Ver.0.9
 ※等幅フォントで閲覧することを推奨します
 
 【最終更新日】
-　2016/02/24
+　2016/02/25
 
 【製作者】
 　おーぷん2ch：◆RoVKHyEYUtVB
@@ -128,6 +128,21 @@ KanColleSimulator(KCS) Ver.0.85
 　試製46cm連装砲           過積載(大) 過積載(大) 過積載(小) 過積載(小) バニラ   過積載(小) 過積載(小) 過積載(小) 過積載(大)
 
 【バージョン履歴】
+○Ver.0.9　2016/02/25
+　・雷撃戦命中率を、次のURLに従い修正した。
+　　https://twitter.com/Xe_UCH/status/700169825121804288
+　・航空戦計算を最新版に修正した。
+　　(恐ろしいことに、攻撃機の雷装が効かなくなっていたので修正した)
+　・その過程で、二式大艇ちゃんもガンガン触接に参加するようになったかも！
+　・対空カットインを試験的に実装した。
+　・JSON読み込み時、ケッコン後の耐久値を変更していなかったので修正した。
+　・給油艦、飛行艇母艦を実装した。
+　　(艦攻装備給油艦は夜戦出来ませんよね？)
+　・ダメージ計算式における切り捨てタイミングを修正した。
+　・内部熟練度に対応した(ただしJSON読み込みではなくtxt読み込みのみ)
+　・GUIでの制空値表示に熟練度が反映されてなかったので修正した。
+　　(ただし内部熟練度は外部熟練度に翻訳されます)
+
 ○Ver.0.85　2016/02/24
 　・クリティカル率の式を微修正した。
 　・WG42は複数持ちすると威力がよりアップするのでそのように修正した。
@@ -210,6 +225,7 @@ KanColleSimulator(KCS) Ver.0.85
 ・http://zekamashi.net/kancolle-kouryaku/dantyakukansokusyageki/
 ・http://ch.nicovideo.jp/ginga_kuon/blomaga/ar890633
 ・http://ch.nicovideo.jp/biikame/blomaga/ar850895
+・https://twitter.com/Xe_UCH/status/700169825121804288
 ・おーぷん本スレの皆さん
 
 【ライセンス】

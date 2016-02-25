@@ -83,6 +83,9 @@ TYPE ToType(const string TypeStr) {
 	else if (TypeStr == "照明弾") {
 		return Type_LightB;
 	}
+	else if (TypeStr == "大型飛行艇") {
+		return Type_DaiteiChan;
+	}
 	else {
 		return Type_Other;
 	}
@@ -172,7 +175,12 @@ SC ToKind(const string KindStr) {
 	else if (KindStr == "練習巡洋艦") {
 		return SC_CP;
 	}
-	else {
+	else if (KindStr == "給油艦") {
+		return SC_AO;
+	}
+	else if (KindStr == "飛行艇母艦") {
+		return SC_CVS;
+	}else{
 		return SC_Other;
 	}
 }
@@ -458,8 +466,9 @@ void ReadKammusuData2(unordered_map<size_t, kammusu> &kammusu_list_1,
 	string GetLine;
 	getline(fin1, GetLine);
 	//17(揚陸艦),19(工作艦),20(潜水母艦),22(給油艦)は未対応
+	//16(水上機母艦)については、秋津洲だけ特別に「飛行艇母艦」カテゴリに入れた
 	const SC kinds[] = { SC_Other , SC_Other , SC_DD ,SC_CL ,SC_CLT ,SC_CA ,SC_CAV ,SC_CVL ,SC_BB ,SC_BB ,SC_BBV ,SC_CV ,
-	                     SC_Other ,SC_SS ,SC_SSV ,SC_LST ,SC_AV ,SC_Other ,SC_ACV ,SC_Other,SC_Other ,SC_CP ,SC_Other };
+	                     SC_Other ,SC_SS ,SC_SSV ,SC_LST ,SC_AV ,SC_Other ,SC_ACV ,SC_Other,SC_Other ,SC_CP ,SC_AO };
 	while (getline(fin1, GetLine)) {
 		if (GetLine.find("null") != string::npos) continue;	//データにnullが含まれるものは避ける
 		vector<string> KammusuData = split(GetLine);
@@ -469,6 +478,7 @@ void ReadKammusuData2(unordered_map<size_t, kammusu> &kammusu_list_1,
 		//艦種
 		Kammusu_1.Kind = kinds[ToInt(KammusuData[2])];
 		if (KammusuData[9] == "0") Kammusu_1.Kind = SC_AF;
+		if (KammusuData[1].find("秋津洲") != string::npos) Kammusu_1.Kind = SC_CVS;
 		//速力
 		if (KammusuData[9] == "10") Kammusu_1.Speed = HighSpeed; else Kammusu_1.Speed = LowSpeed;
 		//初期艤装および初期スロット数
@@ -490,7 +500,7 @@ void ReadKammusuData2(unordered_map<size_t, kammusu> &kammusu_list_1,
 		Kammusu_1.Range = static_cast<RANGE>(ToInt(KammusuData[10]));
 		Kammusu_1.cond = 49;
 		Kammusu_1.Ammo = 100;
-		Kammusu_1.is_kammusu_ = static_cast<bool>(ToInt(KammusuData[17]));
+		Kammusu_1.is_kammusu_ = (ToInt(KammusuData[17]) > 0 ? true : false);
 		Kammusu_1.Defense = ToInt(split(KammusuData[4], ".")[0]);
 		Kammusu_1.Attack = ToInt(split(KammusuData[5], ".")[0]);
 		Kammusu_1.Torpedo = ToInt(split(KammusuData[6], ".")[0]);
@@ -524,5 +534,57 @@ kammusu calc_param(const kammusu &kammusu_1, const kammusu &kammusu_99, int leve
 	set_kammusu.Evade = static_cast<int>(1.0 * (kammusu_99.Evade - kammusu_1.Evade) * level / 99 + kammusu_1.Evade);
 	set_kammusu.AntiSub = static_cast<int>(1.0 * (kammusu_99.AntiSub - kammusu_1.AntiSub) * level / 99 + kammusu_1.AntiSub);
 	set_kammusu.Search = static_cast<int>(1.0 * (kammusu_99.Search - kammusu_1.Search) * level / 99 + kammusu_1.Search);
+	//ケッコン時の耐久計算がクソ面倒なのはいかがなものかと……
+	if (set_kammusu.Level >= 100) {
+		if (set_kammusu.Name == "大和" || set_kammusu.Name == "武蔵") {
+			set_kammusu.HP = set_kammusu.MaxHP = 98;
+			return set_kammusu;
+		}
+		if (set_kammusu.Name == "Littorio" || set_kammusu.Name == "Roma") {
+			set_kammusu.HP = set_kammusu.MaxHP = 94;
+			return set_kammusu;
+		}
+		if (set_kammusu.Name == "Italia" || set_kammusu.Name == "Roma改") {
+			set_kammusu.HP = set_kammusu.MaxHP = 98;
+			return set_kammusu;
+		}
+		if (set_kammusu.Name == "Bismarck") {
+			set_kammusu.HP = set_kammusu.MaxHP = 96;
+			return set_kammusu;
+		}
+		if (set_kammusu.Name.find("Bismarck") != string::npos) {
+			set_kammusu.HP = set_kammusu.MaxHP = 99;
+			return set_kammusu;
+		}
+		if (set_kammusu.Name == "速吸") {
+			return set_kammusu;
+		}
+		if (set_kammusu.Name == "速吸改") {
+			set_kammusu.MaxHP += 2;
+			set_kammusu.HP = set_kammusu.MaxHP;
+			return set_kammusu;
+		}
+		if (set_kammusu.MaxHP < 10) {
+			set_kammusu.MaxHP += 3;
+		}else if(set_kammusu.MaxHP < 30) {
+			set_kammusu.MaxHP += 4;
+		}
+		else if (set_kammusu.MaxHP < 40) {
+			set_kammusu.MaxHP += 5;
+		}
+		else if (set_kammusu.MaxHP < 50) {
+			set_kammusu.MaxHP += 6;
+		}
+		else if (set_kammusu.MaxHP < 70) {
+			set_kammusu.MaxHP += 7;
+		}
+		else if (set_kammusu.MaxHP <= 90) {
+			set_kammusu.MaxHP += 8;
+		}
+		else {
+			set_kammusu.MaxHP += 9;
+		}
+		set_kammusu.HP = set_kammusu.MaxHP;
+	}
 	return set_kammusu;
 }

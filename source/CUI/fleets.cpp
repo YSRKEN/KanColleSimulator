@@ -200,7 +200,7 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 	// 制空値の計算
 	int AntiAirScore[BattleSize];
 	bool hasAir[BattleSize];
-	int bonus_all[] = { 0,1,1,2,2,2,2,3 }, bonus_pf[] = { 0,0,2,5,9,14,14,22 }, bonus_wb[] = {0,0,1,1,1,3,3,6};
+	double bonus_all[] = { 0,1,1,2,2,2,2,3 }, bonus_pf[] = { 0,0,2,5,9,14,14,22 }, bonus_wb[] = {0,0,1,1,1,3,3,6};
 	for(int i = 0; i < BattleSize; ++i) {
 		AntiAirScore[i] = 0;
 		hasAir[i] = false;
@@ -209,19 +209,59 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			for(int j = 0; j < it.Slots; ++j) {
 				weapon &weapon_temp = it.Weapons[j];
 				if((weapon_temp.isAirWar()) && (it.Airs[j] != 0)) hasAir[i] = true;
+				int level = 0;
+				if (weapon_temp.level_ <= -100) {
+					level = 7;
+				}
+				else if (weapon_temp.level_ <= -85) {
+					level = 6;
+				}
+				else if (weapon_temp.level_ <= -70) {
+					level = 5;
+				}
+				else if (weapon_temp.level_ <= -55) {
+					level = 4;
+				}
+				else if (weapon_temp.level_ <= -40) {
+					level = 3;
+				}
+				else if (weapon_temp.level_ <= -25) {
+					level = 2;
+				}
+				else if (weapon_temp.level_ <= -10) {
+					level = 1;
+				}
 				if(weapon_temp.isAirWar()) {
-					AntiAirScore[i] += static_cast<int>(weapon_temp.AntiAir * sqrt(it.Airs[j]));
+					double aas_temp = weapon_temp.AntiAir * sqrt(it.Airs[j]);
 					switch (weapon_temp.Type) {
 					case Type_PF:
-						AntiAirScore[i] += bonus_pf[weapon_temp.level_] + bonus_all[weapon_temp.level_];
+						if (weapon_temp.level_ >= 0) {
+							aas_temp += bonus_pf[weapon_temp.level_] + bonus_all[weapon_temp.level_];
+						}
+						else {
+							aas_temp += bonus_pf[level] + sqrt(-weapon_temp.level_ / 10);
+						}
 						break;
 					case Type_WB:
-						AntiAirScore[i] += bonus_wb[weapon_temp.level_] + bonus_all[weapon_temp.level_];
+						if (weapon_temp.level_ >= 0) {
+							aas_temp += bonus_wb[weapon_temp.level_] + bonus_all[weapon_temp.level_];
+						}
+						else {
+							aas_temp += bonus_wb[level] + sqrt(-weapon_temp.level_ / 10);
+						}
 						break;
 					default:
+						if (weapon_temp.level_ >= 0) {
+							aas_temp += bonus_all[weapon_temp.level_];
+						}
+						else {
+							aas_temp += sqrt(-weapon_temp.level_ / 10);
+						}
 						break;
 					}
+					AntiAirScore[i] += static_cast<int>(aas_temp);
 				}
+				if (weapon_temp.level_ <= 0) weapon_temp.level_ = level;
 			}
 		}
 		if(isShow) cout << "　" << Position[i] << "制空値：" << AntiAirScore[i] << "\n";
@@ -257,30 +297,64 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			if(isShow) cout << "不可能\n";
 			continue;
 		}
-		// 艦攻・夜偵・水偵・艦偵が存在するときのみ発生
-		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
-			for(int j = 0; j < itKammusu->Slots; ++j) {
-				if(itKammusu->Airs[j] != 0){
-					if((itKammusu->Weapons[j].Type == Type_PA)  && (CheckPercent(2))){
-						AllAttackPlus[i] = AttackPlus[itKammusu->Weapons[j].Hit];
-						break;
-					}
-					if((itKammusu->Weapons[j].Type == Type_WSN) && (CheckPercent(5))){
-						AllAttackPlus[i] = AttackPlus[itKammusu->Weapons[j].Hit];
-						break;
-					}
-					if((itKammusu->Weapons[j].Type == Type_WS)  && (CheckPercent(20))){
-						AllAttackPlus[i] = AttackPlus[itKammusu->Weapons[j].Hit];
-						break;
-					}
-					if((itKammusu->Weapons[j].isAirPS())        && (CheckPercent(50))){
-						AllAttackPlus[i] = AttackPlus[itKammusu->Weapons[j].Hit];
+		// 触接の開始率を計算する
+		double trailer_aircraft_per = 0.0;
+		for (auto &it : Fleets[i]->Kammusues) {
+			for (int j = 0; j < it.Slots; ++j) {
+				switch (it.Weapons[j].Type) {
+				case Type_WS:
+				case Type_WSN:
+				case Type_PS:
+				case Type_PSS:
+				case Type_DaiteiChan:
+					trailer_aircraft_per += 0.04 * it.Weapons[j].Search * sqrt(it.MaxAirs[j]);
+				default:
+					break;
+				}
+			}
+		}
+		switch (AirWarResult) {
+		case AM_BEST:
+			break;
+		case AM_GOOD:
+			trailer_aircraft_per *= 0.6;
+			break;
+		case AM_NORMAL:
+			trailer_aircraft_per *= 0.4;
+			break;
+		case AM_BAD:
+			trailer_aircraft_per *= 0.2;
+			break;
+		case AM_WORST:
+			trailer_aircraft_per *= 0;
+			break;
+		}
+		if (trailer_aircraft_per <= Rand(mt)) {
+			if (isShow) cout << "可能(失敗)\n";
+			continue;
+		}
+		// 触接の選択率を計算する
+		const double aap_plus[] = { 1.12, 1.12, 1.17, 1.20 };
+		[&] {
+			for (auto &it : Fleets[i]->Kammusues) {
+				for (int j = 0; j < it.Slots; ++j) {
+					switch (it.Weapons[j].Type) {
+					case Type_WS:
+					case Type_WSN:
+					case Type_PS:
+					case Type_PSS:
+					case Type_PA:
+					case Type_DaiteiChan:
+						if (0.07 * it.Weapons[j].Search >= Rand(mt)) {
+							AllAttackPlus[i] = aap_plus[it.Weapons[j].Hit];
+							return;
+						}
+					default:
 						break;
 					}
 				}
 			}
-			if(AllAttackPlus[i] != 1.0) break;
-		}
+		}();
 		if(AllAttackPlus[i] != 1.0) {
 			if(isShow) cout << "可能(成功、＋" << static_cast<int>((AllAttackPlus[i] - 1) * 100) << "％)\n";
 		} else{
@@ -295,24 +369,24 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 	double KilledAirsPer[BattleSize];
 	switch(AirWarResult){
 		case AM_WORST:
-			KilledAirsPer[FriendSide] = Rand(mt) * 0.12 + 0.4;
+			KilledAirsPer[FriendSide] = 1.0 * (RandInt(150 - 65 + 1) + 65) / 256;
 			KilledAirsPer[EnemySide]  = Rand(mt) * 0.1;
 			break;
 		case AM_BAD:
-			KilledAirsPer[FriendSide] = Rand(mt) * 0.1  + 0.2;
+			KilledAirsPer[FriendSide] = 1.0 * (RandInt(105 - 45 + 1) + 45) / 256;
 			KilledAirsPer[EnemySide]  = Rand(mt) * 0.4;
 			break;
 		case AM_NORMAL:
-			KilledAirsPer[FriendSide] = Rand(mt) * 0.08 + 0.1;
+			KilledAirsPer[FriendSide] = 1.0 * (RandInt(75 - 30 + 1) + 30) / 256;
 			KilledAirsPer[EnemySide]  = Rand(mt) * 0.6;
 			break;
 		case AM_GOOD:
-			KilledAirsPer[FriendSide] = Rand(mt) * 0.06 + 0.05;
+			KilledAirsPer[FriendSide] = 1.0 * (RandInt(45 - 20 + 1) + 20) / 256;
 			KilledAirsPer[EnemySide]  = Rand(mt) * 0.8;
 			break;
 		case AM_BEST:
-			KilledAirsPer[FriendSide] = Rand(mt) * 0.04 + 0.025;
-			KilledAirsPer[EnemySide]  = Rand(mt) * 0.9;
+			KilledAirsPer[FriendSide] = 1.0 * (RandInt(15-7+1) + 7) / 256;
+			KilledAirsPer[EnemySide]  = Rand(mt) * 1.0;
 			break;
 	}
 	for(int i = 0; i < BattleSize; ++i){
@@ -328,71 +402,96 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 		}
 	}
 	/* 防空攻撃・対空放火 */
-	// こちらも自軍と敵軍で計算方法が違うパターン
-	// 自軍の方が死ぬほど複雑なので半分ヤケで書いてますｗ
-	// (対空カットインは今回考慮しません)
 	if(isShow) cout << "○対空火砲による敵攻撃機・爆撃機の迎撃・撃墜\n";
-	// [自軍が敵軍の艦載機を迎撃する場合]
-	//艦隊対空ボーナス値を決定
-	int FleetsAntiAirBonus = 0;
-	for(vector<kammusu>::iterator itKammusu = Fleets[FriendSide]->Kammusues.begin(); itKammusu != Fleets[FriendSide]->Kammusues.end(); ++itKammusu) {
-		double AntiAirBouns = 0.0;
-		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
-			//名前を直接指定だなんて反吐が出るけど仕方ないね……
-			if(itWeapon->Name == "46cm三連装砲"){
-				AntiAirBouns += itWeapon->AntiAir * 0.25;
-			} else if(itWeapon->Name.find("高角砲") != string::npos){
-				AntiAirBouns += itWeapon->AntiAir * 0.35;
-			} else if(itWeapon->Name.find("対空電探") != string::npos){
-				AntiAirBouns += itWeapon->AntiAir * 0.40;
-			} else if(itWeapon->Name == "三式弾"){
-				AntiAirBouns += itWeapon->AntiAir * 0.60;
-			} else{
-				AntiAirBouns += itWeapon->AntiAir * 0.20;
+	for (int i = 0; i < BattleSize; ++i) {
+		//艦隊対空ボーナス値を決定
+		int FleetsAntiAirBonus = 0;
+		for (auto &it_k : Fleets[i]->Kammusues) {
+			double AntiAirBouns = 0.0;
+			for (auto &it_w : it_k.Weapons) {
+				if (it_w.Name.find("高角砲") != string::npos || it_w.Name.find("高射装置") != string::npos) {
+					AntiAirBouns += 0.35 * it_w.AntiAir;
+				}
+				else if (it_w.Type == Type_LargeS || it_w.Type == Type_SmallS) {
+					AntiAirBouns += 0.4 * it_w.AntiAir;
+				}
+				else if (it_w.Name == "三式弾") {
+					AntiAirBouns += 0.6 * it_w.AntiAir;
+				}
+				else {
+					AntiAirBouns += 0.2 * it_w.AntiAir;
+				}
 			}
+			FleetsAntiAirBonus += static_cast<int>(AntiAirBouns);
 		}
-		FleetsAntiAirBonus += static_cast<int>(AntiAirBouns);
-	}
-	FleetsAntiAirBonus = static_cast<int>(FleetsAntiAirBonus * AntiAirBonusPer[Fleets[FriendSide]->Formation]);
-	if(isShow) cout << "　自軍対空ボーナス値：" << FleetsAntiAirBonus << "\n";
-	//迎撃！
-	int AllKilledAirs = 0;
-	for(vector<kammusu>::iterator itKammusu = Fleets[EnemySide]->Kammusues.begin(); itKammusu != Fleets[EnemySide]->Kammusues.end(); ++itKammusu) {
-		for(int j = 0; j < itKammusu->Slots; ++j) {
-			if(itKammusu->Weapons[j].isAirWar2()) {
-				kammusu *InterceptKammusu = &(Fleets[FriendSide]->Kammusues[Fleets[FriendSide]->RandomKammsu()]);
-				int KilledAirs = static_cast<int>((InterceptKammusu->AllAntiAir() + FleetsAntiAirBonus) * 0.2125);
+		FleetsAntiAirBonus = static_cast<int>(2 * AntiAirBonusPer[5 * (Fleets[i]->Kammusues[0].is_kammusu_ ? 0 : 1) + Fleets[i]->Formation] * FleetsAntiAirBonus);
+		if (isShow) cout << "　" << (i == FriendSide ? "自軍" : "敵軍") << "　対空ボーナス値：" << FleetsAntiAirBonus << "\n";
+		//対空カットイン判定を行う
+		size_t aac_bonus_type = 0;
+		[&] {
+			// まず、秋月型カットイン以外の判定を行う
+			for (auto &it_k : Fleets[i]->Kammusues) {
+				size_t aac_bonus_type_ = it_k.getAAC();
+				if (aac_bonus_type_ >= 4) {
+					//※発動率は推測値
+					if (it_k.getAACPer(aac_bonus_type_) >= Rand(mt)) {
+						if (isShow) cout << "　" << "対空カットイン：成功(" << it_k.Name << ", 第" << aac_bonus_type_ << "種)\n";
+						aac_bonus_type = aac_bonus_type_;
+						return;
+					}
+				}
+			}
+			// 次に秋月型カットインの判定を行う
+			for (auto &it_k : Fleets[i]->Kammusues) {
+				size_t aac_bonus_type_ = it_k.getAAC();
+				if (aac_bonus_type_ >= 1 && aac_bonus_type_ <= 3) {
+					if (it_k.getAACPer(aac_bonus_type_) >= Rand(mt)) {
+						if (isShow) cout << "　" << "対空カットイン：成功(" << it_k.Name << ", 第" << aac_bonus_type_ << "種)\n";
+						aac_bonus_type = aac_bonus_type_;
+						break;
+					}
+				}
+			}
+		}();
+		//迎撃！
+		int AllKilledAirs = 0;
+		int aac_bonus_add1[] = { 0,7,6,4,6,4,4,3,4,2,8,6,3,0,4,3,4,2 };
+		for (auto &it_k : Fleets[BattleSize - i - 1]->Kammusues) {
+			for (int j = 0; j < it_k.Slots; ++j) {
+				if (!it_k.Weapons[j].isAirWar2()) continue;
+				kammusu *InterceptKammusu = &(Fleets[i]->Kammusues[Fleets[i]->RandomKammsu()]);
+				int KilledAirs = 0;
+				//割合撃墜
+				if (RandInt(2) == 1) KilledAirs += static_cast<int>(it_k.Airs[j]);
+				//固定撃墜
+				if (RandInt(2) == 1) {
+					if (InterceptKammusu->is_kammusu_) {
+						KilledAirs += static_cast<int>(0.1 * (InterceptKammusu->AllAntiAir() + FleetsAntiAirBonus));
+					}
+					else {
+						KilledAirs += static_cast<int>((InterceptKammusu->AllAntiAir() + FleetsAntiAirBonus) / 10.6);
+					}
+					if (aac_bonus_type > 0) {
+						KilledAirs += static_cast<int>(-1.1376 + 0.2341 * aac_bonus_add1[aac_bonus_type] + 0.0392 * InterceptKammusu->AllAntiAir() + 0.5);
+					}
+				}
+				//対空カットイン成功時の固定ボーナス
+				KilledAirs += aac_bonus_add1[aac_bonus_type];
+				//艦娘限定ボーナス
 				if (InterceptKammusu->is_kammusu_) KilledAirs += 1;
-				if(itKammusu->Airs[j] > KilledAirs){
+				//撃墜処理
+				if (it_k.Airs[j] > KilledAirs) {
 					AllKilledAirs += KilledAirs;
-					itKammusu->Airs[j] -= KilledAirs;
-				} else{
-					AllKilledAirs += itKammusu->Airs[j];
-					itKammusu->Airs[j] = 0;
+					it_k.Airs[j] -= KilledAirs;
+				}
+				else {
+					AllKilledAirs += it_k.Airs[j];
+					it_k.Airs[j] = 0;
 				}
 			}
 		}
+		if (isShow) cout << "　" << (i == FriendSide ? "自軍" : "敵軍") << "迎撃結果：" << AllKilledAirs << "機\n";
 	}
-	if(isShow) cout << "　自軍迎撃結果：" << AllKilledAirs << "機\n";
-	// [敵軍が自軍の艦載機を迎撃する場合]
-	AllKilledAirs = 0;
-	for(vector<kammusu>::iterator itKammusu = Fleets[FriendSide]->Kammusues.begin(); itKammusu != Fleets[FriendSide]->Kammusues.end(); ++itKammusu) {
-		for(int j = 0; j < itKammusu->Slots; ++j) {
-			if(itKammusu->Weapons[j].isAirWar2()) {
-				kammusu *InterceptKammusu = &(Fleets[EnemySide]->Kammusues[Fleets[EnemySide]->RandomKammsu()]);
-				int KilledAirs = InterceptKammusu->AllAntiAir() / 25;
-				if (InterceptKammusu->is_kammusu_) KilledAirs += 1;
-				if(itKammusu->Airs[j] > KilledAirs){
-					AllKilledAirs += KilledAirs;
-					itKammusu->Airs[j] -= KilledAirs;
-				} else{
-					AllKilledAirs += itKammusu->Airs[j];
-					itKammusu->Airs[j] = 0;
-				}
-			}
-		}
-	}
-	if(isShow) cout << "　敵軍迎撃結果：" << AllKilledAirs << "機\n";
 	/* 開幕爆撃 */
 	// 全艦同時なので、全滅判定はひと通り終わった後に行う
 	// (キャップ前補正は無効なので、AttackAction関数の引数におけるBP_SAMEはダミー)
@@ -425,9 +524,9 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 					case Type_PA:
 						//雷撃は150％か80％かがランダムで決まる
 						if(RandInt(2) == 0) {
-							BaseAttack = static_cast<int>(1.5 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
+							BaseAttack = static_cast<int>(1.5 * (MovedKammusu->Weapons[k].Torpedo * sqrt(MovedKammusu->Airs[k]) + 25));
 						} else {
-							BaseAttack = static_cast<int>(0.8 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
+							BaseAttack = static_cast<int>(0.8 * (MovedKammusu->Weapons[k].Torpedo * sqrt(MovedKammusu->Airs[k]) + 25));
 						}
 						break;
 					default:
@@ -1501,30 +1600,65 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		}
 	}
 	double Damage = BaseAttack;
-	/* 命中率を計算し、命中するかどうかを判定する */
-	// 回避側
-	double EvadeSum = TargetK->AllEvade();	//回避合計を計算
-	if(Enemy->Formation == FOR_ECHELON || Enemy->Formation == FOR_ABREAST) EvadeSum *= 1.2;
-	if(TargetK->ShowCond() == Happy) EvadeSum *= 1.8;
-	double EvadeValue;
-	if(EvadeSum <= 40){
-		EvadeValue = 0.03 + EvadeSum / 80;
-	} else {
-		EvadeValue = 0.03 + EvadeSum / (EvadeSum + 40);
+	/* 命中率を計算し、命中するかどうかを判定する
+	 * (とりあえず雷撃戦用のものとそれ以外とに分離した) */
+	double HitValue;
+	if (Turn == TURN_TOR || Turn == TURN_TOR_FIRST) {
+		// 開幕含めた雷撃戦用命中率
+		HitValue = 0.9272;
+		HitValue += 0.02178 * sqrt(HunterK->Level - 1);
+		HitValue += 0.001518 * HunterK->AllTorpedo(false);
+		HitValue += 0.000540 * HunterK->Torpedo;
+		HitValue += 0.009017 * HunterK->AllHit();
+		if (HunterK->Weapons[0].Type == Type_Torpedo) HitValue += 0.02014 * sqrt(HunterK->Weapons[0].level_);
+		if (HunterK->Weapons[1].Type == Type_Torpedo) HitValue += 0.02014 * sqrt(HunterK->Weapons[1].level_);
+		HitValue += 0.001463 * HunterK->Luck;
+		double a;
+		switch (Enemy->Formation) {
+		case FOR_TRAIL:
+			a = 37.40;
+			break;
+		case FOR_SUBTRAIL:
+			a = 37.16;
+			break;
+		case FOR_CIRCLE:
+			a = 32.77;
+			break;
+		default:
+			a = 37.40;
+			break;
+		}
+		double EvadeSum = TargetK->AllEvade();
+		HitValue -= (EvadeSum < a ? EvadeSum / (2.0 * a) : EvadeSum / (EvadeSum + a));
+		if (HitValue > 0.9691) HitValue = 0.9691 + sqrt(HitValue - 0.9691);
 	}
-	//(速力差による回避補正は有意差無しとなりました)
-	// 命中側
-	double HitValue = 1.0 + sqrt(HunterK->Level - 1) / 50 + HunterK->AllHit() / 100;
-	if(HunterK->ShowCond() == RedFatigue) HitValue /= 1.9;
-	HitValue += HunterK->Luck * 0.001 * 1.5;		//命中に運が影響する可能性が
-	HitValue -= HunterK->NonFitBB();			//フィット砲補正
-	if(Friend->Formation == FOR_SUBTRAIL || Friend->Formation == FOR_ECHELON || Friend->Formation == FOR_ABREAST) HitValue += 0.2;
-	if (Friend->Formation == FOR_SUBTRAIL && Enemy->Formation == FOR_ABREAST) HitValue -= 0.2;
-	if (Friend->Formation == FOR_ABREAST && Enemy->Formation == FOR_ECHELON) HitValue -= 0.2;
-	if (Friend->Formation == FOR_ECHELON && Enemy->Formation == FOR_TRAIL) HitValue -= 0.2;
-	// 最終的な命中率を計算する
-	HitValue -= EvadeValue;
-	if (HitValue > 0.97) HitValue = 0.97;
+	else {
+		// 昼砲撃戦用命中率
+		// 回避側
+		double EvadeSum = TargetK->AllEvade();	//回避合計を計算
+		if (Enemy->Formation == FOR_ECHELON || Enemy->Formation == FOR_ABREAST) EvadeSum *= 1.2;
+		if (TargetK->ShowCond() == Happy) EvadeSum *= 1.8;
+		double EvadeValue;
+		if (EvadeSum <= 40) {
+			EvadeValue = 0.03 + EvadeSum / 80;
+		}
+		else {
+			EvadeValue = 0.03 + EvadeSum / (EvadeSum + 40);
+		}
+		//(速力差による回避補正は有意差無しとなりました)
+		// 命中側
+		HitValue = 1.0 + sqrt(HunterK->Level - 1) / 50 + HunterK->AllHit() / 100;
+		if (HunterK->ShowCond() == RedFatigue) HitValue /= 1.9;
+		HitValue += HunterK->Luck * 0.001 * 1.5;		//命中に運が影響する可能性が
+		HitValue -= HunterK->NonFitBB();			//フィット砲補正
+		if (Friend->Formation == FOR_SUBTRAIL || Friend->Formation == FOR_ECHELON || Friend->Formation == FOR_ABREAST) HitValue += 0.2;
+		if (Friend->Formation == FOR_SUBTRAIL && Enemy->Formation == FOR_ABREAST) HitValue -= 0.2;
+		if (Friend->Formation == FOR_ABREAST && Enemy->Formation == FOR_ECHELON) HitValue -= 0.2;
+		if (Friend->Formation == FOR_ECHELON && Enemy->Formation == FOR_TRAIL) HitValue -= 0.2;
+		// 最終的な命中率を計算する
+		HitValue -= EvadeValue;
+		if (HitValue > 0.97) HitValue = 0.97;
+	}
 
 	/* 対潜攻撃だと色々変わるので先に判定しておく */
 	bool isAttackToSub = TargetK->isSubmarine();
@@ -1702,7 +1836,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		Damage *= Multiple;
 	}
 	/* 最終的なダメージ量を決定 */
-	int defense2 = static_cast<int>(0.7 * TargetK->Defense + 0.6 * RandInt(TargetK->Defense));
+	double defense2 = 0.7 * TargetK->Defense + 0.6 * RandInt(TargetK->Defense);
 	Damage = Damage - defense2;
 	//残り弾薬量補正
 	if(HunterK->Ammo < 50) {
