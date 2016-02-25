@@ -576,6 +576,7 @@
             "ソナー",
             "探照灯",
             "照明弾",
+            "水上艦要員",
             "その他"});
 			this.WTypeComboBox.Location = new System.Drawing.Point(189, 41);
 			this.WTypeComboBox.Name = "WTypeComboBox";
@@ -1013,6 +1014,7 @@
             "輸送艦",
             "陸上棲姫",
             "護衛要塞",
+            "練習巡洋艦",
             "その他"});
 			this.KKindComboBox.Location = new System.Drawing.Point(194, 92);
 			this.KKindComboBox.Name = "KKindComboBox";

@@ -12,7 +12,7 @@ void FirstTorpedoPhase(fleets**, const BP, const double*, const bool isShow = tr
 void FirePhase(fleets**, const BP, const AIR_MAS, const double*, const bool isShow = true);
 void FirePhase2(fleets**, const BP, const AIR_MAS, const double*, const bool isShow = true);
 void TorpedoPhase(fleets**, const BP, const double*, const bool isShow = true);
-void NightPhase(fleets**, const BP, const double*, const bool isShow = true);
+void NightPhase(fleets**, const BP, const double*, const bool, const bool isShow = true);
 WIN ShowListEnd(fleets**, const bool, const BP, const bool isShow = true);
 //補助
 int RoundUp5(int);
@@ -43,34 +43,51 @@ WIN fleets::Simulate(fleets &Enemy, const bool isShow, const kSimulateMode simul
 	/* 1.5. 艦隊行動の決定 */
 	BP BattlePosition = BPSelect(Fleets);
 	bool isShowBP = false;	//開幕雷撃までに終了した際に、交戦形態を表示するためのオプション
-	/* 2. 航空戦フェイズ */
-	double AllAttackPlus[BattleSize];
-	AIR_MAS AirWarResult = AirWarPhase(Fleets, isSearchSuccess, AllAttackPlus, isShow);
-	if(isExit(Fleets)) goto Exit;
-	/* 3. 開幕雷撃フェイズ */
-	FirstTorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
-	if(isExit(Fleets)) goto Exit;
-	/* 4. 交戦形態フェイズ */
-	if(isShow) cout << "【交戦形態フェイズ】\n";
-	if(isShow) cout << "　交戦形態：" << BPString[BattlePosition] << "\n";
-	isShowBP = true;
-	/* 5. 砲撃戦フェイズ */
-	FirePhase(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
-	if(isExit(Fleets)) goto Exit;
-	/* 5.5. 砲撃戦フェイズ(二巡目) */
-	FirePhase2(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
-	if(isExit(Fleets)) goto Exit;
-	/* 6. 雷撃戦フェイズ */
-	TorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
-	if(isExit(Fleets)) goto Exit;
-	/* 7. 夜戦フェイズ */
-	if (simulate_mode == kModeDN) {
-		NightPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
+	if (simulate_mode != kModeN) {
+		/* 2. 航空戦フェイズ */
+		double AllAttackPlus[BattleSize];
+		AIR_MAS AirWarResult = AirWarPhase(Fleets, isSearchSuccess, AllAttackPlus, isShow);
 		if (isExit(Fleets)) goto Exit;
+		/* 3. 開幕雷撃フェイズ */
+		FirstTorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
+		if (isExit(Fleets)) goto Exit;
+		/* 4. 交戦形態フェイズ */
+		if (isShow) cout << "【交戦形態フェイズ】\n";
+		if (isShow) cout << "　交戦形態：" << BPString[BattlePosition] << "\n";
+		isShowBP = true;
+		/* 5. 砲撃戦フェイズ */
+		FirePhase(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
+		if (isExit(Fleets)) goto Exit;
+		/* 5.5. 砲撃戦フェイズ(二巡目) */
+		FirePhase2(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
+		if (isExit(Fleets)) goto Exit;
+		/* 6. 雷撃戦フェイズ */
+		TorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
+		if (isExit(Fleets)) goto Exit;
+		/* 7. 夜戦フェイズ */
+		if (simulate_mode == kModeDN) {
+			NightPhase(Fleets, BattlePosition, AllAttackPlus, false, isShow);
+			if (isExit(Fleets)) goto Exit;
+		}
+	}
+	else {
+		/* 夜戦フェイズ2 */
+		if (simulate_mode == kModeN) {
+			double AllAttackPlus[BattleSize];
+			AllAttackPlus[0] = AllAttackPlus[1] = 1.0;
+			NightPhase(Fleets, BattlePosition, AllAttackPlus, true, isShow);
+			if (isExit(Fleets)) goto Exit;
+		}
 	}
 Exit:
 	/* X. 結果表示 */
 	WIN WinReason = ShowListEnd(Fleets, isShowBP, BattlePosition, isShow);
+
+	/* 弾薬補正 */
+	for (auto &it : this->Kammusues) {
+		it.Ammo -= 20;
+		if (it.Ammo < 0) it.Ammo = 0;
+	}
 
 	if(isShow) cout << "\n";
 	return WinReason;
@@ -137,7 +154,7 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 		if(!isSearchSuccess[i]) continue;	//索敵失敗時は制空値0
 		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
 			for(int j = 0; j < itKammusu->Slots; ++j) {
-				if((itKammusu->Weapons[j].isAir()) && (itKammusu->Airs[j] != 0)) hasAir[i] = true;
+				if((itKammusu->Weapons[j].isAirWar()) && (itKammusu->Airs[j] != 0)) hasAir[i] = true;
 				if(itKammusu->Weapons[j].isAirWar()) {
 					AntiAirScore[i] += static_cast<int>(itKammusu->Weapons[j].AntiAir * sqrt(itKammusu->Airs[j]));
 				}
@@ -281,6 +298,7 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			if(itKammusu->Weapons[j].isAirWar2()) {
 				kammusu *InterceptKammusu = &(Fleets[FriendSide]->Kammusues[Fleets[FriendSide]->RandomKammsu()]);
 				int KilledAirs = static_cast<int>((InterceptKammusu->AllAntiAir() + FleetsAntiAirBonus) * 0.2125);
+				if (InterceptKammusu->is_kammusu_) KilledAirs += 1;
 				if(itKammusu->Airs[j] > KilledAirs){
 					AllKilledAirs += KilledAirs;
 					itKammusu->Airs[j] -= KilledAirs;
@@ -299,6 +317,7 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			if(itKammusu->Weapons[j].isAirWar2()) {
 				kammusu *InterceptKammusu = &(Fleets[EnemySide]->Kammusues[Fleets[EnemySide]->RandomKammsu()]);
 				int KilledAirs = InterceptKammusu->AllAntiAir() / 25;
+				if (InterceptKammusu->is_kammusu_) KilledAirs += 1;
 				if(itKammusu->Airs[j] > KilledAirs){
 					AllKilledAirs += KilledAirs;
 					itKammusu->Airs[j] -= KilledAirs;
@@ -835,7 +854,7 @@ void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAtta
 }
 
 /* 夜戦フェイズ */
-void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isShow) {
+void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isNightGame, const bool isShow) {
 	if(isShow) cout << "【夜戦フェイズ】\n";
 	for(unsigned int i = 0; i < MaxKanmusu; ++i) {
 		for(int j = 0; j < BattleSize; ++j) {
@@ -856,7 +875,7 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 			}
 			if(!isAntiSubAttack) {
 				// 対潜攻撃でなければ、水上艦に向かって砲撃を行う
-				Target = Fleets[OtherSide]->RandomKammsuWithoutSS(Fleets[j]->Kammusues[j].hasBomb());
+				Target = Fleets[OtherSide]->RandomKammsuWithoutSS(Fleets[j]->Kammusues[j].hasBomb(), true);
 				if(Target != -1) {
 					BaseAttack = MovedKammusu->AllAttackInNight();
 					isNormalAttack = true;
@@ -865,8 +884,16 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 			// ダメージ処理
 			//対潜攻撃の場合
 			if(isAntiSubAttack) {
-				int Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack,
-					BattlePosition, AllAttackPlus[j], TURN_NIGHT, isShow);
+				int Damage;
+				if (isNightGame) {
+					// 開幕夜戦だと対潜は効く
+					Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack,
+						BattlePosition, AllAttackPlus[j], TURN_GUN, isShow);
+				}
+				else {
+					Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack,
+						BattlePosition, AllAttackPlus[j], TURN_NIGHT, isShow);
+				}
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
 				if(isShow) cout << "　" << MovedKammusu->Label(j) << "が" << TargetKammusu->Label(OtherSide) << "に" << Damage << "ダメージ！\n";
 				if(TargetKammusu->HP > Damage) {
@@ -893,29 +920,27 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 				double Multiple = 1.0;
 				bool isSpecialAttack = false;
 				AT AttackType = MovedKammusu->ShowAttackTypeInNight(AttackCount, Multiple, isSpecialAttack);
-				if((AttackType == CutinAttackT) || (AttackType == CutinAttackG)){
+				if((AttackType == CutinAttackT) || (AttackType == CutinAttackGT) || (AttackType == CutinAttackG)){
 					// カットイン確率を計算し、失敗した場合は通常攻撃に戻す
-					double CutinPer = 15.0;
+					int luck = MovedKammusu->Luck;
+					//熟練見張員補正
+					if (MovedKammusu->hasWatch()) luck += 5;
 					//カットイン種別によっては運キャップを考慮する
-					if(AttackType == CutinAttackT){
-						//魚雷カットインの運キャップは50
-						if(MovedKammusu->Luck > 50){
-							CutinPer += 50;
-						} else{
-							CutinPer += MovedKammusu->Luck;
-						}
-					} else{
-						//主砲カットインの運キャップは40
-						if(MovedKammusu->Luck > 40){
-							CutinPer += 40;
-						} else{
-							CutinPer += MovedKammusu->Luck;
-						}
+					switch (AttackType) {
+					case CutinAttackT:
+						if (luck > 60) luck = 60;
+						break;
+					case CutinAttackGT:
+						if (luck > 75) luck = 75;
+						break;
+					case CutinAttackG:
+						if (luck > 55) luck = 55;
+						break;
 					}
+					double CutinPer = sqrt(70 * luck);
 					//配置補正
-					if(i == 0) CutinPer += 15;
+					if (i == 0) CutinPer += 12.5;
 					//損傷補正
-					if(MovedKammusu->ShowDamage() == LightDamage)  CutinPer += 10;
 					if(MovedKammusu->ShowDamage() == MiddleDamage) CutinPer += 20;
 					//探照灯・照明弾補正
 					if(Fleets[j]->hasLight())         CutinPer += 5;
@@ -1282,7 +1307,7 @@ int fleets::RandomKammsuWithSS(){
 }
 
 /* 生き残ってる艦娘(水上艦)からランダムに選択する */
-int fleets::RandomKammsuWithoutSS(const bool has_bomb){
+int fleets::RandomKammsuWithoutSS(const bool has_bomb, const bool is_night){
 	//生存艦をリストアップ
 	vector<int> AlivedList;
 	for(int i = 0; i < Members; ++i) {
@@ -1296,9 +1321,39 @@ int fleets::RandomKammsuWithoutSS(const bool has_bomb){
 	//適当な場所の艦を返す
 	if(AlivedList.size() == 0){
 		return -1;
-	} else{
-		return AlivedList[RandInt(AlivedList.size())];
+	}else if (AlivedList.size() == 1) {
+		return AlivedList[0];
 	}
+	else {
+		// 夜戦なら探照灯を考慮する
+		int index = findSearchLight(AlivedList);
+		if (is_night && index != -1) {
+			const double search_light_per = 20;	//探照灯点灯時の誘引率(％)
+			if (CheckPercent(search_light_per)) {
+				return index;
+			}
+			else {
+				vector<int> AlivedList2;
+				for (auto &i : AlivedList) {
+					if (i != index) AlivedList2.push_back(i);
+				}
+				return AlivedList2[RandInt(AlivedList2.size())];
+			}
+		}
+		else {
+			return AlivedList[RandInt(AlivedList.size())];
+		}
+	}
+}
+
+/* 探照灯を持っている艦の位置を調べる(外れなら-1) */
+int fleets::findSearchLight(const vector<int> &AlivedList) {
+	for (auto &i : AlivedList) {
+		for (auto &it : Kammusues[i].Weapons) {
+			if (it.Type == Type_SLight) return i;
+		}
+	}
+	return -1;
 }
 
 /* 与えるダメージ量を計算する */
@@ -1319,14 +1374,12 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 			}
 		}
 		if(CanBlockList.size() != 0){
-			//かばう確率は1隻毎に5％だとする(試験実装)
-			for(unsigned int i = 0; i < CanBlockList.size(); ++i){
-				if(CheckPercent(5)){
-					int BlockKammusu = CanBlockList[i];
-					if(isShow) cout << "<<旗艦への攻撃を" << Enemy->Kammusues[BlockKammusu].Name << "がかばう！>>\n";
-					TargetK = &(Enemy->Kammusues[BlockKammusu]);
-					Target = BlockKammusu;
-				}
+			//かばう確率は40％で、どの艦に来るかはランダムである
+			if (CheckPercent(40)) {
+				int BlockKammusu = CanBlockList[RandInt(CanBlockList.size())];
+				if (isShow) cout << "<<旗艦への攻撃を" << Enemy->Kammusues[BlockKammusu].Name << "がかばう！>>\n";
+				TargetK = &(Enemy->Kammusues[BlockKammusu]);
+				Target = BlockKammusu;
 			}
 		}
 	}
@@ -1334,31 +1387,27 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 	/* 命中率を計算し、命中するかどうかを判定する */
 	// 回避側
 	double EvadeSum = TargetK->AllEvade();	//回避合計を計算
-	if(Friend->Formation == FOR_SUBTRAIL) EvadeSum /= 2;	//複縦陣だと相手の回避率が下がる
+	if(Enemy->Formation == FOR_ECHELON || Enemy->Formation == FOR_ABREAST) EvadeSum *= 1.2;
 	if(TargetK->ShowCond() == Happy) EvadeSum *= 1.8;
 	double EvadeValue;
-	if(EvadeSum <= 37.5){
-		EvadeValue = EvadeSum / 75;
+	if(EvadeSum <= 40){
+		EvadeValue = 0.03 + EvadeSum / 80;
 	} else {
-		EvadeValue = EvadeSum / (EvadeSum + 37.5);
+		EvadeValue = 0.03 + EvadeSum / (EvadeSum + 40);
 	}
-	//(速力差による回避補正。もちろん試験実装)
-	bool isEqualSpeed = true;
-	for(int i = 0; i < Enemy->Members; ++i){
-		if(Enemy->Kammusues[i].Speed != Enemy->Kammusues[0].Speed){
-			isEqualSpeed = false;
-			break;
-		}
-	}
-	if(!isEqualSpeed) EvadeValue -= 0.01;
+	//(速力差による回避補正は有意差無しとなりました)
 	// 命中側
-	double HitValue = 1.0 + (sqrt((HunterK->Level - 1) * 5) + HunterK->AllHit()) / 100;
-	if(HunterK->ShowCond() == RedFatigue) HitValue /= 2;
-	HitValue += HunterK->Luck * 0.001;		//命中に運が影響する可能性が？
-	HitValue -= HunterK->NonFit();			//フィット砲補正
-	if(Turn == TURN_NIGHT) HitValue *= 1.5;	//夜戦時における命中補正(試験実装)
+	double HitValue = 1.0 + sqrt(HunterK->Level - 1) / 50 + HunterK->AllHit() / 100;
+	if(HunterK->ShowCond() == RedFatigue) HitValue /= 1.9;
+	HitValue += HunterK->Luck * 0.001 * 1.5;		//命中に運が影響する可能性が
+	HitValue -= HunterK->NonFitBB();			//フィット砲補正
+	if(Friend->Formation == FOR_SUBTRAIL || Friend->Formation == FOR_ECHELON || Friend->Formation == FOR_ABREAST) HitValue += 0.2;
+	if (Friend->Formation == FOR_SUBTRAIL && Enemy->Formation == FOR_ABREAST) HitValue -= 0.2;
+	if (Friend->Formation == FOR_ABREAST && Enemy->Formation == FOR_ECHELON) HitValue -= 0.2;
+	if (Friend->Formation == FOR_ECHELON && Enemy->Formation == FOR_TRAIL) HitValue -= 0.2;
 	// 最終的な命中率を計算する
 	HitValue -= EvadeValue;
+	if (HitValue > 0.97) HitValue = 0.97;
 
 	/* 対潜攻撃だと色々変わるので先に判定しておく */
 	bool isAttackToSub = TargetK->isSubmarine();
@@ -1427,6 +1476,8 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 				Damage *= Multiple;
 			}
 		}
+		//軽巡軽量砲定数
+		Damage += HunterK->FitCL();
 	}
 
 	/* キャップ */
@@ -1441,6 +1492,31 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 	}
 
 	/* キャップ後補正 */
+	//徹甲弾補正
+	if (TargetK->Kind == SC_BB || TargetK->Kind == SC_BBV ||
+		TargetK->Kind == SC_CA || TargetK->Kind == SC_CAV ||
+		TargetK->Kind == SC_CV || TargetK->Kind == SC_ACV ||
+		TargetK->Kind == SC_AF || TargetK->Kind == SC_FT) {
+		bool has_gun = false, has_subgun = false, has_ap = false, has_radar = false;
+		for (auto &it : HunterK->Weapons) {
+			if (it.Type == Type_Gun) {
+				if (it.Name.find("徹甲弾") != string::npos) has_ap = true; else has_gun = true;
+			}
+			if (it.Type == Type_SubGun) has_subgun = true;
+			if (it.Type == Type_SmallS || it.Type == Type_LargeS) has_radar = true;
+		}
+		if (has_gun && has_ap) {
+			if (has_subgun) {
+				Damage = static_cast<int>(1.15 * Damage);
+			}
+			else if (has_radar) {
+				Damage = static_cast<int>(1.10 * Damage);
+			}
+			else {
+				Damage = static_cast<int>(1.08 * Damage);
+			}
+		}
+	}
 	//クリティカル補正
 	if(Turn == TURN_AIR) {
 		if(Rand(mt) < 0.025) {
@@ -1450,7 +1526,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		if(Rand(mt) < 0.30) {
 			Damage *= 1.5;
 		}
-	}else if(Rand(mt) < 0.15) {
+	}else if(Rand(mt) < 0.24 * HitValue / (HitValue + 0.75)) {
 		Damage *= 1.5;
 	}
 	//触接補正
@@ -1460,10 +1536,11 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		Damage *= Multiple;
 	}
 	/* 最終的なダメージ量を決定 */
-	Damage = Damage - TargetK->Defense * (Rand(mt) * 2 / 3 + 2.0 / 3);
+	int defense2 = static_cast<int>(0.7 * TargetK->Defense + 0.6 * RandInt(TargetK->Defense));
+	Damage = Damage - defense2;
 	//残り弾薬量補正
 	if(HunterK->Ammo < 50) {
-		Damage *= 2 * HunterK->Ammo / 100;
+		Damage *= 2.0 * HunterK->Ammo / 100;
 	}
 	//弾着観測射撃時、カットインが入ると命中率が劇的に上昇する
 	if((Turn == TURN_GUN) && (isSpecialAttack)){
@@ -1481,7 +1558,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 	if((Turn == TURN_NIGHT) && (isAttackToSub)) Damage = 0.0;
 	//カスダメ時は相手残り耐久の6～14％を与える
 	if(Damage < 1.0) {
-		Damage = TargetK->HP * (Rand(mt) * 0.08 + 0.06);
+		Damage = 0.06 * TargetK->HP + 0.08 * RandInt(TargetK->HP);
 	}
 	return static_cast<int>(Damage);
 }

@@ -108,5 +108,8 @@ KanColleSimulator(KCS) Ver.0.6
 ・http://www.atmarkit.co.jp/fdotnet/dotnettips/398readall/readall.html
 ・他多数のC#関連ページ
 
+【ライセンス】
+MITライセンスとします。
+
 【連絡先】
 ysr.hsp@gmail.com

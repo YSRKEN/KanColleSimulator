@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <vector>
 #include <random>
 /* その他プリプロセッサ */
@@ -17,6 +18,7 @@ using std::getline;
 using std::string;
 using std::stringstream;
 using std::vector;
+using std::tuple;
 
 /* 定数宣言 */
 // 艦種
@@ -37,6 +39,7 @@ enum SC{
 	SC_LST,		//輸送艦
 	SC_AF,		//陸上棲姫
 	SC_FT,		//護衛要塞
+	SC_CP,		//練習巡洋艦
 	SC_Other	//その他(揚陸艦とか工作艦とか潜水母艦とかはどう扱うのん？)
 };
 // 種別
@@ -85,8 +88,8 @@ const string AMString[] = {"制空権喪失", "航空劣勢", "航空均衡", "�
 enum TURN {TURN_AIR, TURN_TOR_FIRST, TURN_GUN, TURN_TOR, TURN_NIGHT};
 //疲労状態(赤疲労・橙疲労・普通・キラキラ)
 enum COND {RedFatigue, OrangeFatigue, Normal, Happy};
-//攻撃方法(魚雷カットイン・主砲カットイン・連撃・通常)
-enum AT {CutinAttackT, CutinAttackG, DoubleAttack, NormalAttack};
+//攻撃方法(魚雷カットイン・主魚カットイン・主砲カットイン・連撃・通常)
+enum AT {CutinAttackT, CutinAttackGT, CutinAttackG, DoubleAttack, NormalAttack};
 //勝利判定(敗北D・戦術的敗北C・戦術的勝利B・勝利A・勝利S・完全勝利S)
 enum WIN {WIN_D, WIN_C, WIN_B, WIN_A, WIN_S, WIN_SS, WIN_Size};
 const string WINString[] = {"敗北D", "戦術的敗北C", "戦術的勝利B", "勝利A", "勝利S", "完全勝利S"};
@@ -162,7 +165,8 @@ struct kammusu {
 	int AllAntiSub();					//総対潜能力を返す
 	int AllAttack();					//総攻撃力を返す
 	int AllAttackInNight();				//夜戦火力を返す
-	double NonFit();					//フィットしない砲による命中率の逆補正
+	double NonFitBB();					//戦艦にフィットしない砲による命中率の逆補正
+	double FitCL();						//軽巡系にフィットする砲による威力の補正
 	RANGE MaxRange();					//最大射程を返す
 	void ShowAttackType(vector<int>&);				//発動可能な弾着観測射撃の種類を返す
 	AT ShowAttackTypeInNight(int&, double&, bool&);	//夜間特殊攻撃の種類・および倍率を返す
@@ -174,7 +178,8 @@ struct kammusu {
 	bool isTorpedo();				//雷撃可能かを判定
 	bool isMoveInNight();			//夜戦可能かを判定
 	bool isAntiSubInNight();		//夜戦時に対潜攻撃可能かを判定
-	bool kammusu::hasBomb();		//艦爆を持っているかを判定
+	bool hasBomb();					//艦爆を持っているかを判定
+	bool hasWatch();				//熟練見張員を所持しているかを判定
 };
 struct fleets{
 	/* メンバ変数 */
@@ -192,9 +197,10 @@ struct fleets{
 	bool hasHeavyDamage();				//大破以上の艦が存在するかを判定する
 	int RandomKammsu();					//生き残ってる艦娘からランダムに選択する
 	int RandomKammsuWithSS();			//生き残ってる艦娘(潜水艦系)からランダムに選択する
-	int RandomKammsuWithoutSS(const bool);	//生き残ってる艦娘(水上機系)からランダムに選択する
+	int RandomKammsuWithoutSS(const bool, const bool is_night = false);	//生き残ってる艦娘(水上機系)からランダムに選択する
 	int hasAlived();					//生存艦の数をカウントする
 	double ResultsGauge();				//戦果ゲージ量を計算する
+	int findSearchLight(const vector<int>&);	//探照灯を持っている艦の位置を調べる(外れなら-1)
 	//その他
 	void SetKammusu(const kammusu&);	//艦娘をセットする
 	void Reset();						//状態をリセットする
@@ -209,6 +215,6 @@ extern std::mt19937 mt;
 extern std::uniform_real_distribution<> Rand;
 
 extern int RandInt(const int);
-extern void ReadMapData(vector<vector<fleets>>&, const string);
+extern void ReadMapData(vector<vector<fleets>>&, vector<vector<kSimulateMode>>&, const string);
 extern vector<weapon> ReadWeaponData();
 extern vector<kammusu> ReadKammusuData();

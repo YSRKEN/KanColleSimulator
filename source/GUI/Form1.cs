@@ -1100,9 +1100,9 @@ namespace KanColleSimGUI
 			/* バージョン情報表示 */
 			string VerInfo = "";
 			VerInfo += SoftName + "\n";
-			VerInfo += "バージョン：0.6\n";
+			VerInfo += "バージョン：0.7\n";
 			VerInfo += "作成者：YSR\n";
-			VerInfo += "最終更新日時：2016/02/13 16:35\n";
+			VerInfo += "最終更新日：2016/02/17\n";
 			VerInfo += "連絡先：ysr.ken@gmail.com";
 			MessageBox.Show(VerInfo, SoftName);
 		}

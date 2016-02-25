@@ -133,7 +133,8 @@ int main(const int argc, const char *argv[]) {
 			MyFleetsData.ReadData(FleetsDataName[0]);
 			// マップの情報を読み込む
 			vector<vector<fleets>> MapData;
-			ReadMapData(MapData, FleetsDataName[1]);
+			vector<vector<kSimulateMode>> MapSim;
+			ReadMapData(MapData, MapSim, FleetsDataName[1]);
 			// 夜戦用陣形を読み込む
 			string temp(argv[4]);
 			FORMATION night_formation;
@@ -163,16 +164,21 @@ int main(const int argc, const char *argv[]) {
 				for (rsize_t i = 0; i < MapData.size(); ++i) {
 					cout << "《" << (i + 1) << "戦目》\n";
 					// 1戦毎にランダムに編成を選び、あてがう
-					FleetsData[1] = MapData[i][RandInt(MapData[i].size())];
+					rsize_t j = RandInt(MapData[i].size());
+					FleetsData[1] = MapData[i][j];
 					// 自陣形を敵編成から判断する
 					FleetsData[FriendSide].Formation = FOR_TRAIL;
-						// 敵旗艦が潜水艦ならば単横陣
+					//敵旗艦が潜水艦ならば単横陣
 					if (FleetsData[EnemySide].Kammusues[0].isSubmarine()) {
 						FleetsData[FriendSide].Formation = FOR_ABREAST;
 					}
+					//夜戦マスなら指定した陣形にする
+					if (MapSim[i][j] == kModeN) {
+						FleetsData[FriendSide].Formation = night_formation;
+					}
 					if(i != MapData.size() - 1){
 						// 道中
-						FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeD);
+						FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, MapSim[i][j]);
 						// 誰も大破していないかを調べる
 						if (FleetsData[FriendSide].hasHeavyDamage()) {
 							cout << "●道中撤退！●\n";
@@ -180,7 +186,7 @@ int main(const int argc, const char *argv[]) {
 						}
 					}else {
 						// ボス
-						FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeDN);
+						FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, MapSim[i][j]);
 					}
 				}
 				cout << "●終了！●\n";
@@ -196,21 +202,20 @@ int main(const int argc, const char *argv[]) {
 					FleetsData[0] = MyFleetsData;
 					for (rsize_t i = 0; i < areas; ++i) {
 						// 1戦毎にランダムに編成を選び、あてがう
-						FleetsData[1] = MapData[i][RandInt(MapData[i].size())];
+						rsize_t j = RandInt(MapData[i].size());
+						FleetsData[1] = MapData[i][j];
 						// 自陣形を敵編成から判断する
 						FleetsData[FriendSide].Formation = FOR_TRAIL;
-						// 敵旗艦が潜水艦ならば単横陣
+						//敵旗艦が潜水艦ならば単横陣
 						if (FleetsData[EnemySide].Kammusues[0].isSubmarine()) {
 							FleetsData[FriendSide].Formation = FOR_ABREAST;
 						}
-						// シミュレート(勝利判定をカウント)
-						if (i != MapData.size() - 1) {
-							// 道中
-							++WinReason[i][FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, kModeD)];
-						}else {
-							// ボス
-							++WinReason[i][FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, kModeDN)];
+						//夜戦マスなら指定した陣形にする
+						if (MapSim[i][j] == kModeN) {
+							FleetsData[FriendSide].Formation = night_formation;
 						}
+						// シミュレート(勝利判定をカウント)
+						++WinReason[i][FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, MapSim[i][j])];
 						// 誰も大破していないかを調べる
 						if (i != areas - 1) {
 							bool loss_flg = false;

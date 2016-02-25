@@ -178,7 +178,8 @@ bool kammusu::isAntiSub(){
 	}
 	if((Kind == SC_CL)
 	|| (Kind == SC_CLT)
-	|| (Kind == SC_DD)) {
+	|| (Kind == SC_DD)
+	|| (Kind == SC_CP)) {
 		if(AntiSub != 0) return true;
 	}
 	return false;
@@ -252,7 +253,8 @@ bool kammusu::isTorpedo() {
 	|| (Kind == SC_CA)
 	|| (Kind == SC_CAV)
 	|| (Kind == SC_SS)
-	|| (Kind == SC_SSV)) {
+	|| (Kind == SC_SSV)
+	|| (Kind == SC_CP)) {
 		return true;
 	}
 	// 水上機母艦は「改」「甲」のみ可能
@@ -295,7 +297,8 @@ bool kammusu::isMoveInNight() {
 bool kammusu::isAntiSubInNight(){
 	if((Kind == SC_CL)
 	|| (Kind == SC_CLT)
-	|| (Kind == SC_DD)) {
+	|| (Kind == SC_DD)
+	|| (Kind == SC_CP)) {
 		if(AntiSub != 0) return true;
 	}
 	return false;
@@ -377,11 +380,10 @@ AT kammusu::ShowAttackTypeInNight(int &AttackCount, double &Multiple, bool &isSp
 		isSpecialAttack = true;
 		AttackType = CutinAttackG;
 	} else if(((GunCount == 1) || (GunCount == 2)) && (TorpedoCount == 1)){
-		//これを魚雷カットインに含めていいのかはよく分からない……
 		AttackCount = 2;
 		Multiple = 1.3;
 		isSpecialAttack = true;
-		AttackType = CutinAttackT;
+		AttackType = CutinAttackGT;
 	} else if((GunCount == 2) && (SubGunCount == 0) && (TorpedoCount == 0)){
 		AttackCount = 2;
 		Multiple = 1.2;
@@ -401,40 +403,94 @@ AT kammusu::ShowAttackTypeInNight(int &AttackCount, double &Multiple, bool &isSp
 	return AttackType;
 }
 
-/* フィットしない砲による命中率の逆補正 */
-//一般には、金剛・伊勢・扶桑型→35.6、Bismarck→38、長門型→41、大和型→46cmが
-//フィット砲とされており、それより大きな砲を積むと命中率が低下するそうな
-//ただ、具体的な低下割合が不明だったので、フィットしない41cm→1つにつき3%、
-//フィットしない46cm→1つにつき3%(長門型)、6%(その他)という大味な補正を掛けている
-//(扶桑型改二については、情報を受け41cmまで大丈夫なようにした)
-double kammusu::NonFit(){
-	double MinusHit = 0.0;
-	// 数を数えておく
-	int Sum_41 = 0, Sum_46 = 0;
-	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
-		if(itWeapon->Name.find("41cm") != string::npos) ++Sum_41;
-		if(itWeapon->Name.find("46cm") != string::npos) ++Sum_46;
-	}
-	// 種類により減衰量を決定する
-	if((Name.find("金剛") != string::npos)
-	|| (Name.find("比叡") != string::npos)
-	|| (Name.find("榛名") != string::npos)
-	|| (Name.find("霧島") != string::npos)
-	|| (Name.find("伊勢") != string::npos)
-	|| (Name.find("日向") != string::npos)){
-		MinusHit = Sum_41 * 0.03 + Sum_46 * 0.06;
-	}
-	if((Name.find("扶桑") != string::npos)
-	|| (Name.find("山城") != string::npos)){
-		if(Name.find("改二") != string::npos){
-			MinusHit = Sum_46 * 0.03;
-		} else{
-			MinusHit = Sum_41 * 0.03 + Sum_46 * 0.06;
+/* 熟練見張員を所持しているかを判定 */
+bool kammusu::hasWatch() {
+	for (auto &it : Weapons) {
+		if (it.Name == "熟練見張員") {
+			return true;
 		}
 	}
-	if((Name.find("長門") != string::npos)
-	|| (Name.find("陸奥") != string::npos)){
-		MinusHit = Sum_46 * 0.03;
+	return false;
+}
+
+/* フィットしない砲による命中率の逆補正 */
+double kammusu::NonFitBB(){
+	double MinusHit = 0.0;
+	// 通常命中率低下は赤疲労検証での減少率÷2ぐらいでちょうどいいのでは？
+	const double fit[] = { 0.0, -0.01365, -0.0315, -0.0261, -0.0319};
+	const double unfit_small[] = { 0.0, 0.00845, 0.04, 0.0422, 0.04255};
+	const double unfit_large[] = {0.0, 0.05375, 0.06365, 0.08415, 0.09585};
+	// 数を数えておく
+	int Sum_356 = 0, Sum_38 = 0, Sum_381 = 0, Sum_41 = 0, Sum_46 = 0, Sum_46X = 0;
+	for (auto &it : Weapons) {
+		if (it.Name.find("35.6cm") != string::npos) ++Sum_356;
+		if (it.Name.find("38cm"  ) != string::npos) ++Sum_38;
+		if (it.Name.find("381mm" ) != string::npos) ++Sum_381;
+		if (it.Name.find("41cm"  ) != string::npos) ++Sum_41;
+		if (it.Name.find("46cm") != string::npos) {
+			if (it.Name.find("試製") != string::npos) ++Sum_46X; else ++Sum_46;
+		}
+	}
+	// 種類により減衰量を決定する
+	//伊勢型および扶桑型
+	if ((Name.find("伊勢") != string::npos)
+		|| (Name.find("日向") != string::npos)
+		|| (Name.find("扶桑") != string::npos)
+		|| (Name.find("山城") != string::npos)) {
+		if (Name.find("改") != string::npos) {
+			// 航戦
+			MinusHit = fit[Sum_41] + unfit_large[Sum_46] + unfit_large[Sum_46X];
+		}
+		else {
+			// 戦艦
+			MinusHit = fit[Sum_356] + fit[Sum_38] + fit[Sum_381] + unfit_large[Sum_46] + unfit_small[Sum_46X];
+			if ((Name.find("扶桑") != string::npos)
+				|| (Name.find("山城") != string::npos)) {
+				MinusHit += fit[Sum_41];
+			}
+		}
+	}
+	//金剛型およびビスマルク
+	if ((Name.find("金剛") != string::npos)
+		|| (Name.find("比叡") != string::npos)
+		|| (Name.find("榛名") != string::npos)
+		|| (Name.find("霧島") != string::npos)
+		|| (Name.find("Bismarck") != string::npos)) {
+		MinusHit = fit[Sum_356] + fit[Sum_38] + unfit_small[Sum_41] + unfit_large[Sum_46] + unfit_small[Sum_46X];
+		if (Name.find("Bismarck") == string::npos) {
+			MinusHit += unfit_small[Sum_381];
+		}
+	}
+	//イタリア艦
+	if ((Name.find("Littorio") != string::npos)
+		|| (Name.find("Italia") != string::npos)
+		|| (Name.find("Roma") != string::npos)) {
+		MinusHit = fit[Sum_356] + fit[Sum_381] + unfit_small[Sum_41] + unfit_large[Sum_46] + unfit_large[Sum_46X];
+	}
+	//長門型
+	if ((Name.find("長門") != string::npos)
+		|| (Name.find("陸奥") != string::npos)) {
+		MinusHit = fit[Sum_356] + fit[Sum_381] + fit[Sum_41] + unfit_small[Sum_46] + unfit_small[Sum_46X];
+	}
+	//大和型
+	if ((Name.find("大和") != string::npos)
+		|| (Name.find("武蔵") != string::npos)) {
+		MinusHit = fit[Sum_41];
 	}
 	return MinusHit;
+}
+
+/* 軽巡系にフィットする砲による威力の補正 */
+double kammusu::FitCL() {
+	if (Kind != SC_CL && Kind != SC_CLT && Kind != SC_CP) return 0.0;
+	// 数を数えておく
+	int light_gun_single = 0, light_gun_double = 0;
+	for (auto &it : Weapons) {
+		if (it.Name == "14cm単装砲") ++light_gun_single;
+		if (it.Name == "15.2cm単装砲") ++light_gun_single;
+		if (it.Name == "14cm連装砲") ++light_gun_double;
+		if (it.Name == "15.2cm連装砲") ++light_gun_double;
+		if (it.Name == "15.2cm連装砲改") ++light_gun_double;
+	}
+	return sqrt(light_gun_single) + 2.0 * sqrt(light_gun_double);
 }

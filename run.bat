@@ -15,4 +15,9 @@ KanColleSim 1 fleets4.txt 3-5削り_上_high.map 梯形陣 マップ >> log.txt
 echo "" >> log.txt
 echo "マップモード その4" >> log.txt
 KanColleSim 10000 fleets4.txt 3-5削り_上_high.map 梯形陣 マップ >> log.txt
+echo "マップモード その5" >> log.txt
+KanColleSim 1 fleets6.txt 2-5削り_上_high.map 梯形陣 マップ >> log.txt
+echo "" >> log.txt
+echo "マップモード その6" >> log.txt
+KanColleSim 10000 fleets6.txt 2-5削り_上_high.map 梯形陣 マップ >> log.txt
 pause
