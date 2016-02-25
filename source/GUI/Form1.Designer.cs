@@ -165,6 +165,21 @@
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.Read1Button = new System.Windows.Forms.Button();
 			this.Fleets1ListBox = new System.Windows.Forms.ListBox();
+			this.MapModeTab = new System.Windows.Forms.TabPage();
+			this.groupBox8 = new System.Windows.Forms.GroupBox();
+			this.OutputTextBox2 = new System.Windows.Forms.TextBox();
+			this.groupBox7 = new System.Windows.Forms.GroupBox();
+			this.BattleCountComboBox2 = new System.Windows.Forms.ComboBox();
+			this.label44 = new System.Windows.Forms.Label();
+			this.For3ComboBox = new System.Windows.Forms.ComboBox();
+			this.label46 = new System.Windows.Forms.Label();
+			this.CalcButton2 = new System.Windows.Forms.Button();
+			this.groupBox6 = new System.Windows.Forms.GroupBox();
+			this.Read4Button = new System.Windows.Forms.Button();
+			this.PatternListBox = new System.Windows.Forms.ListBox();
+			this.groupBox5 = new System.Windows.Forms.GroupBox();
+			this.Read3Button = new System.Windows.Forms.Button();
+			this.Fleets3ListBox = new System.Windows.Forms.ListBox();
 			this.saveFileDialog = new System.Windows.Forms.SaveFileDialog();
 			this.MenuStrip.SuspendLayout();
 			this.TabControl.SuspendLayout();
@@ -176,6 +191,11 @@
 			this.groupBox4.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.groupBox1.SuspendLayout();
+			this.MapModeTab.SuspendLayout();
+			this.groupBox8.SuspendLayout();
+			this.groupBox7.SuspendLayout();
+			this.groupBox6.SuspendLayout();
+			this.groupBox5.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// MenuStrip
@@ -198,39 +218,39 @@
             this.toolStripSeparator1,
             this.FileCloseMenu});
 			this.FileMenu.Name = "FileMenu";
-			this.FileMenu.Size = new System.Drawing.Size(81, 20);
+			this.FileMenu.Size = new System.Drawing.Size(66, 20);
 			this.FileMenu.Text = "ファイル(&F)";
 			// 
 			// FileOpenMenu
 			// 
 			this.FileOpenMenu.Name = "FileOpenMenu";
-			this.FileOpenMenu.Size = new System.Drawing.Size(195, 22);
+			this.FileOpenMenu.Size = new System.Drawing.Size(186, 22);
 			this.FileOpenMenu.Text = "開く(&O)...";
 			this.FileOpenMenu.Click += new System.EventHandler(this.FileOpenMenu_Click);
 			// 
 			// FileSaveSMenu
 			// 
 			this.FileSaveSMenu.Name = "FileSaveSMenu";
-			this.FileSaveSMenu.Size = new System.Drawing.Size(195, 22);
+			this.FileSaveSMenu.Size = new System.Drawing.Size(186, 22);
 			this.FileSaveSMenu.Text = "上書き保存(&S)";
 			this.FileSaveSMenu.Click += new System.EventHandler(this.FileSaveSMenu_Click);
 			// 
 			// FileSaveAMenu
 			// 
 			this.FileSaveAMenu.Name = "FileSaveAMenu";
-			this.FileSaveAMenu.Size = new System.Drawing.Size(195, 22);
+			this.FileSaveAMenu.Size = new System.Drawing.Size(186, 22);
 			this.FileSaveAMenu.Text = "名前を付けて保存(&A)...";
 			this.FileSaveAMenu.Click += new System.EventHandler(this.FileSaveAMenu_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this.toolStripSeparator1.Name = "toolStripSeparator1";
-			this.toolStripSeparator1.Size = new System.Drawing.Size(192, 6);
+			this.toolStripSeparator1.Size = new System.Drawing.Size(183, 6);
 			// 
 			// FileCloseMenu
 			// 
 			this.FileCloseMenu.Name = "FileCloseMenu";
-			this.FileCloseMenu.Size = new System.Drawing.Size(195, 22);
+			this.FileCloseMenu.Size = new System.Drawing.Size(186, 22);
 			this.FileCloseMenu.Text = "終了(&X)";
 			this.FileCloseMenu.Click += new System.EventHandler(this.FileCloseMenu_Click);
 			// 
@@ -239,13 +259,13 @@
 			this.ヘルプHToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.VerInfoMenu});
 			this.ヘルプHToolStripMenuItem.Name = "ヘルプHToolStripMenuItem";
-			this.ヘルプHToolStripMenuItem.Size = new System.Drawing.Size(72, 20);
+			this.ヘルプHToolStripMenuItem.Size = new System.Drawing.Size(65, 20);
 			this.ヘルプHToolStripMenuItem.Text = "ヘルプ(&H)";
 			// 
 			// VerInfoMenu
 			// 
 			this.VerInfoMenu.Name = "VerInfoMenu";
-			this.VerInfoMenu.Size = new System.Drawing.Size(174, 22);
+			this.VerInfoMenu.Size = new System.Drawing.Size(158, 22);
 			this.VerInfoMenu.Text = "バージョン情報(&A)";
 			this.VerInfoMenu.Click += new System.EventHandler(this.VerInfoMenu_Click);
 			// 
@@ -255,6 +275,7 @@
 			this.TabControl.Controls.Add(this.KammusuTab);
 			this.TabControl.Controls.Add(this.FleetsTab);
 			this.TabControl.Controls.Add(this.SimulationTab);
+			this.TabControl.Controls.Add(this.MapModeTab);
 			this.TabControl.Location = new System.Drawing.Point(12, 38);
 			this.TabControl.Name = "TabControl";
 			this.TabControl.SelectedIndex = 0;
@@ -989,6 +1010,9 @@
             "駆逐艦",
             "潜水艦",
             "潜水空母",
+            "輸送艦",
+            "陸上棲姫",
+            "護衛要塞",
             "その他"});
 			this.KKindComboBox.Location = new System.Drawing.Point(194, 92);
 			this.KKindComboBox.Name = "KKindComboBox";
@@ -1607,6 +1631,173 @@
 			this.Fleets1ListBox.Size = new System.Drawing.Size(91, 76);
 			this.Fleets1ListBox.TabIndex = 0;
 			// 
+			// MapModeTab
+			// 
+			this.MapModeTab.Controls.Add(this.groupBox8);
+			this.MapModeTab.Controls.Add(this.groupBox7);
+			this.MapModeTab.Controls.Add(this.CalcButton2);
+			this.MapModeTab.Controls.Add(this.groupBox6);
+			this.MapModeTab.Controls.Add(this.groupBox5);
+			this.MapModeTab.Location = new System.Drawing.Point(4, 22);
+			this.MapModeTab.Name = "MapModeTab";
+			this.MapModeTab.Padding = new System.Windows.Forms.Padding(3);
+			this.MapModeTab.Size = new System.Drawing.Size(402, 336);
+			this.MapModeTab.TabIndex = 4;
+			this.MapModeTab.Text = "海域シミュレーション";
+			this.MapModeTab.UseVisualStyleBackColor = true;
+			// 
+			// groupBox8
+			// 
+			this.groupBox8.Controls.Add(this.OutputTextBox2);
+			this.groupBox8.Location = new System.Drawing.Point(129, 120);
+			this.groupBox8.Name = "groupBox8";
+			this.groupBox8.Size = new System.Drawing.Size(256, 197);
+			this.groupBox8.TabIndex = 11;
+			this.groupBox8.TabStop = false;
+			this.groupBox8.Text = "シミュレーション結果";
+			// 
+			// OutputTextBox2
+			// 
+			this.OutputTextBox2.Location = new System.Drawing.Point(8, 18);
+			this.OutputTextBox2.Multiline = true;
+			this.OutputTextBox2.Name = "OutputTextBox2";
+			this.OutputTextBox2.ReadOnly = true;
+			this.OutputTextBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this.OutputTextBox2.Size = new System.Drawing.Size(242, 173);
+			this.OutputTextBox2.TabIndex = 35;
+			// 
+			// groupBox7
+			// 
+			this.groupBox7.Controls.Add(this.BattleCountComboBox2);
+			this.groupBox7.Controls.Add(this.label44);
+			this.groupBox7.Controls.Add(this.For3ComboBox);
+			this.groupBox7.Controls.Add(this.label46);
+			this.groupBox7.Location = new System.Drawing.Point(129, 20);
+			this.groupBox7.Name = "groupBox7";
+			this.groupBox7.Size = new System.Drawing.Size(256, 94);
+			this.groupBox7.TabIndex = 10;
+			this.groupBox7.TabStop = false;
+			this.groupBox7.Text = "シミュレーション設定";
+			// 
+			// BattleCountComboBox2
+			// 
+			this.BattleCountComboBox2.FormattingEnabled = true;
+			this.BattleCountComboBox2.Items.AddRange(new object[] {
+            "1",
+            "10",
+            "100",
+            "1000",
+            "10000",
+            "100000"});
+			this.BattleCountComboBox2.Location = new System.Drawing.Point(89, 49);
+			this.BattleCountComboBox2.Name = "BattleCountComboBox2";
+			this.BattleCountComboBox2.Size = new System.Drawing.Size(91, 20);
+			this.BattleCountComboBox2.TabIndex = 6;
+			this.BattleCountComboBox2.Text = "(回数を選択)";
+			// 
+			// label44
+			// 
+			this.label44.AutoSize = true;
+			this.label44.Location = new System.Drawing.Point(30, 52);
+			this.label44.Name = "label44";
+			this.label44.Size = new System.Drawing.Size(53, 12);
+			this.label44.TabIndex = 35;
+			this.label44.Text = "試行回数";
+			// 
+			// For3ComboBox
+			// 
+			this.For3ComboBox.FormattingEnabled = true;
+			this.For3ComboBox.Items.AddRange(new object[] {
+            "単縦陣",
+            "複縦陣",
+            "輪形陣",
+            "梯形陣",
+            "単横陣"});
+			this.For3ComboBox.Location = new System.Drawing.Point(89, 24);
+			this.For3ComboBox.Name = "For3ComboBox";
+			this.For3ComboBox.Size = new System.Drawing.Size(91, 20);
+			this.For3ComboBox.TabIndex = 4;
+			this.For3ComboBox.Text = "(陣形を選択)";
+			// 
+			// label46
+			// 
+			this.label46.AutoSize = true;
+			this.label46.Location = new System.Drawing.Point(6, 27);
+			this.label46.Name = "label46";
+			this.label46.Size = new System.Drawing.Size(77, 12);
+			this.label46.TabIndex = 0;
+			this.label46.Text = "開幕夜戦陣形";
+			// 
+			// CalcButton2
+			// 
+			this.CalcButton2.Location = new System.Drawing.Point(25, 294);
+			this.CalcButton2.Name = "CalcButton2";
+			this.CalcButton2.Size = new System.Drawing.Size(91, 23);
+			this.CalcButton2.TabIndex = 9;
+			this.CalcButton2.Text = "計算開始";
+			this.CalcButton2.UseVisualStyleBackColor = true;
+			this.CalcButton2.Click += new System.EventHandler(this.CalcButton2_Click);
+			// 
+			// groupBox6
+			// 
+			this.groupBox6.Controls.Add(this.Read4Button);
+			this.groupBox6.Controls.Add(this.PatternListBox);
+			this.groupBox6.Location = new System.Drawing.Point(19, 157);
+			this.groupBox6.Name = "groupBox6";
+			this.groupBox6.Size = new System.Drawing.Size(104, 131);
+			this.groupBox6.TabIndex = 3;
+			this.groupBox6.TabStop = false;
+			this.groupBox6.Text = "出撃する海域";
+			// 
+			// Read4Button
+			// 
+			this.Read4Button.Location = new System.Drawing.Point(6, 100);
+			this.Read4Button.Name = "Read4Button";
+			this.Read4Button.Size = new System.Drawing.Size(91, 23);
+			this.Read4Button.TabIndex = 3;
+			this.Read4Button.Text = "読み込み";
+			this.Read4Button.UseVisualStyleBackColor = true;
+			this.Read4Button.Click += new System.EventHandler(this.Read4Button_Click);
+			// 
+			// PatternListBox
+			// 
+			this.PatternListBox.FormattingEnabled = true;
+			this.PatternListBox.ItemHeight = 12;
+			this.PatternListBox.Location = new System.Drawing.Point(6, 18);
+			this.PatternListBox.Name = "PatternListBox";
+			this.PatternListBox.Size = new System.Drawing.Size(91, 76);
+			this.PatternListBox.TabIndex = 2;
+			// 
+			// groupBox5
+			// 
+			this.groupBox5.Controls.Add(this.Read3Button);
+			this.groupBox5.Controls.Add(this.Fleets3ListBox);
+			this.groupBox5.Location = new System.Drawing.Point(19, 20);
+			this.groupBox5.Name = "groupBox5";
+			this.groupBox5.Size = new System.Drawing.Size(104, 131);
+			this.groupBox5.TabIndex = 2;
+			this.groupBox5.TabStop = false;
+			this.groupBox5.Text = "出撃する艦隊";
+			// 
+			// Read3Button
+			// 
+			this.Read3Button.Location = new System.Drawing.Point(6, 100);
+			this.Read3Button.Name = "Read3Button";
+			this.Read3Button.Size = new System.Drawing.Size(91, 23);
+			this.Read3Button.TabIndex = 1;
+			this.Read3Button.Text = "読み込み";
+			this.Read3Button.UseVisualStyleBackColor = true;
+			this.Read3Button.Click += new System.EventHandler(this.Read3Button_Click);
+			// 
+			// Fleets3ListBox
+			// 
+			this.Fleets3ListBox.FormattingEnabled = true;
+			this.Fleets3ListBox.ItemHeight = 12;
+			this.Fleets3ListBox.Location = new System.Drawing.Point(6, 18);
+			this.Fleets3ListBox.Name = "Fleets3ListBox";
+			this.Fleets3ListBox.Size = new System.Drawing.Size(91, 76);
+			this.Fleets3ListBox.TabIndex = 0;
+			// 
 			// MainForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1635,6 +1826,13 @@
 			this.groupBox4.PerformLayout();
 			this.groupBox2.ResumeLayout(false);
 			this.groupBox1.ResumeLayout(false);
+			this.MapModeTab.ResumeLayout(false);
+			this.groupBox8.ResumeLayout(false);
+			this.groupBox8.PerformLayout();
+			this.groupBox7.ResumeLayout(false);
+			this.groupBox7.PerformLayout();
+			this.groupBox6.ResumeLayout(false);
+			this.groupBox5.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -1780,6 +1978,21 @@
 		private System.Windows.Forms.TextBox FAllAntiAirTextBox;
 		private System.Windows.Forms.SaveFileDialog saveFileDialog;
 		private System.Windows.Forms.CheckBox SwapCheckBox;
+        private System.Windows.Forms.TabPage MapModeTab;
+        private System.Windows.Forms.GroupBox groupBox8;
+        private System.Windows.Forms.TextBox OutputTextBox2;
+        private System.Windows.Forms.GroupBox groupBox7;
+        private System.Windows.Forms.ComboBox BattleCountComboBox2;
+        private System.Windows.Forms.Label label44;
+        private System.Windows.Forms.ComboBox For3ComboBox;
+        private System.Windows.Forms.Label label46;
+        private System.Windows.Forms.Button CalcButton2;
+        private System.Windows.Forms.GroupBox groupBox6;
+        private System.Windows.Forms.Button Read4Button;
+        private System.Windows.Forms.ListBox PatternListBox;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Button Read3Button;
+        private System.Windows.Forms.ListBox Fleets3ListBox;
     }
 }
 

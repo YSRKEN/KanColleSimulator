@@ -1,5 +1,18 @@
-KanColleSim 1 fleets1.txt fleets2.txt ’Pcw ’Pcw
-KanColleSim 1 fleets2.txt fleets1.txt ’Pcw ’Pcw
-KanColleSim 10000 fleets1.txt fleets2.txt ’Pcw ’Pcw
-KanColleSim 10000 fleets2.txt fleets1.txt ’Pcw ’Pcw
+echo "’Êíƒ‚[ƒh ‚»‚Ì1" > log.txt
+KanColleSim 1 fleets1.txt fleets2.txt ’Pcw ’Pcw >> log.txt
+echo "" >> log.txt
+echo "’Êíƒ‚[ƒh ‚»‚Ì2" >> log.txt
+KanColleSim 10000 fleets1.txt fleets2.txt ’Pcw ’Pcw >> log.txt
+echo "" >> log.txt
+echo "ƒ}ƒbƒvƒ‚[ƒh ‚»‚Ì1" >> log.txt
+KanColleSim 1 fleets3.txt 1-5_high.map ’òŒ`w ƒ}ƒbƒv >> log.txt
+echo "" >> log.txt
+echo "ƒ}ƒbƒvƒ‚[ƒh ‚»‚Ì2" >> log.txt
+KanColleSim 10000 fleets3.txt 1-5_high.map ’òŒ`w ƒ}ƒbƒv >> log.txt
+echo "" >> log.txt
+echo "ƒ}ƒbƒvƒ‚[ƒh ‚»‚Ì3" >> log.txt
+KanColleSim 1 fleets4.txt 3-5í‚è_ã_high.map ’òŒ`w ƒ}ƒbƒv >> log.txt
+echo "" >> log.txt
+echo "ƒ}ƒbƒvƒ‚[ƒh ‚»‚Ì4" >> log.txt
+KanColleSim 10000 fleets4.txt 3-5í‚è_ã_high.map ’òŒ`w ƒ}ƒbƒv >> log.txt
 pause

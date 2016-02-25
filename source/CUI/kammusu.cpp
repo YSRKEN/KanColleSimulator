@@ -1,6 +1,6 @@
-#include "header.h"
+ï»¿#include "header.h"
 
-/* ‘¹ŠQó‹µ‚ğ¦‚· */
+/* æå®³çŠ¶æ³ã‚’ç¤ºã™ */
 DAMAGE kammusu::ShowDamage(){
 	if(HP == MaxHP) return NoDamage;
 	if(HP == 0) return Lost;
@@ -10,7 +10,7 @@ DAMAGE kammusu::ShowDamage(){
 	return HeavyDamage;
 }
 
-/* ö…ŠÍŒn‚©‚ğ”»’è */
+/* æ½œæ°´è‰¦ç³»ã‹ã‚’åˆ¤å®š */
 bool kammusu::isSubmarine(){
 	if((Kind == SC_SS)
 	|| (Kind == SC_SSV)) {
@@ -20,7 +20,7 @@ bool kammusu::isSubmarine(){
 	}
 }
 
-/* ‘‘Î‹ó’l‚ğ•Ô‚· */
+/* ç·å¯¾ç©ºå€¤ã‚’è¿”ã™ */
 int kammusu::AllAntiAir(){
 	int AASum = AntiAir;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -29,14 +29,14 @@ int kammusu::AllAntiAir(){
 	return AASum;
 }
 
-/* ‘Ï‹vî•ñ‚ğ•Ô‚· */
+/* è€ä¹…æƒ…å ±ã‚’è¿”ã™ */
 string kammusu::ShowHP() {
 	stringstream Output;
 	Output << HP << "/" << MaxHP << "(" << DMString[ShowDamage()] << ")";
 	return Output.str();
 }
 
-/* ŠÈˆÕ“I‚ÈŒ¨‘‚«‚ğ•Ô‚· */
+/* ç°¡æ˜“çš„ãªè‚©æ›¸ãã‚’è¿”ã™ */
 string kammusu::Label(const int pos) {
 	stringstream Output;
 	if(pos >= 0) {
@@ -46,7 +46,7 @@ string kammusu::Label(const int pos) {
 	return Output.str();
 }
 
-/* ‘‰ñ”ğ‚ğ•Ô‚· */
+/* ç·å›é¿ã‚’è¿”ã™ */
 int kammusu::AllEvade() {
 	int ESum = Evade;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -55,7 +55,7 @@ int kammusu::AllEvade() {
 	return ESum;
 }
 
-/* ‘–½’†‚ğ•Ô‚· */
+/* ç·å‘½ä¸­ã‚’è¿”ã™ */
 int kammusu::AllHit() {
 	int HSum = 0;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -64,8 +64,8 @@ int kammusu::AllHit() {
 	return HSum;
 }
 
-/* ”æ˜Jó‘Ô‚ğ•Ô‚· */
-//Ô”æ˜J‚âƒLƒ‰ƒLƒ‰ˆÈŠO‚Å‚Ìí“¬‚É‚¨‚¯‚é‰e‹¿‚Í‚Í‚Á‚«‚è‚µ‚È‚¢
+/* ç–²åŠ´çŠ¶æ…‹ã‚’è¿”ã™ */
+//èµ¤ç–²åŠ´ã‚„ã‚­ãƒ©ã‚­ãƒ©ä»¥å¤–ã§ã®æˆ¦é—˜ã«ãŠã‘ã‚‹å½±éŸ¿ã¯ã¯ã£ãã‚Šã—ãªã„
 COND kammusu::ShowCond() {
 	if(cond < 20){
 		return RedFatigue;
@@ -78,11 +78,13 @@ COND kammusu::ShowCond() {
 	}
 }
 
-/* ŠJ–‹—‹Œ‚‰Â”\‚©‚ğ”»’è */
+/* é–‹å¹•é›·æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š */
 bool kammusu::isFirstTorpedo(){
-	//Lv10ˆÈã‚Ìö…ŠÍŒn‚Í–³ğŒ‚ÅOK
+	//Lv10ä»¥ä¸Šã®æ½œæ°´è‰¦ç³»ã¯ç„¡æ¡ä»¶ã§OK
 	if((isSubmarine()) && (Level >= 10)) return true;
-	//‚»‚êˆÈŠO‚Ìö…ŠÍŒnE—‹„E…ã‹@•êŠÍ‚Íb•W“I‚ª•K{
+	//æ·±æµ·æ£²è‰¦ãªã‚‰ç„¡æ¡ä»¶ã§OK
+	if((!is_kammusu_) && isSubmarine()) return true;
+	//ãã‚Œä»¥å¤–ã®æ½œæ°´è‰¦ç³»ãƒ»é›·å·¡ãƒ»æ°´ä¸Šæ©Ÿæ¯è‰¦ã¯ç”²æ¨™çš„ãŒå¿…é ˆ
 	if((Kind == SC_SS)
 	|| (Kind == SC_SSV)
 	|| (Kind == SC_CLT)
@@ -93,14 +95,25 @@ bool kammusu::isFirstTorpedo(){
 			}
 		}
 	}
-	//ˆ¢•ŒG‰ü“ñ—p‚Ìİ’è
-	if(Name.find("ˆ¢•ŒG‰ü“ñ") != string::npos){
-		return true;
+	//é˜¿æ­¦éšˆæ”¹äºŒç”¨ã®è¨­å®š
+	if(Name.find("é˜¿æ­¦éšˆæ”¹äºŒ") != string::npos){
+		for (vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
+			if (itWeapon->Type == Type_SpecialSS) {
+				return true;
+			}
+		}
 	}
+	//ãƒ¬ç´šeliteç”¨ã®è¨­å®š
+	if (Name.find("ãƒ¬ç´š") != string::npos) {
+		if (Name.find("ã‚¨ãƒª") != string::npos) return true;
+		if (Name.find("elite") != string::npos) return true;
+	}
+	// é§†é€æ°´é¬¼ç”¨ã®è¨­å®š
+	if (Name.find("é§†é€æ°´é¬¼") != string::npos) return true;
 	return false;
 }
 
-/* ‘—‹‘•‚ğ•Ô‚· */
+/* ç·é›·è£…ã‚’è¿”ã™ */
 int kammusu::AllTorpedo() {
 	int TSum = Torpedo;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -109,9 +122,9 @@ int kammusu::AllTorpedo() {
 	return TSum;
 }
 
-/* ’‹í‚ÅUŒ‚‰Â”\‚©‚ğ”»’è */
+/* æ˜¼æˆ¦ã§æ”»æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š */
 bool kammusu::isMoveInGun() {
-	//’‹í‚ÅUŒ‚•s‰Â”\ccŒ‚’¾ÏA’†”j‹ó•êA‘å”j‘•b‹ó•êAŠÍÚ‹@Ø‚ê‹ó•êAö…ŠÍŒn
+	//æ˜¼æˆ¦ã§æ”»æ’ƒä¸å¯èƒ½â€¦â€¦æ’ƒæ²ˆæ¸ˆã€ä¸­ç ´ç©ºæ¯ã€å¤§ç ´è£…ç”²ç©ºæ¯ã€è‰¦è¼‰æ©Ÿåˆ‡ã‚Œç©ºæ¯ã€æ½œæ°´è‰¦ç³»
 	if(ShowDamage() == Lost) return false;
 	if((ShowDamage() == HeavyDamage)  &&  (Kind == SC_ACV)) return false;
 	if((ShowDamage() >= MiddleDamage) && ((Kind == SC_CV) || (Kind == SC_CVL))) return false;
@@ -129,7 +142,7 @@ bool kammusu::isMoveInGun() {
 	return true;
 }
 
-/* Å‘åË’ö‚ğ•Ô‚· */
+/* æœ€å¤§å°„ç¨‹ã‚’è¿”ã™ */
 RANGE kammusu::MaxRange(){
 	RANGE MaxR = Range;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -138,7 +151,7 @@ RANGE kammusu::MaxRange(){
 	return MaxR;
 }
 
-/* ‘ÎöUŒ‚‰Â”\‚©‚ğ•Ô‚· */
+/* å¯¾æ½œæ”»æ’ƒå¯èƒ½ã‹ã‚’è¿”ã™ */
 bool kammusu::isAntiSub(){
 	if((Kind == SC_BBV)
 	|| (Kind == SC_AV)
@@ -152,7 +165,8 @@ bool kammusu::isAntiSub(){
 		}
 		if(isAS) return true;
 	}
-	if(Kind == SC_CVL){
+	if((Kind == SC_CVL)
+	|| (Kind == SC_AF)){
 		bool isAS = false;
 		for(int i = 0; i < Slots; ++i){
 			if((Weapons[i].isAntiSub2()) && (Airs[i] != 0)){
@@ -170,10 +184,10 @@ bool kammusu::isAntiSub(){
 	return false;
 }
 
-/* ‘‘Îö”\—Í‚ğ•Ô‚· */
+/* ç·å¯¾æ½œèƒ½åŠ›ã‚’è¿”ã™ */
 int kammusu::AllAntiSub(){
-	int BaseAS = AntiSub;	//‘f‚Ì‘Îö
-	int WeaponAS = 0;		//‘•”õ‘Îö
+	int BaseAS = AntiSub;	//ç´ ã®å¯¾æ½œ
+	int WeaponAS = 0;		//è£…å‚™å¯¾æ½œ
 	bool hasDP = false, hasSonar = false;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
 		WeaponAS += itWeapon->AntiSub;
@@ -183,32 +197,32 @@ int kammusu::AllAntiSub(){
 		|| (itWeapon->Type == Type_PSS)
 		|| (itWeapon->Type == Type_WS)
 		|| (itWeapon->Type == Type_WSN)){
-			//’ã@‹@‚Ìê‡‚Í‘•”õ‘Îö‚Å‚Í‚È‚­‘f‚Ì‘Îö‚É’Ç‰Á‚³‚ê‚éH
+			//åµå¯Ÿæ©Ÿã®å ´åˆã¯è£…å‚™å¯¾æ½œã§ã¯ãªãç´ ã®å¯¾æ½œã«è¿½åŠ ã•ã‚Œã‚‹ï¼Ÿ
 			WeaponAS -= itWeapon->AntiSub;
 			BaseAS += itWeapon->AntiSub;
 		}
 	}
-	//UŒ‚—Í‚ğŒvZ
+	//æ”»æ’ƒåŠ›ã‚’è¨ˆç®—
 	int AntiSubPower = BaseAS / 5 + WeaponAS * 2;
-	//UŒ‚•Ê•â³
+	//æ”»æ’ƒåˆ¥è£œæ­£
 	if(hasDP || hasSonar){
-		//”š—‹‚âƒ\ƒi[‚É‚æ‚éUŒ‚‚Ìê‡
+		//çˆ†é›·ã‚„ã‚½ãƒŠãƒ¼ã«ã‚ˆã‚‹æ”»æ’ƒã®å ´åˆ
 		AntiSubPower += 25;
 	} else{
-		//q‹ó‹@‚É‚æ‚éUŒ‚‚Ìê‡
+		//èˆªç©ºæ©Ÿã«ã‚ˆã‚‹æ”»æ’ƒã®å ´åˆ
 		AntiSubPower += 10;
 	}
-	//ƒVƒiƒW[•â³
+	//ã‚·ãƒŠã‚¸ãƒ¼è£œæ­£
 	if(hasDP && hasSonar) AntiSubPower = static_cast<int>(AntiSubPower * 1.15);
 	return AntiSubPower;
 }
 
-/* ‘UŒ‚—Í‚ğ•Ô‚· */
+/* ç·æ”»æ’ƒåŠ›ã‚’è¿”ã™ */
 int kammusu::AllAttack(){
 	int BaseAttack = 0;
-	if((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL)){
-		// ‹ó•êŒn
-		// (Š®‘S‚É0‚¶‚á‚È‚¢ŒÀ‚è‚ ‚é‚à‚Ì‚Æ‚µ‚Äˆµ‚¤‚Æ‚¢‚¤“äd—l)
+	if((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL) || (Kind == SC_AF) || (Kind == SC_FT)){
+		// ç©ºæ¯ç³»
+		// (å®Œå…¨ã«0ã˜ã‚ƒãªã„é™ã‚Šã‚ã‚‹ã‚‚ã®ã¨ã—ã¦æ‰±ã†ã¨ã„ã†è¬ä»•æ§˜)
 		int AllTorpedo = 0, AllBomb = 0;
 		for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
 			AllTorpedo += itWeapon->Torpedo;
@@ -217,7 +231,7 @@ int kammusu::AllAttack(){
 		BaseAttack = static_cast<int>((Attack + AllTorpedo) * 1.5 + AllBomb * 2 + 55);
 
 	} else{
-		// ”ñ‹ó•êŒn
+		// éç©ºæ¯ç³»
 		BaseAttack += Attack;
 		for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
 			BaseAttack += itWeapon->Attack;
@@ -227,11 +241,11 @@ int kammusu::AllAttack(){
 	return BaseAttack;
 }
 
-/* —‹Œ‚‰Â”\‚©‚ğ”»’è@*/
+/* é›·æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®šã€€*/
 bool kammusu::isTorpedo() {
-	// ‘f‚Ì—‹‘•’l‚ª0‚¾‚Æ—‹Œ‚•s‰Â”\
+	// ç´ ã®é›·è£…å€¤ãŒ0ã ã¨é›·æ’ƒä¸å¯èƒ½
 	if(Torpedo == 0) return false;
-	// ‹ì’€EŒy„E—‹„Ed„Eq„Eö…ŠÍ‚Í–³ğŒ‚É‰Â”\
+	// é§†é€ãƒ»è»½å·¡ãƒ»é›·å·¡ãƒ»é‡å·¡ãƒ»èˆªå·¡ãƒ»æ½œæ°´è‰¦ã¯ç„¡æ¡ä»¶ã«å¯èƒ½
 	if((Kind == SC_DD)
 	|| (Kind == SC_CL)
 	|| (Kind == SC_CLT)
@@ -241,28 +255,43 @@ bool kammusu::isTorpedo() {
 	|| (Kind == SC_SSV)) {
 		return true;
 	}
-	// …ã‹@•êŠÍ‚Íu‰üvubv‚Ì‚İ‰Â”\
-	// (‘f‚Ì—‹‘•’l‚ª0‚¾‚Æ—‹Œ‚‚Å‚«‚È‚¢)
+	// æ°´ä¸Šæ©Ÿæ¯è‰¦ã¯ã€Œæ”¹ã€ã€Œç”²ã€ã®ã¿å¯èƒ½
+	// (ç´ ã®é›·è£…å€¤ãŒ0ã ã¨é›·æ’ƒã§ããªã„)
 	if(Kind == SC_AV) {
-		if((Name.find("‰ü") != string::npos)
-		|| (Name.find("b") != string::npos)) {
+		if((Name.find("æ”¹") != string::npos)
+		|| (Name.find("ç”²") != string::npos)) {
 			return true;
 		}
 		return false;
 	}
-	// Bismarck drei‚Í—‹‘•’l‚ğ‚Â‚Ì‚ÅAíŠÍ‚È‚Ì‚É—‹Œ‚‰Â”\
-	if(Name == "Bismarck drei") return true;
+	// ãã®ä»–ã€é›·æ’ƒå¯èƒ½ãªé€£ä¸­
+	if(Name.find("Bismarck drei") != string::npos) return true;
+	if(Name.find("ãƒ¬ç´š") != string::npos) return true;
+	if (Name.find("é¬¼") != string::npos) return true;
+	if (Name.find("å§«") != string::npos) return true;
+	if (Name.find("è­·è¡›è¦å¡") != string::npos) return true;
 	return false;
 }
 
-/* –éí‰Â”\‚©‚ğ”»’è */
+/* å¤œæˆ¦å¯èƒ½ã‹ã‚’åˆ¤å®š */
 bool kammusu::isMoveInNight() {
 	if(ShowDamage() >= HeavyDamage) return false;
-	if((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL)) return false;
+	if ((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL)) {
+		// æ•µç©ºæ¯åŠã³ã‚°ãƒ©ãƒ¼ãƒ•ã¯å¤œæˆ¦æ”»æ’ƒå¯èƒ½ã€ãã†ã§ãªã„ç©ºæ¯ã¯ä¸å¯
+		if (!is_kammusu_) {
+			if ((Name.find("ãƒ•ãƒ©") != string::npos) || (Name.find("flagship") != string::npos)) {
+				if (Name.find("ãƒ²ç´š") != string::npos) return true;
+				if (Name.find("ãƒŒç´š") != string::npos) return true;
+			}
+		}
+		if (Name.find("Graf") != string::npos) return true;
+		if (Name.find("ã‚°ãƒ©ãƒ¼ãƒ•") != string::npos) return true;
+		return false;
+	}
 	return true;
 }
 
-/* –éí‚É‘ÎöUŒ‚‰Â”\‚©‚ğ”»’è */
+/* å¤œæˆ¦æ™‚ã«å¯¾æ½œæ”»æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š */
 bool kammusu::isAntiSubInNight(){
 	if((Kind == SC_CL)
 	|| (Kind == SC_CLT)
@@ -272,7 +301,15 @@ bool kammusu::isAntiSubInNight(){
 	return false;
 }
 
-/* –éí‰Î—Í‚ğ•Ô‚· */
+/* è‰¦çˆ†ã‚’æŒã£ã¦ã„ã‚‹ã‹ã‚’åˆ¤å®š */
+bool kammusu::hasBomb() {
+	for (auto &it : Weapons) {
+		if (it.Type == Type_PB) return true;
+	}
+	return false;
+}
+
+/* å¤œæˆ¦ç«åŠ›ã‚’è¿”ã™ */
 int kammusu::AllAttackInNight(){
 	int BaseAttack = Attack + Torpedo;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -282,7 +319,7 @@ int kammusu::AllAttackInNight(){
 	return BaseAttack;
 }
 
-/* ’ã@‹@‚ğ‚Á‚Ä‚¢‚é‚©‚ğ”»’è */
+/* åµå¯Ÿæ©Ÿã‚’æŒã£ã¦ã„ã‚‹ã‹ã‚’åˆ¤å®š */
 bool kammusu::isSearchAir(){
 	for(int i = 0; i < Slots; ++i) {
 		if((Airs[i] > 0) && ((Weapons[i].Type == Type_WS) || (Weapons[i].Type == Type_WB))){
@@ -292,20 +329,20 @@ bool kammusu::isSearchAir(){
 	return false;
 }
 
-/* ”­“®‰Â”\‚È’e’…ŠÏ‘ªËŒ‚‚Ìí—Ş‚ğ•Ô‚· */
+/* ç™ºå‹•å¯èƒ½ãªå¼¾ç€è¦³æ¸¬å°„æ’ƒã®ç¨®é¡ã‚’è¿”ã™ */
 void kammusu::ShowAttackType(vector<int> &isAttackType){
-	// Še‘•”õ‚Ì”‚ğ”‚¦‚é
+	// å„è£…å‚™ã®æ•°ã‚’æ•°ãˆã‚‹
 	int GunCount = 0, SubGunCount = 0, APCount = 0, RadarCount = 0;
 	AT AttackType = NormalAttack;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
 		if(itWeapon->Type == Type_Gun)     ++GunCount;
 		if(itWeapon->Type == Type_SubGun) ++SubGunCount;
-		if(itWeapon->Name.find("“Ob’e") != string::npos) ++APCount;
+		if(itWeapon->Name.find("å¾¹ç”²å¼¾") != string::npos) ++APCount;
 		if((itWeapon->Type == Type_SmallS) || (itWeapon->Type == Type_LargeS)) ++RadarCount;
 	}
-	// í—Ş‚ğ”»’è
-	//ååƒJƒbƒgƒCƒ“Eå“OƒJƒbƒgƒCƒ“Eå“dƒJƒbƒgƒCƒ“Eå•›ƒJƒbƒgƒCƒ“E˜AŒ‚‚ğ
-	//‚»‚ê‚¼‚êA`E‚Æ’u‚­‚ÆAA‚ÆEAB‚ÆDAC‚ÆDAD‚ÆE‚Í•¡‡‚·‚é‰Â”\«‚ª‚ ‚é
+	// ç¨®é¡ã‚’åˆ¤å®š
+	//ä¸»ä¸»ã‚«ãƒƒãƒˆã‚¤ãƒ³ãƒ»ä¸»å¾¹ã‚«ãƒƒãƒˆã‚¤ãƒ³ãƒ»ä¸»é›»ã‚«ãƒƒãƒˆã‚¤ãƒ³ãƒ»ä¸»å‰¯ã‚«ãƒƒãƒˆã‚¤ãƒ³ãƒ»é€£æ’ƒã‚’
+	//ãã‚Œãã‚ŒAï½Eã¨ç½®ãã¨ã€Aã¨Eã€Bã¨Dã€Cã¨Dã€Dã¨Eã¯è¤‡åˆã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹
 	if((GunCount == 2) && (SubGunCount == 0) && (APCount == 1) && (RadarCount == 0)) isAttackType[0] = 1;
 	if((GunCount == 1) && (SubGunCount == 1) && (APCount == 1) && (RadarCount == 0)) isAttackType[1] = 1;
 	if((GunCount == 1) && (SubGunCount == 1) && (APCount == 0) && (RadarCount == 1)) isAttackType[2] = 1;
@@ -313,9 +350,9 @@ void kammusu::ShowAttackType(vector<int> &isAttackType){
 	if(GunCount >= 2) isAttackType[4] = 1;
 }
 
-/* –éŠÔ“ÁêUŒ‚‚Ìí—ŞE‚¨‚æ‚Ñ”{—¦‚ğ•Ô‚· */
+/* å¤œé–“ç‰¹æ®Šæ”»æ’ƒã®ç¨®é¡ãƒ»ãŠã‚ˆã³å€ç‡ã‚’è¿”ã™ */
 AT kammusu::ShowAttackTypeInNight(int &AttackCount, double &Multiple, bool &isSpecialAttack){
-	// Še‘•”õ‚Ì”‚ğ”‚¦‚é
+	// å„è£…å‚™ã®æ•°ã‚’æ•°ãˆã‚‹
 	int GunCount = 0, SubGunCount = 0, TorpedoCount = 0;
 	AT AttackType = NormalAttack;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
@@ -323,7 +360,7 @@ AT kammusu::ShowAttackTypeInNight(int &AttackCount, double &Multiple, bool &isSp
 		if(itWeapon->Type == Type_SubGun ) ++SubGunCount;
 		if(itWeapon->Type == Type_Torpedo) ++TorpedoCount;
 	}
-	// í—Ş‚ğ”»’è
+	// ç¨®é¡ã‚’åˆ¤å®š
 	if(TorpedoCount >= 2){
 		AttackCount = 2;
 		Multiple = 1.5;
@@ -340,7 +377,7 @@ AT kammusu::ShowAttackTypeInNight(int &AttackCount, double &Multiple, bool &isSp
 		isSpecialAttack = true;
 		AttackType = CutinAttackG;
 	} else if(((GunCount == 1) || (GunCount == 2)) && (TorpedoCount == 1)){
-		//‚±‚ê‚ğ‹›—‹ƒJƒbƒgƒCƒ“‚ÉŠÜ‚ß‚Ä‚¢‚¢‚Ì‚©‚Í‚æ‚­•ª‚©‚ç‚È‚¢cc
+		//ã“ã‚Œã‚’é­šé›·ã‚«ãƒƒãƒˆã‚¤ãƒ³ã«å«ã‚ã¦ã„ã„ã®ã‹ã¯ã‚ˆãåˆ†ã‹ã‚‰ãªã„â€¦â€¦
 		AttackCount = 2;
 		Multiple = 1.3;
 		isSpecialAttack = true;
@@ -364,39 +401,39 @@ AT kammusu::ShowAttackTypeInNight(int &AttackCount, double &Multiple, bool &isSp
 	return AttackType;
 }
 
-/* ƒtƒBƒbƒg‚µ‚È‚¢–C‚É‚æ‚é–½’†—¦‚Ì‹t•â³ */
-//ˆê”Ê‚É‚ÍA‹à„EˆÉ¨E•}ŒKŒ^¨35.6ABismarck¨38A’·–åŒ^¨41A‘å˜aŒ^¨46cm‚ª
-//ƒtƒBƒbƒg–C‚Æ‚³‚ê‚Ä‚¨‚èA‚»‚ê‚æ‚è‘å‚«‚È–C‚ğÏ‚Ş‚Æ–½’†—¦‚ª’á‰º‚·‚é‚»‚¤‚È
-//‚½‚¾A‹ï‘Ì“I‚È’á‰ºŠ„‡‚ª•s–¾‚¾‚Á‚½‚Ì‚ÅAƒtƒBƒbƒg‚µ‚È‚¢41cm¨1‚Â‚É‚Â‚«3%A
-//ƒtƒBƒbƒg‚µ‚È‚¢46cm¨1‚Â‚É‚Â‚«3%(’·–åŒ^)A6%(‚»‚Ì‘¼)‚Æ‚¢‚¤‘å–¡‚È•â³‚ğŠ|‚¯‚Ä‚¢‚é
-//(•}ŒKŒ^‰ü“ñ‚É‚Â‚¢‚Ä‚ÍAî•ñ‚ğó‚¯41cm‚Ü‚Å‘åä•v‚È‚æ‚¤‚É‚µ‚½)
+/* ãƒ•ã‚£ãƒƒãƒˆã—ãªã„ç ²ã«ã‚ˆã‚‹å‘½ä¸­ç‡ã®é€†è£œæ­£ */
+//ä¸€èˆ¬ã«ã¯ã€é‡‘å‰›ãƒ»ä¼Šå‹¢ãƒ»æ‰¶æ¡‘å‹â†’35.6ã€Bismarckâ†’38ã€é•·é–€å‹â†’41ã€å¤§å’Œå‹â†’46cmãŒ
+//ãƒ•ã‚£ãƒƒãƒˆç ²ã¨ã•ã‚Œã¦ãŠã‚Šã€ãã‚Œã‚ˆã‚Šå¤§ããªç ²ã‚’ç©ã‚€ã¨å‘½ä¸­ç‡ãŒä½ä¸‹ã™ã‚‹ãã†ãª
+//ãŸã ã€å…·ä½“çš„ãªä½ä¸‹å‰²åˆãŒä¸æ˜ã ã£ãŸã®ã§ã€ãƒ•ã‚£ãƒƒãƒˆã—ãªã„41cmâ†’1ã¤ã«ã¤ã3%ã€
+//ãƒ•ã‚£ãƒƒãƒˆã—ãªã„46cmâ†’1ã¤ã«ã¤ã3%(é•·é–€å‹)ã€6%(ãã®ä»–)ã¨ã„ã†å¤§å‘³ãªè£œæ­£ã‚’æ›ã‘ã¦ã„ã‚‹
+//(æ‰¶æ¡‘å‹æ”¹äºŒã«ã¤ã„ã¦ã¯ã€æƒ…å ±ã‚’å—ã‘41cmã¾ã§å¤§ä¸ˆå¤«ãªã‚ˆã†ã«ã—ãŸ)
 double kammusu::NonFit(){
 	double MinusHit = 0.0;
-	// ”‚ğ”‚¦‚Ä‚¨‚­
+	// æ•°ã‚’æ•°ãˆã¦ãŠã
 	int Sum_41 = 0, Sum_46 = 0;
 	for(vector<weapon>::iterator itWeapon = Weapons.begin(); itWeapon != Weapons.end(); ++itWeapon) {
 		if(itWeapon->Name.find("41cm") != string::npos) ++Sum_41;
 		if(itWeapon->Name.find("46cm") != string::npos) ++Sum_46;
 	}
-	// í—Ş‚É‚æ‚èŒ¸Š—Ê‚ğŒˆ’è‚·‚é
-	if((Name.find("‹à„") != string::npos)
-	|| (Name.find("”ä‰b") != string::npos)
-	|| (Name.find("Y–¼") != string::npos)
-	|| (Name.find("–¶“‡") != string::npos)
-	|| (Name.find("ˆÉ¨") != string::npos)
-	|| (Name.find("“úŒü") != string::npos)){
+	// ç¨®é¡ã«ã‚ˆã‚Šæ¸›è¡°é‡ã‚’æ±ºå®šã™ã‚‹
+	if((Name.find("é‡‘å‰›") != string::npos)
+	|| (Name.find("æ¯”å¡") != string::npos)
+	|| (Name.find("æ¦›å") != string::npos)
+	|| (Name.find("éœ§å³¶") != string::npos)
+	|| (Name.find("ä¼Šå‹¢") != string::npos)
+	|| (Name.find("æ—¥å‘") != string::npos)){
 		MinusHit = Sum_41 * 0.03 + Sum_46 * 0.06;
 	}
-	if((Name.find("•}ŒK") != string::npos)
-	|| (Name.find("Ré") != string::npos)){
-		if(Name.find("‰ü“ñ") != string::npos){
+	if((Name.find("æ‰¶æ¡‘") != string::npos)
+	|| (Name.find("å±±åŸ") != string::npos)){
+		if(Name.find("æ”¹äºŒ") != string::npos){
 			MinusHit = Sum_46 * 0.03;
 		} else{
 			MinusHit = Sum_41 * 0.03 + Sum_46 * 0.06;
 		}
 	}
-	if((Name.find("’·–å") != string::npos)
-	|| (Name.find("—¤‰œ") != string::npos)){
+	if((Name.find("é•·é–€") != string::npos)
+	|| (Name.find("é™¸å¥¥") != string::npos)){
 		MinusHit = Sum_46 * 0.03;
 	}
 	return MinusHit;

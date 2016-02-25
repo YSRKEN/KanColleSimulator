@@ -1,16 +1,9 @@
-#include <fstream>
-#include <random>
-#include "header.h"
+ï»¿#include "header.h"
 
 using std::fstream;
 
-/* —”‚Ì’è‹` */
-std::random_device rd;
-std::mt19937 mt(rd());
-std::uniform_real_distribution<> Rand(0.0, 1.0);
-
-/* ƒvƒƒgƒ^ƒCƒvéŒ¾ */
-//ƒƒCƒ“
+/* ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€ */
+//ãƒ¡ã‚¤ãƒ³
 void ShowListStart(fleets**, const bool isShow = true);
 void SearchPhase(fleets**, bool*, const bool isShow = true);
 BP BPSelect(fleets**);
@@ -21,11 +14,10 @@ void FirePhase2(fleets**, const BP, const AIR_MAS, const double*, const bool isS
 void TorpedoPhase(fleets**, const BP, const double*, const bool isShow = true);
 void NightPhase(fleets**, const BP, const double*, const bool isShow = true);
 WIN ShowListEnd(fleets**, const bool, const BP, const bool isShow = true);
-//•â•
+//è£œåŠ©
 int RoundUp5(int);
 bool isExit(fleets**);
 bool isAllSubmarine1(fleets*);
-int RandInt(const int);
 bool CheckPercent(const double);
 int AttackAction(fleets*, fleets*, const int, int&, const int, const BP, const double, const TURN,
                  const bool isShow = true, const double Multiple = 1.0, const bool isSpecialAttack = false);
@@ -36,91 +28,93 @@ SC ToKind(const string);
 SPEED ToSpeed(const string);
 
 /* ---------------------- */
-/* |  ƒVƒ~ƒ…ƒŒ[ƒgŠÖŒW  | */
-/* | (ƒƒCƒ“‚Æ‚È‚éŠÖ”) | */
+/* |  ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆé–¢ä¿‚  | */
+/* | (ãƒ¡ã‚¤ãƒ³ã¨ãªã‚‹é–¢æ•°) | */
 /* ---------------------- */
 
-/* í“¬‚ğƒVƒ~ƒ…ƒŒ[ƒg‚·‚é */
-WIN fleets::Simulate(fleets &Enemy, const bool isShow) {
+/* æˆ¦é—˜ã‚’ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆã™ã‚‹ */
+WIN fleets::Simulate(fleets &Enemy, const bool isShow, const kSimulateMode simulate_mode) {
 	fleets* Fleets[] = {this, &Enemy};
-	/* 0. î•ñ•\¦ */
+	/* 0. æƒ…å ±è¡¨ç¤º */
 	ShowListStart(Fleets, isShow);
-	/* 1. õ“GƒtƒFƒCƒY */
+	/* 1. ç´¢æ•µãƒ•ã‚§ã‚¤ã‚º */
 	bool isSearchSuccess[2];
 	SearchPhase(Fleets, isSearchSuccess, isShow);
-	/* 1.5. ŠÍ‘às“®‚ÌŒˆ’è */
+	/* 1.5. è‰¦éšŠè¡Œå‹•ã®æ±ºå®š */
 	BP BattlePosition = BPSelect(Fleets);
-	bool isShowBP = false;	//ŠJ–‹—‹Œ‚‚Ü‚Å‚ÉI—¹‚µ‚½Û‚ÉAŒğíŒ`‘Ô‚ğ•\¦‚·‚é‚½‚ß‚ÌƒIƒvƒVƒ‡ƒ“
-	/* 2. q‹óíƒtƒFƒCƒY */
+	bool isShowBP = false;	//é–‹å¹•é›·æ’ƒã¾ã§ã«çµ‚äº†ã—ãŸéš›ã«ã€äº¤æˆ¦å½¢æ…‹ã‚’è¡¨ç¤ºã™ã‚‹ãŸã‚ã®ã‚ªãƒ—ã‚·ãƒ§ãƒ³
+	/* 2. èˆªç©ºæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 	double AllAttackPlus[BattleSize];
 	AIR_MAS AirWarResult = AirWarPhase(Fleets, isSearchSuccess, AllAttackPlus, isShow);
 	if(isExit(Fleets)) goto Exit;
-	/* 3. ŠJ–‹—‹Œ‚ƒtƒFƒCƒY */
+	/* 3. é–‹å¹•é›·æ’ƒãƒ•ã‚§ã‚¤ã‚º */
 	FirstTorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
 	if(isExit(Fleets)) goto Exit;
-	/* 4. ŒğíŒ`‘ÔƒtƒFƒCƒY */
-	if(isShow) cout << "yŒğíŒ`‘ÔƒtƒFƒCƒYz\n";
-	if(isShow) cout << "@ŒğíŒ`‘ÔF" << BPString[BattlePosition] << "\n";
+	/* 4. äº¤æˆ¦å½¢æ…‹ãƒ•ã‚§ã‚¤ã‚º */
+	if(isShow) cout << "ã€äº¤æˆ¦å½¢æ…‹ãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
+	if(isShow) cout << "ã€€äº¤æˆ¦å½¢æ…‹ï¼š" << BPString[BattlePosition] << "\n";
 	isShowBP = true;
-	/* 5. –CŒ‚íƒtƒFƒCƒY */
+	/* 5. ç ²æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 	FirePhase(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
 	if(isExit(Fleets)) goto Exit;
-	/* 5.5. –CŒ‚íƒtƒFƒCƒY(“ñ„–Ú) */
+	/* 5.5. ç ²æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º(äºŒå·¡ç›®) */
 	FirePhase2(Fleets, BattlePosition, AirWarResult, AllAttackPlus, isShow);
 	if(isExit(Fleets)) goto Exit;
-	/* 6. —‹Œ‚íƒtƒFƒCƒY */
+	/* 6. é›·æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 	TorpedoPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
 	if(isExit(Fleets)) goto Exit;
-	/* 7. –éíƒtƒFƒCƒY */
-	NightPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
-	if(isExit(Fleets)) goto Exit;
+	/* 7. å¤œæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
+	if (simulate_mode == kModeDN) {
+		NightPhase(Fleets, BattlePosition, AllAttackPlus, isShow);
+		if (isExit(Fleets)) goto Exit;
+	}
 Exit:
-	/* X. Œ‹‰Ê•\¦ */
+	/* X. çµæœè¡¨ç¤º */
 	WIN WinReason = ShowListEnd(Fleets, isShowBP, BattlePosition, isShow);
 
 	if(isShow) cout << "\n";
 	return WinReason;
 }
 
-/* î•ñ•\¦ */
+/* æƒ…å ±è¡¨ç¤º */
 void ShowListStart(fleets **Fleets, const bool isShow) {
-	if(isShow) cout << "yî•ñ•\¦z\n";
+	if(isShow) cout << "ã€æƒ…å ±è¡¨ç¤ºã€‘\n";
 	for(int i = 0; i < BattleSize; ++i) {
-		if(isShow) cout << "›" << Position[i] << "\n";
+		if(isShow) cout << "â—‹" << Position[i] << "\n";
 		Fleets[i]->ShowList(isShow);
 	}
-	if(isShow) cout << "›wŒ`\n";
-	if(isShow) cout << "@" << FORString[Fleets[FriendSide]->Formation] << "vs" << FORString[Fleets[EnemySide]->Formation] << "\n";
+	if(isShow) cout << "â—‹é™£å½¢\n";
+	if(isShow) cout << "ã€€" << FORString[Fleets[FriendSide]->Formation] << "vs" << FORString[Fleets[EnemySide]->Formation] << "\n";
 }
 
-/* õ“GƒtƒFƒCƒY */
+/* ç´¢æ•µãƒ•ã‚§ã‚¤ã‚º */
 void SearchPhase(fleets **Fleets, bool *isSearchSuccess, const bool isShow) {
-	if(isShow) cout << "yõ“GƒtƒFƒCƒYz\n";
+	if(isShow) cout << "ã€ç´¢æ•µãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		double SearchPower = Fleets[i]->CalcSearchPower();
-		if(isShow) cout << "@" << Position[i] << "õ“G’lF" << SearchPower << "\n";
-		//õ“G‚Ì¬Œ÷ğŒ‚ª‚æ‚­•ª‚©‚ç‚È‚¢‚Ì‚ÅÀ‚Í“K“–‚¾‚Á‚½‚è‚·‚é
+		if(isShow) cout << "ã€€" << Position[i] << "ç´¢æ•µå€¤ï¼š" << SearchPower << "\n";
+		//ç´¢æ•µã®æˆåŠŸæ¡ä»¶ãŒã‚ˆãåˆ†ã‹ã‚‰ãªã„ã®ã§å®Ÿã¯é©å½“ã ã£ãŸã‚Šã™ã‚‹
 		if(SearchPower > 10.0) {
-			if(isShow) cout << "@" << Position[i] << "ô“GŒ‹‰ÊF¬Œ÷\n";
+			if(isShow) cout << "ã€€" << Position[i] << "ç­–æ•µçµæœï¼šæˆåŠŸ\n";
 			isSearchSuccess[i] = true;
 		} else {
-			if(isShow) cout << "@" << Position[i] << "ô“GŒ‹‰ÊF¸”s\n";
+			if(isShow) cout << "ã€€" << Position[i] << "ç­–æ•µçµæœï¼šå¤±æ•—\n";
 			isSearchSuccess[i] = false;
 		}
 	}
 }
 
-/* ŒğíŒ`‘Ô‚ÌŒˆ’è */
+/* äº¤æˆ¦å½¢æ…‹ã®æ±ºå®š */
 BP BPSelect(fleets **Fleets) {
 	double p = Rand(mt);
 	if(p < 0.45) {
-		return BP_SAME;		//“¯qí
+		return BP_SAME;		//åŒèˆªæˆ¦
 	} else if(p < 0.75) {
-		return BP_DIFF;		//”½qí
+		return BP_DIFF;		//åèˆªæˆ¦
 	} else if(p < 0.90) {
-		return BP_T_PLUS;	//Tš—L—˜
+		return BP_T_PLUS;	//Tå­—æœ‰åˆ©
 	} else {
-		// Ê‰_‚ª‚¢‚½ê‡‚Í”½qíA‚»‚¤‚Å‚È‚¢ê‡‚ÍTš•s—˜
+		// å½©é›²ãŒã„ãŸå ´åˆã¯åèˆªæˆ¦ã€ãã†ã§ãªã„å ´åˆã¯Tå­—ä¸åˆ©
 		if((Fleets[FriendSide]->hasSaiun()) || (Fleets[EnemySide]->hasSaiun())) {
 			return BP_DIFF;
 		} else {
@@ -129,18 +123,18 @@ BP BPSelect(fleets **Fleets) {
 	}
 }
 
-/* q‹óíƒtƒFƒCƒY */
+/* èˆªç©ºæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAttackPlus[], const bool isShow) {
-	if(isShow) cout << "yq‹óíƒtƒFƒCƒYz\n";
-	/* §‹óó‘Ô‚ÌŒˆ’è */
-	if(isShow) cout << "›§‹óŒ ‚ÌŒˆ’è\n";
-	// §‹ó’l‚ÌŒvZ
+	if(isShow) cout << "ã€èˆªç©ºæˆ¦ãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
+	/* åˆ¶ç©ºçŠ¶æ…‹ã®æ±ºå®š */
+	if(isShow) cout << "â—‹åˆ¶ç©ºæ¨©ã®æ±ºå®š\n";
+	// åˆ¶ç©ºå€¤ã®è¨ˆç®—
 	int AntiAirScore[BattleSize];
 	bool hasAir[BattleSize];
 	for(int i = 0; i < BattleSize; ++i) {
 		AntiAirScore[i] = 0;
 		hasAir[i] = false;
-		if(!isSearchSuccess[i]) continue;	//õ“G¸”s‚Í§‹ó’l0
+		if(!isSearchSuccess[i]) continue;	//ç´¢æ•µå¤±æ•—æ™‚ã¯åˆ¶ç©ºå€¤0
 		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
 			for(int j = 0; j < itKammusu->Slots; ++j) {
 				if((itKammusu->Weapons[j].isAir()) && (itKammusu->Airs[j] != 0)) hasAir[i] = true;
@@ -149,9 +143,9 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 				}
 			}
 		}
-		if(isShow) cout << "@" << Position[i] << "§‹ó’lF" << AntiAirScore[i] << "\n";
+		if(isShow) cout << "ã€€" << Position[i] << "åˆ¶ç©ºå€¤ï¼š" << AntiAirScore[i] << "\n";
 	}
-	// §‹óó‘Ô‚ÌŠm”F
+	// åˆ¶ç©ºçŠ¶æ…‹ã®ç¢ºèª
 	AIR_MAS AirWarResult;
 	if(((!hasAir[FriendSide]) && (!hasAir[EnemySide]))
 	|| ((!isSearchSuccess[FriendSide]) && (!hasAir[EnemySide]))
@@ -169,20 +163,20 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 	} else{
 		AirWarResult = AM_BEST;
 	}
-	if(isShow) cout << "@Œ‹‰ÊF" << AMString[AirWarResult] << "\n";
-	/* GÚ”»’è */
-	// ‚±‚Ì”»’è•û–@‚ª³Šm‚È‚Ì‚©‚Í”÷–­‚¾‚¯‚Ç—¬Î‚É‚µ‚á[‚È‚¢‚©‚Æv‚í‚ê
-	if(isShow) cout << "›GÚ”»’è\n";
+	if(isShow) cout << "ã€€çµæœï¼š" << AMString[AirWarResult] << "\n";
+	/* è§¦æ¥åˆ¤å®š */
+	// ã“ã®åˆ¤å®šæ–¹æ³•ãŒæ­£ç¢ºãªã®ã‹ã¯å¾®å¦™ã ã‘ã©æµçŸ³ã«ã—ã‚ƒãƒ¼ãªã„ã‹ã¨æ€ã‚ã‚Œ
+	if(isShow) cout << "â—‹è§¦æ¥åˆ¤å®š\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		AllAttackPlus[i] = 1.0;
-		if(isShow) cout << "@" << Position[i] << "GÚF";
-		// –¡•ûE“G‹¤‚Éq‹ó—ò¨ˆÈã‚Å‚È‚¢‚Æ”­“®‚µ‚È‚¢
+		if(isShow) cout << "ã€€" << Position[i] << "è§¦æ¥ï¼š";
+		// å‘³æ–¹ãƒ»æ•µå…±ã«èˆªç©ºåŠ£å‹¢ä»¥ä¸Šã§ãªã„ã¨ç™ºå‹•ã—ãªã„
 		if(((i == FriendSide) && ((AirWarResult == AM_WORST) || (!hasAir[i])))
 		|| ((i == EnemySide) && ((AirWarResult == AM_BEST) || (!hasAir[i])))){
-			if(isShow) cout << "•s‰Â”\\n";
+			if(isShow) cout << "ä¸å¯èƒ½\n";
 			continue;
 		}
-		// ŠÍUE–é’ãE…’ãEŠÍ’ã‚ª‘¶İ‚·‚é‚Æ‚«‚Ì‚İ”­¶
+		// è‰¦æ”»ãƒ»å¤œåµãƒ»æ°´åµãƒ»è‰¦åµãŒå­˜åœ¨ã™ã‚‹ã¨ãã®ã¿ç™ºç”Ÿ
 		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
 			for(int j = 0; j < itKammusu->Slots; ++j) {
 				if(itKammusu->Airs[j] != 0){
@@ -207,16 +201,16 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			if(AllAttackPlus[i] != 1.0) break;
 		}
 		if(AllAttackPlus[i] != 1.0) {
-			if(isShow) cout << "‰Â”\(¬Œ÷A{" << static_cast<int>((AllAttackPlus[i] - 1) * 100) << "“)\n";
+			if(isShow) cout << "å¯èƒ½(æˆåŠŸã€ï¼‹" << static_cast<int>((AllAttackPlus[i] - 1) * 100) << "ï¼…)\n";
 		} else{
-			if(isShow) cout << "‰Â”\(¸”s)\n";
+			if(isShow) cout << "å¯èƒ½(å¤±æ•—)\n";
 		}
 	}
-	/* ‹ó’†í */
-	// Œ‚’ÄŠ„‡‚Íˆê—l—”‚É‚µ‚½‚¯‚Ç‚±‚ê‚Å‚¢‚¢‚Ì‚¾‚ë‚¤‚©H
-	// ‚ÆŒ¾‚¤‚©‚³‚è‹C‚È‚­©ŒR‚Æ“GŒR‚Å—‚Æ‚³‚ê•û‚ª‚©‚È‚èˆá‚¤‚Á‚Ä‚Ì‚Í
-	// ƒVƒ~ƒ…ìÒ‹ƒ‚©‚¹‚¾‚æ‚Ècc‚Ü‚ “K“–‚É‚Å‚Á‚¿ã‚°‚½‚ª
-	if(isShow) cout << "›í“¬‹@‚É‚æ‚é“GŠÍÚ‹@‚ÌUŒ‚EŒ‚’Ä\n";
+	/* ç©ºä¸­æˆ¦ */
+	// æ’ƒå¢œå‰²åˆã¯ä¸€æ§˜ä¹±æ•°ã«ã—ãŸã‘ã©ã“ã‚Œã§ã„ã„ã®ã ã‚ã†ã‹ï¼Ÿ
+	// ã¨è¨€ã†ã‹ã•ã‚Šæ°—ãªãè‡ªè»ã¨æ•µè»ã§è½ã¨ã•ã‚Œæ–¹ãŒã‹ãªã‚Šé•ã†ã£ã¦ã®ã¯
+	// ã‚·ãƒŸãƒ¥ä½œè€…æ³£ã‹ã›ã ã‚ˆãªâ€¦â€¦ã¾ã‚é©å½“ã«ã§ã£ã¡ä¸Šã’ãŸãŒ
+	if(isShow) cout << "â—‹æˆ¦é—˜æ©Ÿã«ã‚ˆã‚‹æ•µè‰¦è¼‰æ©Ÿã®æ”»æ’ƒãƒ»æ’ƒå¢œ\n";
 	double KilledAirsPer[BattleSize];
 	switch(AirWarResult){
 		case AM_WORST:
@@ -241,7 +235,7 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			break;
 	}
 	for(int i = 0; i < BattleSize; ++i){
-		if(isShow) cout << "@" << Position[i] << "F" << floor(KilledAirsPer[i] * 1000 + 0.5) / 10 << "“\n";
+		if(isShow) cout << "ã€€" << Position[i] << "ï¼š" << floor(KilledAirsPer[i] * 1000 + 0.5) / 10 << "ï¼…\n";
 	}
 	for(int i = 0; i < BattleSize; ++i) {
 		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
@@ -252,25 +246,25 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			}
 		}
 	}
-	/* –h‹óUŒ‚E‘Î‹ó•ú‰Î */
-	// ‚±‚¿‚ç‚à©ŒR‚Æ“GŒR‚ÅŒvZ•û–@‚ªˆá‚¤ƒpƒ^[ƒ“
-	// ©ŒR‚Ì•û‚ª€‚Ê‚Ù‚Ç•¡G‚È‚Ì‚Å”¼•ªƒ„ƒP‚Å‘‚¢‚Ä‚Ü‚·‚—
-	// (‘Î‹óƒJƒbƒgƒCƒ“‚Í¡‰ñl—¶‚µ‚Ü‚¹‚ñ)
-	if(isShow) cout << "›‘Î‹ó‰Î–C‚É‚æ‚é“GUŒ‚‹@E”šŒ‚‹@‚ÌŒ}Œ‚EŒ‚’Ä\n";
-	// [©ŒR‚ª“GŒR‚ÌŠÍÚ‹@‚ğŒ}Œ‚‚·‚éê‡]
-	//ŠÍ‘à‘Î‹óƒ{[ƒiƒX’l‚ğŒˆ’è
+	/* é˜²ç©ºæ”»æ’ƒãƒ»å¯¾ç©ºæ”¾ç« */
+	// ã“ã¡ã‚‰ã‚‚è‡ªè»ã¨æ•µè»ã§è¨ˆç®—æ–¹æ³•ãŒé•ã†ãƒ‘ã‚¿ãƒ¼ãƒ³
+	// è‡ªè»ã®æ–¹ãŒæ­»ã¬ã»ã©è¤‡é›‘ãªã®ã§åŠåˆ†ãƒ¤ã‚±ã§æ›¸ã„ã¦ã¾ã™ï½—
+	// (å¯¾ç©ºã‚«ãƒƒãƒˆã‚¤ãƒ³ã¯ä»Šå›è€ƒæ…®ã—ã¾ã›ã‚“)
+	if(isShow) cout << "â—‹å¯¾ç©ºç«ç ²ã«ã‚ˆã‚‹æ•µæ”»æ’ƒæ©Ÿãƒ»çˆ†æ’ƒæ©Ÿã®è¿æ’ƒãƒ»æ’ƒå¢œ\n";
+	// [è‡ªè»ãŒæ•µè»ã®è‰¦è¼‰æ©Ÿã‚’è¿æ’ƒã™ã‚‹å ´åˆ]
+	//è‰¦éšŠå¯¾ç©ºãƒœãƒ¼ãƒŠã‚¹å€¤ã‚’æ±ºå®š
 	int FleetsAntiAirBonus = 0;
 	for(vector<kammusu>::iterator itKammusu = Fleets[FriendSide]->Kammusues.begin(); itKammusu != Fleets[FriendSide]->Kammusues.end(); ++itKammusu) {
 		double AntiAirBouns = 0.0;
 		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
-			//–¼‘O‚ğ’¼Úw’è‚¾‚È‚ñ‚Ä”½“f‚ªo‚é‚¯‚Çd•û‚È‚¢‚Ëcc
-			if(itWeapon->Name == "46cmO˜A‘•–C"){
+			//åå‰ã‚’ç›´æ¥æŒ‡å®šã ãªã‚“ã¦ååãŒå‡ºã‚‹ã‘ã©ä»•æ–¹ãªã„ã­â€¦â€¦
+			if(itWeapon->Name == "46cmä¸‰é€£è£…ç ²"){
 				AntiAirBouns += itWeapon->AntiAir * 0.25;
-			} else if(itWeapon->Name.find("‚Šp–C") != string::npos){
+			} else if(itWeapon->Name.find("é«˜è§’ç ²") != string::npos){
 				AntiAirBouns += itWeapon->AntiAir * 0.35;
-			} else if(itWeapon->Name.find("‘Î‹ó“d’T") != string::npos){
+			} else if(itWeapon->Name.find("å¯¾ç©ºé›»æ¢") != string::npos){
 				AntiAirBouns += itWeapon->AntiAir * 0.40;
-			} else if(itWeapon->Name == "O®’e"){
+			} else if(itWeapon->Name == "ä¸‰å¼å¼¾"){
 				AntiAirBouns += itWeapon->AntiAir * 0.60;
 			} else{
 				AntiAirBouns += itWeapon->AntiAir * 0.20;
@@ -279,8 +273,8 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 		FleetsAntiAirBonus += static_cast<int>(AntiAirBouns);
 	}
 	FleetsAntiAirBonus = static_cast<int>(FleetsAntiAirBonus * AntiAirBonusPer[Fleets[FriendSide]->Formation]);
-	if(isShow) cout << "@©ŒR‘Î‹óƒ{[ƒiƒX’lF" << FleetsAntiAirBonus << "\n";
-	//Œ}Œ‚I
+	if(isShow) cout << "ã€€è‡ªè»å¯¾ç©ºãƒœãƒ¼ãƒŠã‚¹å€¤ï¼š" << FleetsAntiAirBonus << "\n";
+	//è¿æ’ƒï¼
 	int AllKilledAirs = 0;
 	for(vector<kammusu>::iterator itKammusu = Fleets[EnemySide]->Kammusues.begin(); itKammusu != Fleets[EnemySide]->Kammusues.end(); ++itKammusu) {
 		for(int j = 0; j < itKammusu->Slots; ++j) {
@@ -297,8 +291,8 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			}
 		}
 	}
-	if(isShow) cout << "@©ŒRŒ}Œ‚Œ‹‰ÊF" << AllKilledAirs << "‹@\n";
-	// [“GŒR‚ª©ŒR‚ÌŠÍÚ‹@‚ğŒ}Œ‚‚·‚éê‡]
+	if(isShow) cout << "ã€€è‡ªè»è¿æ’ƒçµæœï¼š" << AllKilledAirs << "æ©Ÿ\n";
+	// [æ•µè»ãŒè‡ªè»ã®è‰¦è¼‰æ©Ÿã‚’è¿æ’ƒã™ã‚‹å ´åˆ]
 	AllKilledAirs = 0;
 	for(vector<kammusu>::iterator itKammusu = Fleets[FriendSide]->Kammusues.begin(); itKammusu != Fleets[FriendSide]->Kammusues.end(); ++itKammusu) {
 		for(int j = 0; j < itKammusu->Slots; ++j) {
@@ -315,31 +309,38 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 			}
 		}
 	}
-	if(isShow) cout << "@“GŒRŒ}Œ‚Œ‹‰ÊF" << AllKilledAirs << "‹@\n";
-	/* ŠJ–‹”šŒ‚ */
-	// ‘SŠÍ“¯‚È‚Ì‚ÅA‘S–Å”»’è‚Í‚Ğ‚Æ’Ê‚èI‚í‚Á‚½Œã‚És‚¤
-	// (ƒLƒƒƒbƒv‘O•â³‚Í–³Œø‚È‚Ì‚ÅAAttackActionŠÖ”‚Ìˆø”‚É‚¨‚¯‚éBP_SAME‚Íƒ_ƒ~[)
-	if(isShow) cout << "›ŠJ–‹”šŒ‚\n";
+	if(isShow) cout << "ã€€æ•µè»è¿æ’ƒçµæœï¼š" << AllKilledAirs << "æ©Ÿ\n";
+	/* é–‹å¹•çˆ†æ’ƒ */
+	// å…¨è‰¦åŒæ™‚ãªã®ã§ã€å…¨æ»…åˆ¤å®šã¯ã²ã¨é€šã‚Šçµ‚ã‚ã£ãŸå¾Œã«è¡Œã†
+	// (ã‚­ãƒ£ãƒƒãƒ—å‰è£œæ­£ã¯ç„¡åŠ¹ãªã®ã§ã€AttackActioné–¢æ•°ã®å¼•æ•°ã«ãŠã‘ã‚‹BP_SAMEã¯ãƒ€ãƒŸãƒ¼)
+	if(isShow) cout << "â—‹é–‹å¹•çˆ†æ’ƒ\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		int OtherSide = BattleSize - i - 1;
+		// æ•µã®ä¸­ã§ã®æ°´ä¸Šè‰¦ã ã‘ã‚’ãƒ”ãƒƒã‚¯ã‚¢ãƒƒãƒ—ã™ã‚‹
+		vector<rsize_t> all_unsub;
+		for (int j = 0; j < Fleets[OtherSide]->Members; ++j) {
+			if (!Fleets[OtherSide]->Kammusues[j].isSubmarine()) all_unsub.push_back(j);
+		}
+		// æ°´ä¸Šè‰¦ã ã‘ã«é–‹å¹•çˆ†æ’ƒãŒè¡Œã‚ã‚Œã‚‹
+		if (all_unsub.size() == 0) continue;
 		vector<bool> isTarget(Fleets[OtherSide]->Members, false);
-		//ƒ_ƒ[ƒWŒvZ
+		//ãƒ€ãƒ¡ãƒ¼ã‚¸è¨ˆç®—
 		vector<int> AllDamage(Fleets[OtherSide]->Members, 0);
 		for(int j = 0; j < Fleets[i]->Members; ++j) {
 			kammusu *MovedKammusu = &(Fleets[i]->Kammusues[j]);
 			for(int k = 0; k < MovedKammusu->Slots; ++k) {
 				if((MovedKammusu->Airs[k] != 0) && (MovedKammusu->Weapons[k].isAirWar2())) {
-					int Target = RandInt(Fleets[OtherSide]->Members);
+					int Target = all_unsub[RandInt(all_unsub.size())];
 					int BaseAttack;
 					switch(MovedKammusu->Weapons[k].Type) {
 						case Type_PB:
 						case Type_PBF:
 						case Type_WB:
-							//”šŒ‚‚Í“™”{ƒ_ƒ[ƒW
+							//çˆ†æ’ƒã¯ç­‰å€ãƒ€ãƒ¡ãƒ¼ã‚¸
 							BaseAttack = static_cast<int>(MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
 							break;
 						case Type_PA:
-							//—‹Œ‚‚Í150“‚©80“‚©‚ªƒ‰ƒ“ƒ_ƒ€‚ÅŒˆ‚Ü‚é
+							//é›·æ’ƒã¯150ï¼…ã‹80ï¼…ã‹ãŒãƒ©ãƒ³ãƒ€ãƒ ã§æ±ºã¾ã‚‹
 							if(RandInt(2) == 0) {
 								BaseAttack = static_cast<int>(1.5 * MovedKammusu->Weapons[k].Bomb * sqrt(MovedKammusu->Airs[k]) + 25);
 							} else {
@@ -355,24 +356,24 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 				}
 			}
 		}
-		//ƒ_ƒ[ƒWˆ—
+		//ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†
 		for(int j = 0; j < Fleets[OtherSide]->Members; ++j) {
 			if(isTarget[j]) {
 				kammusu *MovedKammusu = &(Fleets[OtherSide]->Kammusues[j]);
-				if(isShow) cout << "@" << MovedKammusu->Label(OtherSide) << "‚É" << AllDamage[j] << "ƒ_ƒ[ƒWI\n";
+				if(isShow) cout << "ã€€" << MovedKammusu->Label(OtherSide) << "ã«" << AllDamage[j] << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 				if(MovedKammusu->HP > AllDamage[j]) {
 					MovedKammusu->HP -= AllDamage[j];
-					if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+					if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 				} else {
-					// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-					// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+					// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+					// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 					if(OtherSide == 0){
-						MovedKammusu->HP -= 0.5 * MovedKammusu->HP + 0.3 * RandInt(MovedKammusu->HP);
+						MovedKammusu->HP -= static_cast<int>(0.5 * MovedKammusu->HP + 0.3 * RandInt(MovedKammusu->HP));
 						if(MovedKammusu->HP <= 0) MovedKammusu->HP = 1;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 					}else{
 						MovedKammusu->HP = 0;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 					}
 				}
 			}
@@ -383,18 +384,18 @@ AIR_MAS AirWarPhase(fleets **Fleets, const bool *isSearchSuccess, double AllAtta
 	return AirWarResult;
 }
 
-/* ŠJ–‹—‹Œ‚ƒtƒFƒCƒY */
+/* é–‹å¹•é›·æ’ƒãƒ•ã‚§ã‚¤ã‚º */
 void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isShow) {
-	if(isShow) cout << "yŠJ–‹—‹Œ‚ƒtƒFƒCƒYz\n";
+	if(isShow) cout << "ã€é–‹å¹•é›·æ’ƒãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		int OtherSide = BattleSize - i - 1;
 		vector<bool> isTarget(Fleets[OtherSide]->Members, false);
-		//ƒ_ƒ[ƒWŒvZ
+		//ãƒ€ãƒ¡ãƒ¼ã‚¸è¨ˆç®—
 		vector<int> AllDamage(Fleets[OtherSide]->Members, 0);
 		for(int j = 0; j < Fleets[i]->Members; ++j){
 			kammusu *MovedKammusu = &(Fleets[i]->Kammusues[j]);
 			if((MovedKammusu->isFirstTorpedo()) && (MovedKammusu->ShowDamage() != Lost)){
-				int Target = Fleets[OtherSide]->RandomKammsuWithoutSS();
+				int Target = Fleets[OtherSide]->RandomKammsuWithoutSS(true);
 				if(Target != -1){
 					int BaseAttack = MovedKammusu->AllTorpedo() + 5;
 					int Damage = AttackAction(Fleets[i], Fleets[OtherSide], j, Target, BaseAttack,
@@ -404,25 +405,25 @@ void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double Al
 				}
 			}
 		}
-		//ƒ_ƒ[ƒWˆ—
+		//ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†
 		for(int j = 0; j < Fleets[OtherSide]->Members; ++j) {
 			if(isTarget[j]) {
 				kammusu *MovedKammusu = &(Fleets[OtherSide]->Kammusues[j]);
 				if(MovedKammusu->ShowDamage() != Lost){
-					if(isShow) cout << "@" << MovedKammusu->Label(OtherSide) << "‚É" << AllDamage[j] << "ƒ_ƒ[ƒWI\n";
+					if(isShow) cout << "ã€€" << MovedKammusu->Label(OtherSide) << "ã«" << AllDamage[j] << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 					if(MovedKammusu->HP > AllDamage[j]) {
 						MovedKammusu->HP -= AllDamage[j];
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 					} else {
-						// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-						// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+						// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+						// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 						if(OtherSide == 0){
-							MovedKammusu->HP -= 0.5 * MovedKammusu->HP + 0.3 * RandInt(MovedKammusu->HP);
+							MovedKammusu->HP -= static_cast<int>(0.5 * MovedKammusu->HP + 0.3 * RandInt(MovedKammusu->HP));
 							if(MovedKammusu->HP <= 0) MovedKammusu->HP = 1;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 						}else{
 							MovedKammusu->HP = 0;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 						}
 					}
 				}
@@ -431,22 +432,23 @@ void FirstTorpedoPhase(fleets **Fleets, const BP BattlePosition, const double Al
 	}
 }
 
-/* –CŒ‚íƒtƒFƒCƒY */
+/* ç ²æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarResult, const double AllAttackPlus[], const bool isShow) {
-	if(isShow) cout << "y–CŒ‚íƒtƒFƒCƒYz\n";
-	/* UŒ‚‡‚ğô’è */
+	if(isShow) cout << "ã€ç ²æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
+	/* æ”»æ’ƒé †ã‚’ç­–å®š */
 	vector< vector<int> >ShotList(BattleSize);
 	for(int i = 0; i < BattleSize; ++i) {
-		//s“®‰Â”\‚ÈŠÍ–ºˆê——‚ğì¬‚·‚é
+		//è¡Œå‹•å¯èƒ½ãªè‰¦å¨˜ä¸€è¦§ã‚’ä½œæˆã™ã‚‹
 		for(int j = 0; j < Fleets[i]->Members; ++j) {
 			if(Fleets[i]->Kammusues[j].isMoveInGun()) {
 				ShotList[i].push_back(j);
 			}
 		}
-		//ˆê——‚ğƒVƒƒƒbƒtƒ‹‚·‚é
+		if (ShotList[i].size() == 0) continue;
+		//ä¸€è¦§ã‚’ã‚·ãƒ£ãƒƒãƒ•ãƒ«ã™ã‚‹
 		random_shuffle(ShotList[i].begin(), ShotList[i].end());
-		//ˆê——‚ğË’ö‚ÅˆÀ’èƒ\[ƒg‚·‚é
-		//(‚±‚ê‚É‚æ‚èA“¯Ë’ö‚Å‚Í‡”Ô‚ªƒ‰ƒ“ƒ_ƒ€‚É‚È‚é)
+		//ä¸€è¦§ã‚’å°„ç¨‹ã§å®‰å®šã‚½ãƒ¼ãƒˆã™ã‚‹
+		//(ã“ã‚Œã«ã‚ˆã‚Šã€åŒå°„ç¨‹ã§ã¯é †ç•ªãŒãƒ©ãƒ³ãƒ€ãƒ ã«ãªã‚‹)
 		for(unsigned int j = 0; j < ShotList[i].size() - 1; ++j){
 			for(unsigned int k = j + 1; k < ShotList[i].size(); ++k){
 				if(Fleets[i]->Kammusues[ShotList[i][j]].MaxRange() < Fleets[i]->Kammusues[ShotList[i][k]].MaxRange()){
@@ -457,18 +459,18 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 			}
 		}
 	}
-	/* UŒ‚ŠJn */
+	/* æ”»æ’ƒé–‹å§‹ */
 	for(unsigned int i = 0; i < MaxKanmusu; ++i){
 		for(int j = 0; j < BattleSize; ++j){
 			if(ShotList[j].size() <= i) continue;
 			if(!Fleets[j]->Kammusues[ShotList[j][i]].isMoveInGun()) continue;
-			// ƒ_ƒ[ƒWŒvZ
+			// ãƒ€ãƒ¡ãƒ¼ã‚¸è¨ˆç®—
 			kammusu *MovedKammusu = &(Fleets[j]->Kammusues[ShotList[j][i]]);
 			int OtherSide = BattleSize - j - 1;
 			int BaseAttack, Target;
 			bool isAntiSubAttack = false, isNormalAttack = false;
 			if(MovedKammusu->isAntiSub()){
-				// ‘ÎöUŒ‚‰Â”\ŠÍ‚Ìê‡Aö…ŠÍŒn‚ªc‚Á‚Ä‚¢‚éÛ‚É‘ÎöUŒ‚‚ğ—Dæ‚³‚¹‚é
+				// å¯¾æ½œæ”»æ’ƒå¯èƒ½è‰¦ã®å ´åˆã€æ½œæ°´è‰¦ç³»ãŒæ®‹ã£ã¦ã„ã‚‹éš›ã«å¯¾æ½œæ”»æ’ƒã‚’å„ªå…ˆã•ã›ã‚‹
 				Target = Fleets[OtherSide]->RandomKammsuWithSS();
 				if(Target != -1){
 					BaseAttack = MovedKammusu->AllAntiSub();
@@ -476,50 +478,50 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 				}
 			}
 			if(!isAntiSubAttack){
-				// ‘ÎöUŒ‚‚Å‚È‚¯‚ê‚ÎA…ãŠÍ‚ÉŒü‚©‚Á‚Ä–CŒ‚‚ğs‚¤
-				Target = Fleets[OtherSide]->RandomKammsuWithoutSS();
+				// å¯¾æ½œæ”»æ’ƒã§ãªã‘ã‚Œã°ã€æ°´ä¸Šè‰¦ã«å‘ã‹ã£ã¦ç ²æ’ƒã‚’è¡Œã†
+				Target = Fleets[OtherSide]->RandomKammsuWithoutSS(Fleets[j]->Kammusues[ShotList[j][i]].hasBomb());
 				if(Target != -1){
 					BaseAttack = MovedKammusu->AllAttack();
 					isNormalAttack = true;
 				}
 			}
-			// ƒ_ƒ[ƒWˆ—
-			// ‘ÎöUŒ‚‚Ìê‡
+			// ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†
+			// å¯¾æ½œæ”»æ’ƒã®å ´åˆ
 			if(isAntiSubAttack){
 				int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 					BattlePosition, AllAttackPlus[j], TURN_GUN, isShow);
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
-				if(isShow) cout << "@" << MovedKammusu->Label(j) << "‚ª" << TargetKammusu->Label(OtherSide) << "‚É" << Damage << "ƒ_ƒ[ƒWI\n";
+				if(isShow) cout << "ã€€" << MovedKammusu->Label(j) << "ãŒ" << TargetKammusu->Label(OtherSide) << "ã«" << Damage << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 				if(TargetKammusu->HP > Damage) {
 					TargetKammusu->HP -= Damage;
-					if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+					if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 				} else {
-					// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-					// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+					// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+					// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 					if(OtherSide == 0){
-						TargetKammusu->HP -= 0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP);
+						TargetKammusu->HP -= static_cast<int>(0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP));
 						if(TargetKammusu->HP <= 0) TargetKammusu->HP = 1;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					}else{
 						TargetKammusu->HP = 0;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					}
 					if(isExit(Fleets)) return;
 				}
 			}
-			//’ÊíUŒ‚‚Ìê‡
+			//é€šå¸¸æ”»æ’ƒã®å ´åˆ
 			if(isNormalAttack){
-				// UŒ‚‚Ìí—Ş‚ğ”»•Ê
+				// æ”»æ’ƒã®ç¨®é¡ã‚’åˆ¤åˆ¥
 				int AttackCount = 1;
 				double Multiple = 1.0;
 				bool isSpecialAttack = false;
 				if(((i == 0) && (AirWarResult > AM_NORMAL)) || ((i == 1) && (AirWarResult < AM_NORMAL))){
-					//’ã@‹@‚ª‘¶İ‚µ‚È‚¢‚Æ‚»‚à‚»‚à’e’…ŠÏ‘ªËŒ‚‚µ‚æ‚¤‚ª‚È‚¢‚µA‘å”j‚àŠî–{“I‚É‘Ê–Ú
+					//åµå¯Ÿæ©ŸãŒå­˜åœ¨ã—ãªã„ã¨ãã‚‚ãã‚‚å¼¾ç€è¦³æ¸¬å°„æ’ƒã—ã‚ˆã†ãŒãªã„ã—ã€å¤§ç ´ã‚‚åŸºæœ¬çš„ã«é§„ç›®
 					if((MovedKammusu->isSearchAir()) && (MovedKammusu->ShowDamage() < HeavyDamage)) {
-						//’e’…ŠÏ‘ªËŒ‚‚Í•¡‡‚Í”­¶Šm—¦‚ªã¸‚·‚é“Á«‚ª‚ ‚é‚Ì‚ÅA
-						//‚Æ‚è‚ ‚¦‚¸1‚Â‚Ì‰Â”\«‚É‚Â‚«”­“®Šm—¦‚ğ30%‚Æ‚µA‚»‚ê‚É‘õ“G•â³E
-						//ŠøŠÍ•â³EŠm•Û•â³‚ğ‰Á‚¦A”­“®‚µ‚½‚çŠm—¦‚ğ“™•ª‚·‚é‚æ‚¤‚É‚µ‚½
-						vector<int> isAttackType(5, 0);		//vector<bool>‚Í—á‚É‚æ‚Á‚Ä”ğ‚¯‚½
+						//å¼¾ç€è¦³æ¸¬å°„æ’ƒã¯è¤‡åˆæ™‚ã¯ç™ºç”Ÿç¢ºç‡ãŒä¸Šæ˜‡ã™ã‚‹ç‰¹æ€§ãŒã‚ã‚‹ã®ã§ã€
+						//ã¨ã‚Šã‚ãˆãš1ã¤ã®å¯èƒ½æ€§ã«ã¤ãç™ºå‹•ç¢ºç‡ã‚’30%ã¨ã—ã€ãã‚Œã«ç·ç´¢æ•µè£œæ­£ãƒ»
+						//æ——è‰¦è£œæ­£ãƒ»ç¢ºä¿æ™‚è£œæ­£ã‚’åŠ ãˆã€ç™ºå‹•ã—ãŸã‚‰ç¢ºç‡ã‚’ç­‰åˆ†ã™ã‚‹ã‚ˆã†ã«ã—ãŸ
+						vector<int> isAttackType(5, 0);		//vector<bool>ã¯ä¾‹ã«ã‚ˆã£ã¦é¿ã‘ãŸ
 						MovedKammusu->ShowAttackType(isAttackType);
 						int SpecialPer = 0, SpecialKinds = 0;
 						for(vector<int>::iterator itAT = isAttackType.begin(); itAT != isAttackType.end(); ++itAT){
@@ -529,11 +531,11 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 							}
 						}
 						if(SpecialPer != 0){
-							//‘õ“G•â³EŠøŠÍ•â³EŠm•Û•â³‚ğ‰Á‚¦‚é
+							//ç·ç´¢æ•µè£œæ­£ãƒ»æ——è‰¦è£œæ­£ãƒ»ç¢ºä¿æ™‚è£œæ­£ã‚’åŠ ãˆã‚‹
 							SpecialPer += static_cast<int>(Fleets[i]->CalcSearchPower() * 0.06);
 							if(ShotList[j][i] == 0) SpecialPer += 10;
 							if(AirWarResult == AM_BEST) SpecialPer += 10;
-							//”»’è
+							//åˆ¤å®š
 							int p = static_cast<int>(Rand(mt) * 100);
 							if(p < SpecialPer){
 								int APKind = p * SpecialKinds / SpecialPer;
@@ -543,28 +545,28 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 										if(APKind == APKind_){
 											switch(i){
 												case 0:
-													//ååƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<ååƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»ä¸»ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»ä¸»ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.5;
 													break;
 												case 1:
-													//å“OƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<å“OƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»å¾¹ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»å¾¹ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.3;
 													break;
 												case 2:
-													//å“dƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<å“dƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»é›»ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»é›»ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.2;
 													break;
 												case 3:
-													//å•›ƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<å•›ƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»å‰¯ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»å‰¯ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.1;
 													break;
 												case 4:
-													//˜AŒ‚
-													if(isShow) cout << "<<˜AŒ‚‚ª”­¶I>>\n";
+													//é€£æ’ƒ
+													if(isShow) cout << "<<é€£æ’ƒãŒç™ºç”Ÿï¼>>\n";
 													AttackCount = 2;
 													Multiple = 1.2;
 													break;
@@ -580,25 +582,25 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 						}
 					}
 				}
-				//UŒ‚ˆ—
+				//æ”»æ’ƒå‡¦ç†
 				for(int k = 0; k < AttackCount; ++k){
 					int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 						BattlePosition, AllAttackPlus[j], TURN_GUN, isShow, Multiple, isSpecialAttack);
 					kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
-					if(isShow) cout << "@" << MovedKammusu->Label(j) << "‚ª" << TargetKammusu->Label(OtherSide) << "‚É" << Damage << "ƒ_ƒ[ƒWI\n";
+					if(isShow) cout << "ã€€" << MovedKammusu->Label(j) << "ãŒ" << TargetKammusu->Label(OtherSide) << "ã«" << Damage << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 					if(TargetKammusu->HP > Damage) {
 						TargetKammusu->HP -= Damage;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					} else {
-						// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-						// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+						// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+						// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 						if(OtherSide == 0){
-							TargetKammusu->HP -= 0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP);
+							TargetKammusu->HP -= static_cast<int>(0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP));
 							if(TargetKammusu->HP <= 0) TargetKammusu->HP = 1;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 						}else{
 							TargetKammusu->HP = 0;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 						}
 					}
 				}
@@ -608,10 +610,10 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 	}
 }
 
-/* –CŒ‚íƒtƒFƒCƒY(“ñ„–Ú) */
+/* ç ²æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º(äºŒå·¡ç›®) */
 void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarResult, const double AllAttackPlus[], const bool isShow) {
-	if(isShow) cout << "y–CŒ‚íƒtƒFƒCƒY(“ñ„–Ú)z\n";
-	/* Å’á1ÇˆÈãíŠÍ‚ª‘¶İ‚·‚é‚©‚ğ”»’è‚·‚é */
+	if(isShow) cout << "ã€ç ²æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º(äºŒå·¡ç›®)ã€‘\n";
+	/* æœ€ä½1éš»ä»¥ä¸Šæˆ¦è‰¦ãŒå­˜åœ¨ã™ã‚‹ã‹ã‚’åˆ¤å®šã™ã‚‹ */
 	bool hasBB = false;
 	for(int i = 0; i < BattleSize; ++i) {
 		for(vector<kammusu>::iterator itKammusu = Fleets[i]->Kammusues.begin(); itKammusu != Fleets[i]->Kammusues.end(); ++itKammusu) {
@@ -623,28 +625,28 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 		if(hasBB) break;
 	}
 	if(!hasBB) return;
-	/* UŒ‚‡‚ğô’è */
+	/* æ”»æ’ƒé †ã‚’ç­–å®š */
 	vector< vector<int> >ShotList(BattleSize);
 	for(int i = 0; i < BattleSize; ++i) {
-		//s“®‰Â”\‚ÈŠÍ–ºˆê——‚ğì¬‚·‚é
+		//è¡Œå‹•å¯èƒ½ãªè‰¦å¨˜ä¸€è¦§ã‚’ä½œæˆã™ã‚‹
 		for(int j = 0; j < Fleets[i]->Members; ++j) {
 			if(Fleets[i]->Kammusues[j].isMoveInGun()) {
 				ShotList[i].push_back(j);
 			}
 		}
 	}
-	/* UŒ‚ŠJn */
+	/* æ”»æ’ƒé–‹å§‹ */
 	for(unsigned int i = 0; i < MaxKanmusu; ++i) {
 		for(int j = 0; j < BattleSize; ++j) {
 			if(ShotList[j].size() <= i) continue;
 			if(!Fleets[j]->Kammusues[ShotList[j][i]].isMoveInGun()) continue;
-			// ƒ_ƒ[ƒWŒvZ
+			// ãƒ€ãƒ¡ãƒ¼ã‚¸è¨ˆç®—
 			kammusu *MovedKammusu = &(Fleets[j]->Kammusues[ShotList[j][i]]);
 			int OtherSide = BattleSize - j - 1;
 			int BaseAttack, Target;
 			bool isAntiSubAttack = false, isNormalAttack = false;
 			if(MovedKammusu->isAntiSub()) {
-				// ‘ÎöUŒ‚‰Â”\ŠÍ‚Ìê‡Aö…ŠÍŒn‚ªc‚Á‚Ä‚¢‚éÛ‚É‘ÎöUŒ‚‚ğ—Dæ‚³‚¹‚é
+				// å¯¾æ½œæ”»æ’ƒå¯èƒ½è‰¦ã®å ´åˆã€æ½œæ°´è‰¦ç³»ãŒæ®‹ã£ã¦ã„ã‚‹éš›ã«å¯¾æ½œæ”»æ’ƒã‚’å„ªå…ˆã•ã›ã‚‹
 				Target = Fleets[OtherSide]->RandomKammsuWithSS();
 				if(Target != -1) {
 					BaseAttack = MovedKammusu->AllAntiSub();
@@ -652,50 +654,50 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 				}
 			}
 			if(!isAntiSubAttack) {
-				// ‘ÎöUŒ‚‚Å‚È‚¯‚ê‚ÎA…ãŠÍ‚ÉŒü‚©‚Á‚Ä–CŒ‚‚ğs‚¤
-				Target = Fleets[OtherSide]->RandomKammsuWithoutSS();
+				// å¯¾æ½œæ”»æ’ƒã§ãªã‘ã‚Œã°ã€æ°´ä¸Šè‰¦ã«å‘ã‹ã£ã¦ç ²æ’ƒã‚’è¡Œã†
+				Target = Fleets[OtherSide]->RandomKammsuWithoutSS(Fleets[j]->Kammusues[ShotList[j][i]].hasBomb());
 				if(Target != -1) {
 					BaseAttack = MovedKammusu->AllAttack();
 					isNormalAttack = true;
 				}
 			}
-			// ƒ_ƒ[ƒWˆ—
-			// ‘ÎöUŒ‚‚Ìê‡
+			// ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†
+			// å¯¾æ½œæ”»æ’ƒã®å ´åˆ
 			if(isAntiSubAttack){
 				int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 					BattlePosition, AllAttackPlus[j], TURN_GUN, isShow);
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
-				if(isShow) cout << "@" << MovedKammusu->Label(j) << "‚ª" << TargetKammusu->Label(OtherSide) << "‚É" << Damage << "ƒ_ƒ[ƒWI\n";
+				if(isShow) cout << "ã€€" << MovedKammusu->Label(j) << "ãŒ" << TargetKammusu->Label(OtherSide) << "ã«" << Damage << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 				if(TargetKammusu->HP > Damage) {
 					TargetKammusu->HP -= Damage;
-					if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+					if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 				} else {
-					// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-					// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+					// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+					// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 					if(OtherSide == 0){
-						TargetKammusu->HP -= 0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP);
+						TargetKammusu->HP -= static_cast<int>(0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP));
 						if(TargetKammusu->HP <= 0) TargetKammusu->HP = 1;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					}else{
 						TargetKammusu->HP = 0;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					}
 					if(isExit(Fleets)) return;
 				}
 			}
-			//’ÊíUŒ‚‚Ìê‡
+			//é€šå¸¸æ”»æ’ƒã®å ´åˆ
 			if(isNormalAttack) {
-				// UŒ‚‚Ìí—Ş‚ğ”»•Ê
+				// æ”»æ’ƒã®ç¨®é¡ã‚’åˆ¤åˆ¥
 				int AttackCount = 1;
 				double Multiple = 1.0;
 				bool isSpecialAttack = false;
 				if(((i == 0) && (AirWarResult > AM_NORMAL)) || ((i == 1) && (AirWarResult < AM_NORMAL))){
-					//’ã@‹@‚ª‘¶İ‚µ‚È‚¢‚Æ‚»‚à‚»‚à’e’…ŠÏ‘ªËŒ‚‚µ‚æ‚¤‚ª‚È‚¢‚µA‘å”j‚àŠî–{“I‚É‘Ê–Ú
+					//åµå¯Ÿæ©ŸãŒå­˜åœ¨ã—ãªã„ã¨ãã‚‚ãã‚‚å¼¾ç€è¦³æ¸¬å°„æ’ƒã—ã‚ˆã†ãŒãªã„ã—ã€å¤§ç ´ã‚‚åŸºæœ¬çš„ã«é§„ç›®
 					if((MovedKammusu->isSearchAir()) && (MovedKammusu->ShowDamage() < HeavyDamage)) {
-						//’e’…ŠÏ‘ªËŒ‚‚Í•¡‡‚Í”­¶Šm—¦‚ªã¸‚·‚é“Á«‚ª‚ ‚é‚Ì‚ÅA
-						//‚Æ‚è‚ ‚¦‚¸1‚Â‚Ì‰Â”\«‚É‚Â‚«”­“®Šm—¦‚ğ30%‚Æ‚µA‚»‚ê‚É‘õ“G•â³E
-						//ŠøŠÍ•â³EŠm•Û•â³‚ğ‰Á‚¦A”­“®‚µ‚½‚çŠm—¦‚ğ“™•ª‚·‚é‚æ‚¤‚É‚µ‚½
-						vector<int> isAttackType(5, 0);		//vector<bool>‚Í—á‚É‚æ‚Á‚Ä”ğ‚¯‚½
+						//å¼¾ç€è¦³æ¸¬å°„æ’ƒã¯è¤‡åˆæ™‚ã¯ç™ºç”Ÿç¢ºç‡ãŒä¸Šæ˜‡ã™ã‚‹ç‰¹æ€§ãŒã‚ã‚‹ã®ã§ã€
+						//ã¨ã‚Šã‚ãˆãš1ã¤ã®å¯èƒ½æ€§ã«ã¤ãç™ºå‹•ç¢ºç‡ã‚’30%ã¨ã—ã€ãã‚Œã«ç·ç´¢æ•µè£œæ­£ãƒ»
+						//æ——è‰¦è£œæ­£ãƒ»ç¢ºä¿æ™‚è£œæ­£ã‚’åŠ ãˆã€ç™ºå‹•ã—ãŸã‚‰ç¢ºç‡ã‚’ç­‰åˆ†ã™ã‚‹ã‚ˆã†ã«ã—ãŸ
+						vector<int> isAttackType(5, 0);		//vector<bool>ã¯ä¾‹ã«ã‚ˆã£ã¦é¿ã‘ãŸ
 						MovedKammusu->ShowAttackType(isAttackType);
 						int SpecialPer = 0, SpecialKinds = 0;
 						for(vector<int>::iterator itAT = isAttackType.begin(); itAT != isAttackType.end(); ++itAT){
@@ -705,11 +707,11 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 							}
 						}
 						if(SpecialPer != 0){
-							//‘õ“G•â³EŠøŠÍ•â³EŠm•Û•â³‚ğ‰Á‚¦‚é
+							//ç·ç´¢æ•µè£œæ­£ãƒ»æ——è‰¦è£œæ­£ãƒ»ç¢ºä¿æ™‚è£œæ­£ã‚’åŠ ãˆã‚‹
 							SpecialPer += static_cast<int>(Fleets[i]->CalcSearchPower() * 0.06);
 							if(ShotList[j][i] == 0) SpecialPer += 10;
 							if(AirWarResult == AM_BEST) SpecialPer += 10;
-							//”»’è
+							//åˆ¤å®š
 							int p = static_cast<int>(Rand(mt) * 100);
 							if(p < SpecialPer){
 								int APKind = p * SpecialKinds / SpecialPer;
@@ -719,28 +721,28 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 										if(APKind == APKind_){
 											switch(i){
 												case 0:
-													//ååƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<ååƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»ä¸»ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»ä¸»ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.5;
 													break;
 												case 1:
-													//å“OƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<å“OƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»å¾¹ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»å¾¹ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.3;
 													break;
 												case 2:
-													//å“dƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<å“dƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»é›»ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»é›»ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.2;
 													break;
 												case 3:
-													//å•›ƒJƒbƒgƒCƒ“
-													if(isShow) cout << "<<å•›ƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+													//ä¸»å‰¯ã‚«ãƒƒãƒˆã‚¤ãƒ³
+													if(isShow) cout << "<<ä¸»å‰¯ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 													Multiple = 1.1;
 													break;
 												case 4:
-													//˜AŒ‚
-													if(isShow) cout << "<<˜AŒ‚‚ª”­¶I>>\n";
+													//é€£æ’ƒ
+													if(isShow) cout << "<<é€£æ’ƒãŒç™ºç”Ÿï¼>>\n";
 													AttackCount = 2;
 													Multiple = 1.2;
 													break;
@@ -756,25 +758,25 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 						}
 					}
 				}
-				//UŒ‚ˆ—
+				//æ”»æ’ƒå‡¦ç†
 				for(int k = 0; k < AttackCount; ++k){
 					int Damage = AttackAction(Fleets[j], Fleets[OtherSide], ShotList[j][i], Target, BaseAttack,
 						BattlePosition, AllAttackPlus[j], TURN_GUN, isShow, Multiple, isSpecialAttack);
 					kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
-					if(isShow) cout << "@" << MovedKammusu->Label(j) << "‚ª" << TargetKammusu->Label(OtherSide) << "‚É" << Damage << "ƒ_ƒ[ƒWI\n";
+					if(isShow) cout << "ã€€" << MovedKammusu->Label(j) << "ãŒ" << TargetKammusu->Label(OtherSide) << "ã«" << Damage << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 					if(TargetKammusu->HP > Damage) {
 						TargetKammusu->HP -= Damage;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					} else {
-						// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-						// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+						// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+						// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 						if(OtherSide == 0){
-							TargetKammusu->HP -= 0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP);
+							TargetKammusu->HP -= static_cast<int>(0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP));
 							if(TargetKammusu->HP <= 0) TargetKammusu->HP = 1;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 						}else{
 							TargetKammusu->HP = 0;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 						}
 					}
 				}
@@ -784,18 +786,18 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 	}
 }
 
-/* —‹Œ‚íƒtƒFƒCƒY */
+/* é›·æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isShow) {
-	if(isShow) cout << "y—‹Œ‚íƒtƒFƒCƒYz\n";
+	if(isShow) cout << "ã€é›·æ’ƒæˆ¦ãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
 	for(int i = 0; i < BattleSize; ++i) {
 		int OtherSide = BattleSize - i - 1;
 		vector<bool> isTarget(Fleets[OtherSide]->Members, false);
-		//ƒ_ƒ[ƒWŒvZ
+		//ãƒ€ãƒ¡ãƒ¼ã‚¸è¨ˆç®—
 		vector<int> AllDamage(Fleets[OtherSide]->Members, 0);
 		for(int j = 0; j < Fleets[i]->Members; ++j) {
 			kammusu *MovedKammusu = &(Fleets[i]->Kammusues[j]);
 			if((MovedKammusu->isTorpedo()) && (MovedKammusu->ShowDamage() < MiddleDamage)) {
-				int Target = Fleets[OtherSide]->RandomKammsuWithoutSS();
+				int Target = Fleets[OtherSide]->RandomKammsuWithoutSS(true);
 				if(Target != -1) {
 					int BaseAttack = MovedKammusu->AllTorpedo() + 5;
 					int Damage = AttackAction(Fleets[i], Fleets[OtherSide], j, Target, BaseAttack,
@@ -805,25 +807,25 @@ void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAtta
 				}
 			}
 		}
-		//ƒ_ƒ[ƒWˆ—
+		//ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†
 		for(int j = 0; j < Fleets[OtherSide]->Members; ++j) {
 			if(isTarget[j]) {
 				kammusu *MovedKammusu = &(Fleets[OtherSide]->Kammusues[j]);
 				if(MovedKammusu->ShowDamage() != Lost) {
-					if(isShow) cout << "@" << MovedKammusu->Label(OtherSide) << "‚É" << AllDamage[j] << "ƒ_ƒ[ƒWI\n";
+					if(isShow) cout << "ã€€" << MovedKammusu->Label(OtherSide) << "ã«" << AllDamage[j] << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 					if(MovedKammusu->HP > AllDamage[j]) {
 						MovedKammusu->HP -= AllDamage[j];
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 					} else {
-						// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-						// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+						// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+						// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 						if(OtherSide == 0){
-							MovedKammusu->HP -= 0.5 * MovedKammusu->HP + 0.3 * RandInt(MovedKammusu->HP);
+							MovedKammusu->HP -= static_cast<int>(0.5 * MovedKammusu->HP + 0.3 * RandInt(MovedKammusu->HP));
 							if(MovedKammusu->HP <= 0) MovedKammusu->HP = 1;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 						}else{
 							MovedKammusu->HP = 0;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << MovedKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << MovedKammusu->ShowHP() << "\n";
 						}
 					}
 				}
@@ -832,20 +834,20 @@ void TorpedoPhase(fleets **Fleets, const BP BattlePosition, const double AllAtta
 	}
 }
 
-/* –éíƒtƒFƒCƒY */
+/* å¤œæˆ¦ãƒ•ã‚§ã‚¤ã‚º */
 void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttackPlus[], const bool isShow) {
-	if(isShow) cout << "y–éíƒtƒFƒCƒYz\n";
+	if(isShow) cout << "ã€å¤œæˆ¦ãƒ•ã‚§ã‚¤ã‚ºã€‘\n";
 	for(unsigned int i = 0; i < MaxKanmusu; ++i) {
 		for(int j = 0; j < BattleSize; ++j) {
 			if(Fleets[j]->Members <= static_cast<int>(i)) continue;
 			if(!Fleets[j]->Kammusues[i].isMoveInNight()) continue;
-			// ƒ_ƒ[ƒWŒvZ
+			// ãƒ€ãƒ¡ãƒ¼ã‚¸è¨ˆç®—
 			kammusu *MovedKammusu = &(Fleets[j]->Kammusues[i]);
 			int OtherSide = BattleSize - j - 1;
 			int BaseAttack, Target;
 			bool isAntiSubAttack = false, isNormalAttack = false;
 			if(MovedKammusu->isAntiSubInNight()) {
-				// ‘ÎöUŒ‚‰Â”\ŠÍ‚Ìê‡Aö…ŠÍŒn‚ªc‚Á‚Ä‚¢‚éÛ‚É‘ÎöUŒ‚‚ğ—Dæ‚³‚¹‚é
+				// å¯¾æ½œæ”»æ’ƒå¯èƒ½è‰¦ã®å ´åˆã€æ½œæ°´è‰¦ç³»ãŒæ®‹ã£ã¦ã„ã‚‹éš›ã«å¯¾æ½œæ”»æ’ƒã‚’å„ªå…ˆã•ã›ã‚‹
 				Target = Fleets[OtherSide]->RandomKammsuWithSS();
 				if(Target != -1) {
 					BaseAttack = MovedKammusu->AllAntiSub();
@@ -853,72 +855,72 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 				}
 			}
 			if(!isAntiSubAttack) {
-				// ‘ÎöUŒ‚‚Å‚È‚¯‚ê‚ÎA…ãŠÍ‚ÉŒü‚©‚Á‚Ä–CŒ‚‚ğs‚¤
-				Target = Fleets[OtherSide]->RandomKammsuWithoutSS();
+				// å¯¾æ½œæ”»æ’ƒã§ãªã‘ã‚Œã°ã€æ°´ä¸Šè‰¦ã«å‘ã‹ã£ã¦ç ²æ’ƒã‚’è¡Œã†
+				Target = Fleets[OtherSide]->RandomKammsuWithoutSS(Fleets[j]->Kammusues[j].hasBomb());
 				if(Target != -1) {
 					BaseAttack = MovedKammusu->AllAttackInNight();
 					isNormalAttack = true;
 				}
 			}
-			// ƒ_ƒ[ƒWˆ—
-			//‘ÎöUŒ‚‚Ìê‡
+			// ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†
+			//å¯¾æ½œæ”»æ’ƒã®å ´åˆ
 			if(isAntiSubAttack) {
 				int Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack,
 					BattlePosition, AllAttackPlus[j], TURN_NIGHT, isShow);
 				kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
-				if(isShow) cout << "@" << MovedKammusu->Label(j) << "‚ª" << TargetKammusu->Label(OtherSide) << "‚É" << Damage << "ƒ_ƒ[ƒWI\n";
+				if(isShow) cout << "ã€€" << MovedKammusu->Label(j) << "ãŒ" << TargetKammusu->Label(OtherSide) << "ã«" << Damage << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 				if(TargetKammusu->HP > Damage) {
 					TargetKammusu->HP -= Damage;
-					if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+					if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 				} else {
-					// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-					// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+					// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+					// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 					if(OtherSide == 0){
-						TargetKammusu->HP -= 0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP);
+						TargetKammusu->HP -= static_cast<int>(0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP));
 						if(TargetKammusu->HP <= 0) TargetKammusu->HP = 1;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					}else{
 						TargetKammusu->HP = 0;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					}
 					if(isExit(Fleets)) return;
 				}
 			}
-			//’ÊíUŒ‚‚Ìê‡
+			//é€šå¸¸æ”»æ’ƒã®å ´åˆ
 			if(isNormalAttack) {
-				// UŒ‚‚Ìí—Ş‚ğ”»•Ê
+				// æ”»æ’ƒã®ç¨®é¡ã‚’åˆ¤åˆ¥
 				int AttackCount = 1;
 				double Multiple = 1.0;
 				bool isSpecialAttack = false;
 				AT AttackType = MovedKammusu->ShowAttackTypeInNight(AttackCount, Multiple, isSpecialAttack);
 				if((AttackType == CutinAttackT) || (AttackType == CutinAttackG)){
-					// ƒJƒbƒgƒCƒ“Šm—¦‚ğŒvZ‚µA¸”s‚µ‚½ê‡‚Í’ÊíUŒ‚‚É–ß‚·
+					// ã‚«ãƒƒãƒˆã‚¤ãƒ³ç¢ºç‡ã‚’è¨ˆç®—ã—ã€å¤±æ•—ã—ãŸå ´åˆã¯é€šå¸¸æ”»æ’ƒã«æˆ»ã™
 					double CutinPer = 15.0;
-					//ƒJƒbƒgƒCƒ“í•Ê‚É‚æ‚Á‚Ä‚Í‰^ƒLƒƒƒbƒv‚ğl—¶‚·‚é
+					//ã‚«ãƒƒãƒˆã‚¤ãƒ³ç¨®åˆ¥ã«ã‚ˆã£ã¦ã¯é‹ã‚­ãƒ£ãƒƒãƒ—ã‚’è€ƒæ…®ã™ã‚‹
 					if(AttackType == CutinAttackT){
-						//‹›—‹ƒJƒbƒgƒCƒ“‚Ì‰^ƒLƒƒƒbƒv‚Í50
+						//é­šé›·ã‚«ãƒƒãƒˆã‚¤ãƒ³ã®é‹ã‚­ãƒ£ãƒƒãƒ—ã¯50
 						if(MovedKammusu->Luck > 50){
 							CutinPer += 50;
 						} else{
 							CutinPer += MovedKammusu->Luck;
 						}
 					} else{
-						//å–CƒJƒbƒgƒCƒ“‚Ì‰^ƒLƒƒƒbƒv‚Í40
+						//ä¸»ç ²ã‚«ãƒƒãƒˆã‚¤ãƒ³ã®é‹ã‚­ãƒ£ãƒƒãƒ—ã¯40
 						if(MovedKammusu->Luck > 40){
 							CutinPer += 40;
 						} else{
 							CutinPer += MovedKammusu->Luck;
 						}
 					}
-					//”z’u•â³
+					//é…ç½®è£œæ­£
 					if(i == 0) CutinPer += 15;
-					//‘¹•â³
+					//æå‚·è£œæ­£
 					if(MovedKammusu->ShowDamage() == LightDamage)  CutinPer += 10;
 					if(MovedKammusu->ShowDamage() == MiddleDamage) CutinPer += 20;
-					//’TÆ“”EÆ–¾’e•â³
+					//æ¢ç…§ç¯ãƒ»ç…§æ˜å¼¾è£œæ­£
 					if(Fleets[j]->hasLight())         CutinPer += 5;
 					if(Fleets[OtherSide]->hasLight()) CutinPer -= 10;
-					//—”‚Å¬Œ÷‚©”Û‚©‚ğ”»’è
+					//ä¹±æ•°ã§æˆåŠŸã‹å¦ã‹ã‚’åˆ¤å®š
 					if(!CheckPercent(CutinPer)){
 						AttackCount = 1;
 						Multiple = 1.0;
@@ -927,7 +929,7 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 					}
 				}
 				if(AttackType == DoubleAttack){
-					// ˜AŒ‚‚àŠmÀ‚É”­“®‚·‚é‚í‚¯‚Å‚Í‚È‚¢(‚Æ‚è‚ ‚¦‚¸99“‚Æ‚µ‚½)
+					// é€£æ’ƒã‚‚ç¢ºå®Ÿã«ç™ºå‹•ã™ã‚‹ã‚ã‘ã§ã¯ãªã„(ã¨ã‚Šã‚ãˆãš99ï¼…ã¨ã—ãŸ)
 					if(!CheckPercent(99)){
 						AttackCount = 1;
 						Multiple = 1.0;
@@ -935,36 +937,36 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 						AttackType = NormalAttack;
 					}
 				}
-				// UŒ‚ˆ—
+				// æ”»æ’ƒå‡¦ç†
 				switch(AttackType){
 					case CutinAttackT:
-						if(isShow) cout << "<<‹›—‹ƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+						if(isShow) cout << "<<é­šé›·ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 						break;
 					case CutinAttackG:
-						if(isShow) cout << "<<å–CƒJƒbƒgƒCƒ“‚ª”­¶I>>\n";
+						if(isShow) cout << "<<ä¸»ç ²ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒç™ºç”Ÿï¼>>\n";
 						break;
 					case DoubleAttack:
-						if(isShow) cout << "<<˜AŒ‚‚ª”­¶I>>\n";
+						if(isShow) cout << "<<é€£æ’ƒãŒç™ºç”Ÿï¼>>\n";
 						break;
 				}
 				for(int k = 0; k < AttackCount; ++k){
 					int Damage = AttackAction(Fleets[j], Fleets[OtherSide], i, Target, BaseAttack, BattlePosition,
 						AllAttackPlus[j], TURN_NIGHT, isShow, Multiple, isSpecialAttack);
 					kammusu *TargetKammusu = &(Fleets[OtherSide]->Kammusues[Target]);
-					if(isShow) cout << "@" << MovedKammusu->Label(j) << "‚ª" << TargetKammusu->Label(OtherSide) << "‚É" << Damage << "ƒ_ƒ[ƒWI\n";
+					if(isShow) cout << "ã€€" << MovedKammusu->Label(j) << "ãŒ" << TargetKammusu->Label(OtherSide) << "ã«" << Damage << "ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼\n";
 					if(TargetKammusu->HP > Damage) {
 						TargetKammusu->HP -= Damage;
-						if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+						if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 					} else {
-						// ©ŒR‚É‚Ì‚İŒ’¾ƒXƒgƒbƒp[‚ğ“K—p‚·‚é
-						// (c‚è‘Ï‹v‚ğã‰ñ‚éƒ_ƒ[ƒW‚ª—ˆ‚½ê‡Aƒ_ƒ[ƒW—Ê0.5~‘Ï‹v+0.3~[0,‘Ï‹v-1]‚Æ‚·‚é)
+						// è‡ªè»ã«ã®ã¿è½Ÿæ²ˆã‚¹ãƒˆãƒƒãƒ‘ãƒ¼ã‚’é©ç”¨ã™ã‚‹
+						// (æ®‹ã‚Šè€ä¹…ã‚’ä¸Šå›ã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸ãŒæ¥ãŸå ´åˆã€ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ï¼0.5Ã—è€ä¹…+0.3Ã—[0,è€ä¹…-1]ã¨ã™ã‚‹)
 						if(OtherSide == 0){
-							TargetKammusu->HP -= 0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP);
+							TargetKammusu->HP -= static_cast<int>(0.5 * TargetKammusu->HP + 0.3 * RandInt(TargetKammusu->HP));
 							if(TargetKammusu->HP <= 0) TargetKammusu->HP = 1;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 						}else{
 							TargetKammusu->HP = 0;
-							if(isShow) cout << "@@c‚è‘Ï‹vF" << TargetKammusu->ShowHP() << "\n";
+							if(isShow) cout << "ã€€ã€€æ®‹ã‚Šè€ä¹…ï¼š" << TargetKammusu->ShowHP() << "\n";
 						}
 					}
 				}
@@ -974,19 +976,19 @@ void NightPhase(fleets **Fleets, const BP BattlePosition, const double AllAttack
 	}
 }
 
-/* Œ‹‰Ê•\¦ */
-//EŸ—˜‚ÌğŒ‚ªB–†‚·‚¬‚é‚Ì‚ÅA‚ ‚¦‚Ä”»’è‚Å‚ÍÈ‚¢‚½
+/* çµæœè¡¨ç¤º */
+//Eå‹åˆ©ã®æ¡ä»¶ãŒæ›–æ˜§ã™ãã‚‹ã®ã§ã€ã‚ãˆã¦åˆ¤å®šã§ã¯çœã„ãŸ
 WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, const bool isShow) {
-	if(isShow) cout << "yŒ‹‰Ê•\¦z\n";
+	if(isShow) cout << "ã€çµæœè¡¨ç¤ºã€‘\n";
 	if(!isShowBP) {
-		if(isShow) cout << "@ŒğíŒ`‘ÔF" << BPString[BattlePosition] << "\n";
+		if(isShow) cout << "ã€€äº¤æˆ¦å½¢æ…‹ï¼š" << BPString[BattlePosition] << "\n";
 	}
 	for(int i = 0; i < BattleSize; ++i) {
-		if(isShow) cout << "›" << Position[i] << "\n";
+		if(isShow) cout << "â—‹" << Position[i] << "\n";
 		Fleets[i]->ShowList(isShow);
 	}
-	// Ÿ—˜”»’è‚ğ•\¦
-	if(isShow) cout << "›Ÿ—˜”»’èF";
+	// å‹åˆ©åˆ¤å®šã‚’è¡¨ç¤º
+	if(isShow) cout << "â—‹å‹åˆ©åˆ¤å®šï¼š";
 	int AlivedKammusues[BattleSize];
 	double ResultsGauge[BattleSize];
 	for(int i = 0; i < BattleSize; ++i) {
@@ -995,9 +997,9 @@ WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, c
 		ResultsGauge[i] = Fleets[OtherSide]->ResultsGauge();
 	}
 	if(AlivedKammusues[FriendSide] == Fleets[FriendSide]->Members) {
-		//©ŒR‚ÌŠÍ‚ªˆêÇ‚Å‚àŒ‚’¾‚µ‚Ä‚È‚¢ê‡
+		//è‡ªè»ã®è‰¦ãŒä¸€éš»ã§ã‚‚æ’ƒæ²ˆã—ã¦ãªã„å ´åˆ
 		if(AlivedKammusues[EnemySide] == 0) {
-			//SŸ—˜Šm’èBˆÈ‰ºAŠ®‘SŸ—˜‚©‚ğ”»’è
+			//Så‹åˆ©ç¢ºå®šã€‚ä»¥ä¸‹ã€å®Œå…¨å‹åˆ©ã‹ã‚’åˆ¤å®š
 			bool isPerfectWin = true;
 			for(vector<kammusu>::iterator itKammusu = Fleets[FriendSide]->Kammusues.begin(); itKammusu != Fleets[FriendSide]->Kammusues.end(); ++itKammusu) {
 				if(itKammusu->ShowDamage() != NoDamage) {
@@ -1006,13 +1008,13 @@ WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, c
 				}
 			}
 			if(isPerfectWin){
-				if(isShow) cout << "Š®‘SŸ—˜S\n";
+				if(isShow) cout << "å®Œå…¨å‹åˆ©S\n";
 				return WIN_SS;
 			}
-			if(isShow) cout << "Ÿ—˜S\n";
+			if(isShow) cout << "å‹åˆ©S\n";
 			return WIN_S;
 		} else {
-			//AŸ—˜‚©‚ğ”»’è
+			//Aå‹åˆ©ã‹ã‚’åˆ¤å®š
 			bool isMajorWin = false;
 			switch(Fleets[EnemySide]->Members){
 				case 2:
@@ -1032,30 +1034,30 @@ WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, c
 					break;
 			}
 			if(isMajorWin){
-				if(isShow) cout << "Ÿ—˜A\n";
+				if(isShow) cout << "å‹åˆ©A\n";
 				return WIN_A;
 			}
-			//“GŠøŠÍ‚ªŒ‚’¾‚µ‚Ä‚¢‚ê‚Î–³ğŒ‚ÅBŸ—˜
+			//æ•µæ——è‰¦ãŒæ’ƒæ²ˆã—ã¦ã„ã‚Œã°ç„¡æ¡ä»¶ã§Bå‹åˆ©
 			if(Fleets[EnemySide]->Kammusues[0].ShowDamage() == Lost){
-				if(isShow) cout << "íp“IŸ—˜B\n";
+				if(isShow) cout << "æˆ¦è¡“çš„å‹åˆ©B\n";
 				return WIN_B;
 			}
-			//©ŒR‚Ìí‰ÊƒQ[ƒW‚ª‘Šè‚Ì2.5”{ˆÈã‚Ìê‡BŸ—˜
+			//è‡ªè»ã®æˆ¦æœã‚²ãƒ¼ã‚¸ãŒç›¸æ‰‹ã®2.5å€ä»¥ä¸Šã®å ´åˆBå‹åˆ©
 			if(ResultsGauge[FriendSide] >= ResultsGauge[EnemySide] * 2.5) {
-				if(isShow) cout << "íp“IŸ—˜B\n";
+				if(isShow) cout << "æˆ¦è¡“çš„å‹åˆ©B\n";
 				return WIN_B;
 			}
-			//©ŒR‚Ìí‰ÊƒQ[ƒW‚ª‘Šè‚æ‚è’á‚¢‚©0.1%ˆÈ‰º‚È‚ç”s–kDA‚»‚¤‚Å‚È‚¯‚ê‚Îíp“I”s–kC
+			//è‡ªè»ã®æˆ¦æœã‚²ãƒ¼ã‚¸ãŒç›¸æ‰‹ã‚ˆã‚Šä½ã„ã‹0.1%ä»¥ä¸‹ãªã‚‰æ•—åŒ—Dã€ãã†ã§ãªã‘ã‚Œã°æˆ¦è¡“çš„æ•—åŒ—C
 			if((ResultsGauge[FriendSide] < ResultsGauge[EnemySide])
 			|| (ResultsGauge[FriendSide] < 0.001)) {
-				if(isShow) cout << "”s–kD\n";
+				if(isShow) cout << "æ•—åŒ—D\n";
 				return WIN_D;
 			}
-			if(isShow) cout << "íp“I”s–kC\n";
+			if(isShow) cout << "æˆ¦è¡“çš„æ•—åŒ—C\n";
 			return WIN_C;
 		}
-	}//©ŒR‚ÌŠÍ‚ªˆêÇˆÈãŒ‚’¾‚µ‚Ä‚¢‚éê‡
-	//“G‚ÌŒ’¾”‚Å•ªŠò
+	}//è‡ªè»ã®è‰¦ãŒä¸€éš»ä»¥ä¸Šæ’ƒæ²ˆã—ã¦ã„ã‚‹å ´åˆ
+	//æ•µã®è½Ÿæ²ˆæ•°ã§åˆ†å²
 	bool isMajorWin = false;
 	switch(Fleets[EnemySide]->Members) {
 		case 2:
@@ -1075,57 +1077,57 @@ WIN ShowListEnd(fleets **Fleets, const bool isShowBP, const BP BattlePosition, c
 			break;
 	}
 	if(isMajorWin) {
-		//©ŒR‚Ìí‰ÊƒQ[ƒW‚ª‘Šè‚Ì2.5”{ˆÈã‚Ìê‡BŸ—˜
+		//è‡ªè»ã®æˆ¦æœã‚²ãƒ¼ã‚¸ãŒç›¸æ‰‹ã®2.5å€ä»¥ä¸Šã®å ´åˆBå‹åˆ©
 		if(ResultsGauge[FriendSide] >= ResultsGauge[EnemySide] * 2.5) {
-			if(isShow) cout << "íp“IŸ—˜B\n";
+			if(isShow) cout << "æˆ¦è¡“çš„å‹åˆ©B\n";
 			return WIN_B;
 		}
 		if(Fleets[EnemySide]->Kammusues[0].ShowDamage() == Lost){
-			//ŠøŠÍ‚ğŒ‚’¾‚µA‚©‚Â©ŠÍ‘à‚ÌŒ‚’¾”ƒ“GŠÍ‘à‚ÌŒ‚’¾”‚Ìíp“IŸ—˜BA
-			//‚³‚à‚È‚¢‚Æíp“I”s–kC
+			//æ——è‰¦ã‚’æ’ƒæ²ˆã—ã€ã‹ã¤è‡ªè‰¦éšŠã®æ’ƒæ²ˆæ•°ï¼œæ•µè‰¦éšŠã®æ’ƒæ²ˆæ•°ã®æ™‚æˆ¦è¡“çš„å‹åˆ©Bã€
+			//ã•ã‚‚ãªã„ã¨æˆ¦è¡“çš„æ•—åŒ—C
 			if((Fleets[FriendSide]->Members - AlivedKammusues[FriendSide])
 			 < (Fleets[EnemySide]->Members  - AlivedKammusues[EnemySide])){
-				if(isShow) cout << "íp“IŸ—˜B\n";
+				if(isShow) cout << "æˆ¦è¡“çš„å‹åˆ©B\n";
 				return WIN_B;
 			 }
-			if(isShow) cout << "íp“I”s–kC\n";
+			if(isShow) cout << "æˆ¦è¡“çš„æ•—åŒ—C\n";
 			return WIN_C;
 		}
-		//í‰ÊƒQ[ƒW‚ª‘Šè‚Ì1.0”{ˆÈã‚Ìíp“I”s–kCA‚³‚à‚È‚¢‚Æ”s–kD
+		//æˆ¦æœã‚²ãƒ¼ã‚¸ãŒç›¸æ‰‹ã®1.0å€ä»¥ä¸Šã®æ™‚æˆ¦è¡“çš„æ•—åŒ—Cã€ã•ã‚‚ãªã„ã¨æ•—åŒ—D
 		if(ResultsGauge[FriendSide] >= ResultsGauge[EnemySide]) {
-			if(isShow) cout << "íp“I”s–kC\n";
+			if(isShow) cout << "æˆ¦è¡“çš„æ•—åŒ—C\n";
 			return WIN_C;
 		}
-		if(isShow) cout << "”s–kD\n";
+		if(isShow) cout << "æ•—åŒ—D\n";
 		return WIN_D;
 	}
 	if(Fleets[EnemySide]->Kammusues[0].ShowDamage() == Lost) {
-		//ŠøŠÍ‚ğŒ‚’¾‚µA‚©‚Â©ŠÍ‘à‚ÌŒ‚’¾”ƒ“GŠÍ‘à‚ÌŒ‚’¾”‚Ìíp“IŸ—˜BA
-		//‚³‚à‚È‚¢‚Æíp“I”s–kC
+		//æ——è‰¦ã‚’æ’ƒæ²ˆã—ã€ã‹ã¤è‡ªè‰¦éšŠã®æ’ƒæ²ˆæ•°ï¼œæ•µè‰¦éšŠã®æ’ƒæ²ˆæ•°ã®æ™‚æˆ¦è¡“çš„å‹åˆ©Bã€
+		//ã•ã‚‚ãªã„ã¨æˆ¦è¡“çš„æ•—åŒ—C
 		if((Fleets[FriendSide]->Members - AlivedKammusues[FriendSide])
 		 < (Fleets[EnemySide]->Members  - AlivedKammusues[EnemySide])) {
-			if(isShow) cout << "íp“IŸ—˜B\n";
+			if(isShow) cout << "æˆ¦è¡“çš„å‹åˆ©B\n";
 			return WIN_B;
 		}
-		if(isShow) cout << "íp“I”s–kC\n";
+		if(isShow) cout << "æˆ¦è¡“çš„æ•—åŒ—C\n";
 		return WIN_C;
 	} else {
-		//©ŒR‚Ìí‰ÊƒQ[ƒW‚ª‘Šè‚Ì1.0”{ˆÈã‚Ìê‡íp“I”s–kCA‚³‚à‚È‚¢‚Æ”s–kD
+		//è‡ªè»ã®æˆ¦æœã‚²ãƒ¼ã‚¸ãŒç›¸æ‰‹ã®1.0å€ä»¥ä¸Šã®å ´åˆæˆ¦è¡“çš„æ•—åŒ—Cã€ã•ã‚‚ãªã„ã¨æ•—åŒ—D
 		if(ResultsGauge[FriendSide] >= ResultsGauge[EnemySide]) {
-			if(isShow) cout << "íp“I”s–kC\n";
+			if(isShow) cout << "æˆ¦è¡“çš„æ•—åŒ—C\n";
 			return WIN_C;
 		}
-		if(isShow) cout << "”s–kD\n";
+		if(isShow) cout << "æ•—åŒ—D\n";
 		return WIN_D;
 	}
 }
 
 /* -------------------- */
-/* | ƒVƒ~ƒ…ƒŒ[ƒgŠÖŒW | */
-/* | (•â•‚Æ‚È‚éŠÖ”) | */
+/* | ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆé–¢ä¿‚ | */
+/* | (è£œåŠ©ã¨ãªã‚‹é–¢æ•°) | */
 /* -------------------- */
 
-/* 5‚Ì”{”‚ÉØ‚èã‚° */
+/* 5ã®å€æ•°ã«åˆ‡ã‚Šä¸Šã’ */
 int RoundUp5(int n) {
 	if(n % 5 == 0) {
 		return n;
@@ -1134,75 +1136,75 @@ int RoundUp5(int n) {
 	}
 }
 
-/* õ“G’l‚ğŒvZ‚·‚é */
+/* ç´¢æ•µå€¤ã‚’è¨ˆç®—ã™ã‚‹ */
 double fleets::CalcSearchPower() {
 	double Search = 0.0;
 #ifdef USE_NEW_SEARCH_METHOD
-	// 2-5®(H)
+	// 2-5å¼(ç§‹)
 	// http://ch.nicovideo.jp/biikame/blomaga/ar663428
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
 		Search += sqrt(itKammusu->Search) * 1.6841056;
 		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
 			switch(itWeapon->Type) {
-				case Type_PB:	//ŠÍ”š
+				case Type_PB:	//è‰¦çˆ†
 					Search += itWeapon->Search * 1.0376255;
 					break;
-				case Type_WB:	//…”š
+				case Type_WB:	//æ°´çˆ†
 					Search += itWeapon->Search * 1.7787282;
 					break;
-				case Type_PA:	//ŠÍU
+				case Type_PA:	//è‰¦æ”»
 					Search += itWeapon->Search * 1.3677954;
 					break;
-				case Type_PS:	//ŠÍ’ã
+				case Type_PS:	//è‰¦åµ
 					Search += itWeapon->Search * 1.6592780;
 					break;
-				case Type_WS:	//…’ã
+				case Type_WS:	//æ°´åµ
 					Search += itWeapon->Search * 2.0000000;
 					break;
-				case Type_SmallS:	//¬Œ^“d’T
+				case Type_SmallS:	//å°å‹é›»æ¢
 					Search += itWeapon->Search * 1.0045358;
 					break;
-				case Type_LargeS:	//‘åŒ^“d’T
+				case Type_LargeS:	//å¤§å‹é›»æ¢
 					Search += itWeapon->Search * 0.9906638;
 					break;
-				case Type_SLight:	//’TÆ“”
+				case Type_SLight:	//æ¢ç…§ç¯
 					Search += itWeapon->Search * 0.9067950;
 					break;
 			}
 		}
 	}
 	Search += RoundUp5(HQLevel) * (-0.6142467);
-	return floor(Search * 10.0 + 0.5) / 10.0;	//¬”‘æ2ˆÊ‚ğlÌŒÜ“ü
+	return floor(Search * 10.0 + 0.5) / 10.0;	//å°æ•°ç¬¬2ä½ã‚’å››æ¨äº”å…¥
 #else
-	// 2-5®(‹Œ)
+	// 2-5å¼(æ—§)
 	double AllKammusuSearch = 0.0;
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
 		AllKammusuSearch += itKammusu->Search;
 		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
 			switch(itWeapon->Type) {
-				case Type_WB:	//…”š
+				case Type_WB:	//æ°´çˆ†
 					Search += itWeapon->Search * 2;
 					break;
-				case Type_PS:	//ŠÍ’ã
+				case Type_PS:	//è‰¦åµ
 					Search += itWeapon->Search * 2;
 					break;
-				case Type_WS:	//…’ã
+				case Type_WS:	//æ°´åµ
 					Search += itWeapon->Search * 2;
 					break;
-				case Type_SmallS:	//¬Œ^“d’T
+				case Type_SmallS:	//å°å‹é›»æ¢
 					Search += itWeapon->Search * 1;
 					break;
-				case Type_LargeS:	//‘åŒ^“d’T
+				case Type_LargeS:	//å¤§å‹é›»æ¢
 					Search += itWeapon->Search * 1;
 			}
 		}
 	}
 	Search += sqrt(AllKammusuSearch);
-	return floor(Search);	//¬”“_ˆÈ‰ºØ‚èÌ‚Ä
+	return floor(Search);	//å°æ•°ç‚¹ä»¥ä¸‹åˆ‡ã‚Šæ¨ã¦
 #endif
 }
 
-/* Ê‰_‚ª‚¢‚é‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é */
+/* å½©é›²ãŒã„ã‚‹ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹ */
 bool fleets::hasSaiun() {
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
 		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
@@ -1212,7 +1214,7 @@ bool fleets::hasSaiun() {
 	return false;
 }
 
-/* í“¬I—¹‚ğ”»’è‚·‚é */
+/* æˆ¦é—˜çµ‚äº†ã‚’åˆ¤å®šã™ã‚‹ */
 bool isExit(fleets **Fleets) {
 	for(int i = 0; i < BattleSize; ++i) {
 		bool isAllLost = true;
@@ -1227,7 +1229,7 @@ bool isExit(fleets **Fleets) {
 	return false;
 }
 
-/* (…ã‹@‚à“‹Ú‚µ‚Ä‚¢‚È‚¢)ö…ŠÍ‚µ‚©‚¢‚È‚¢‚©”»’è‚·‚é */
+/* (æ°´ä¸Šæ©Ÿã‚‚æ­è¼‰ã—ã¦ã„ãªã„)æ½œæ°´è‰¦ã—ã‹ã„ãªã„ã‹åˆ¤å®šã™ã‚‹ */
 bool isAllSubmarine1(fleets *This){
 	for(vector<kammusu>::iterator itKammusu = This->Kammusues.begin(); itKammusu != This->Kammusues.end(); ++itKammusu) {
 		if(!itKammusu->isSubmarine()) return false;
@@ -1238,12 +1240,7 @@ bool isAllSubmarine1(fleets *This){
 	return true;
 }
 
-/* [0, N - 1]‚È®”—”‚ğ¶¬‚·‚é */
-int RandInt(const int n) {
-	return static_cast<int>(Rand(mt) * n);
-}
-
-/* ¬Œ÷—¦‚ªLimit[“]‚È–Û‚É‚Â‚¢‚ÄA¬Œ÷‚©”Û‚©‚ğ”»’è‚·‚é */
+/* æˆåŠŸç‡ãŒLimit[ï¼…]ãªäº‹è±¡ã«ã¤ã„ã¦ã€æˆåŠŸã‹å¦ã‹ã‚’åˆ¤å®šã™ã‚‹ */
 bool CheckPercent(const double Limit) {
 	if(Rand(mt) * 100 < Limit) {
 		return true;
@@ -1252,22 +1249,22 @@ bool CheckPercent(const double Limit) {
 	}
 }
 
-/* ¶‚«c‚Á‚Ä‚éŠÍ–º‚©‚çƒ‰ƒ“ƒ_ƒ€‚É‘I‘ğ‚·‚é */
+/* ç”Ÿãæ®‹ã£ã¦ã‚‹è‰¦å¨˜ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«é¸æŠã™ã‚‹ */
 int fleets::RandomKammsu(){
-	//¶‘¶ŠÍ‚ğƒŠƒXƒgƒAƒbƒv
+	//ç”Ÿå­˜è‰¦ã‚’ãƒªã‚¹ãƒˆã‚¢ãƒƒãƒ—
 	vector<int> AlivedList;
 	for(int i = 0; i < Members; ++i) {
 		if(Kammusues[i].ShowDamage() != Lost){
 			AlivedList.push_back(i);
 		}
 	}
-	//“K“–‚ÈêŠ‚ÌŠÍ‚ğ•Ô‚·
+	//é©å½“ãªå ´æ‰€ã®è‰¦ã‚’è¿”ã™
 	return AlivedList[RandInt(AlivedList.size())];
 }
 
-/* ¶‚«c‚Á‚Ä‚éŠÍ–º(ö…ŠÍŒn)‚©‚çƒ‰ƒ“ƒ_ƒ€‚É‘I‘ğ‚·‚é */
+/* ç”Ÿãæ®‹ã£ã¦ã‚‹è‰¦å¨˜(æ½œæ°´è‰¦ç³»)ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«é¸æŠã™ã‚‹ */
 int fleets::RandomKammsuWithSS(){
-	//¶‘¶ŠÍ‚ğƒŠƒXƒgƒAƒbƒv
+	//ç”Ÿå­˜è‰¦ã‚’ãƒªã‚¹ãƒˆã‚¢ãƒƒãƒ—
 	vector<int> AlivedList;
 	for(int i = 0; i < Members; ++i) {
 		if(Kammusues[i].ShowDamage() != Lost){
@@ -1276,7 +1273,7 @@ int fleets::RandomKammsuWithSS(){
 			}
 		}
 	}
-	//“K“–‚ÈêŠ‚ÌŠÍ‚ğ•Ô‚·
+	//é©å½“ãªå ´æ‰€ã®è‰¦ã‚’è¿”ã™
 	if(AlivedList.size() == 0){
 		return -1;
 	} else{
@@ -1284,18 +1281,19 @@ int fleets::RandomKammsuWithSS(){
 	}
 }
 
-/* ¶‚«c‚Á‚Ä‚éŠÍ–º(…ãŠÍ)‚©‚çƒ‰ƒ“ƒ_ƒ€‚É‘I‘ğ‚·‚é */
-int fleets::RandomKammsuWithoutSS(){
-	//¶‘¶ŠÍ‚ğƒŠƒXƒgƒAƒbƒv
+/* ç”Ÿãæ®‹ã£ã¦ã‚‹è‰¦å¨˜(æ°´ä¸Šè‰¦)ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«é¸æŠã™ã‚‹ */
+int fleets::RandomKammsuWithoutSS(const bool has_bomb){
+	//ç”Ÿå­˜è‰¦ã‚’ãƒªã‚¹ãƒˆã‚¢ãƒƒãƒ—
 	vector<int> AlivedList;
 	for(int i = 0; i < Members; ++i) {
 		if(Kammusues[i].ShowDamage() != Lost){
 			if(!Kammusues[i].isSubmarine()){
+				if (has_bomb && Kammusues[i].Kind == SC_AF) continue;
 				AlivedList.push_back(i);
 			}
 		}
 	}
-	//“K“–‚ÈêŠ‚ÌŠÍ‚ğ•Ô‚·
+	//é©å½“ãªå ´æ‰€ã®è‰¦ã‚’è¿”ã™
 	if(AlivedList.size() == 0){
 		return -1;
 	} else{
@@ -1303,16 +1301,16 @@ int fleets::RandomKammsuWithoutSS(){
 	}
 }
 
-/* —^‚¦‚éƒ_ƒ[ƒW—Ê‚ğŒvZ‚·‚é */
+/* ä¸ãˆã‚‹ãƒ€ãƒ¡ãƒ¼ã‚¸é‡ã‚’è¨ˆç®—ã™ã‚‹ */
 int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, const int BaseAttack,
                  const BP BattlePosition, const double AllAttackPlus, const TURN Turn,
                  const bool isShow, const double Multiple, const bool isSpecialAttack) {
 	kammusu *HunterK = &(Friend->Kammusues[Hunter]);
 	kammusu *TargetK = &( Enemy->Kammusues[Target]);
-	/* ŠøŠÍ‚¾‚Á‚½ê‡Au‚©‚Î‚¤v‹““®‚ª”­¶‚·‚é‰Â”\«‚ª‚ ‚é */
-	//(…ãorö…“¯m‚ÅA‚©‚Â‚©‚Î‚¤‘¤‚ª¬”j‚·‚ç‚µ‚Ä‚È‚¢ê‡‚ÉŒÀ‚é)
+	/* æ——è‰¦ã ã£ãŸå ´åˆã€ã€Œã‹ã°ã†ã€æŒ™å‹•ãŒç™ºç”Ÿã™ã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹ */
+	//(æ°´ä¸Šoræ½œæ°´åŒå£«ã§ã€ã‹ã¤ã‹ã°ã†å´ãŒå°ç ´ã™ã‚‰ã—ã¦ãªã„å ´åˆã«é™ã‚‹)
 	if(Target == 0){
-		//“¯Œ^ŠÍ‚Å‚©‚Î‚¦‚é‘Šè‚ª‘¶İ‚·‚é‚©‚ğ’²‚×‚é
+		//åŒå‹è‰¦ã§ã‹ã°ãˆã‚‹ç›¸æ‰‹ãŒå­˜åœ¨ã™ã‚‹ã‹ã‚’èª¿ã¹ã‚‹
 		bool FlagshipIsSubmarine = TargetK->isSubmarine();
 		vector<int> CanBlockList;
 		for(int i = 1; i < Enemy->Members; ++i){
@@ -1321,24 +1319,22 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 			}
 		}
 		if(CanBlockList.size() != 0){
-			//‚©‚Î‚¤Šm—¦‚Í1Ç–ˆ‚É5“‚¾‚Æ‚·‚é(Œ±À‘•)
+			//ã‹ã°ã†ç¢ºç‡ã¯1éš»æ¯ã«5ï¼…ã ã¨ã™ã‚‹(è©¦é¨“å®Ÿè£…)
 			for(unsigned int i = 0; i < CanBlockList.size(); ++i){
 				if(CheckPercent(5)){
 					int BlockKammusu = CanBlockList[i];
-					if(isShow) cout << "<<ŠøŠÍ‚Ö‚ÌUŒ‚‚ğ" << Enemy->Kammusues[BlockKammusu].Name << "‚ª‚©‚Î‚¤I>>\n";
+					if(isShow) cout << "<<æ——è‰¦ã¸ã®æ”»æ’ƒã‚’" << Enemy->Kammusues[BlockKammusu].Name << "ãŒã‹ã°ã†ï¼>>\n";
 					TargetK = &(Enemy->Kammusues[BlockKammusu]);
 					Target = BlockKammusu;
 				}
 			}
 		}
 	}
-
-
 	double Damage = BaseAttack;
-	/* –½’†—¦‚ğŒvZ‚µA–½’†‚·‚é‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é */
-	// ‰ñ”ğ‘¤
-	double EvadeSum = TargetK->AllEvade();	//‰ñ”ğ‡Œv‚ğŒvZ
-	if(Friend->Formation == FOR_SUBTRAIL) EvadeSum /= 2;	//•¡cw‚¾‚Æ‘Šè‚Ì‰ñ”ğ—¦‚ª‰º‚ª‚é
+	/* å‘½ä¸­ç‡ã‚’è¨ˆç®—ã—ã€å‘½ä¸­ã™ã‚‹ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹ */
+	// å›é¿å´
+	double EvadeSum = TargetK->AllEvade();	//å›é¿åˆè¨ˆã‚’è¨ˆç®—
+	if(Friend->Formation == FOR_SUBTRAIL) EvadeSum /= 2;	//è¤‡ç¸¦é™£ã ã¨ç›¸æ‰‹ã®å›é¿ç‡ãŒä¸‹ãŒã‚‹
 	if(TargetK->ShowCond() == Happy) EvadeSum *= 1.8;
 	double EvadeValue;
 	if(EvadeSum <= 37.5){
@@ -1346,7 +1342,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 	} else {
 		EvadeValue = EvadeSum / (EvadeSum + 37.5);
 	}
-	//(‘¬—Í·‚É‚æ‚é‰ñ”ğ•â³B‚à‚¿‚ë‚ñŒ±À‘•)
+	//(é€ŸåŠ›å·®ã«ã‚ˆã‚‹å›é¿è£œæ­£ã€‚ã‚‚ã¡ã‚ã‚“è©¦é¨“å®Ÿè£…)
 	bool isEqualSpeed = true;
 	for(int i = 0; i < Enemy->Members; ++i){
 		if(Enemy->Kammusues[i].Speed != Enemy->Kammusues[0].Speed){
@@ -1355,22 +1351,39 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		}
 	}
 	if(!isEqualSpeed) EvadeValue -= 0.01;
-	// –½’†‘¤
+	// å‘½ä¸­å´
 	double HitValue = 1.0 + (sqrt((HunterK->Level - 1) * 5) + HunterK->AllHit()) / 100;
 	if(HunterK->ShowCond() == RedFatigue) HitValue /= 2;
-	HitValue += HunterK->Luck * 0.001;		//–½’†‚É‰^‚ª‰e‹¿‚·‚é‰Â”\«‚ªH
-	HitValue -= HunterK->NonFit();			//ƒtƒBƒbƒg–C•â³
-	if(Turn == TURN_NIGHT) HitValue *= 1.5;	//–éí‚É‚¨‚¯‚é–½’†•â³(Œ±À‘•)
-	// ÅI“I‚È–½’†—¦‚ğŒvZ‚·‚é
+	HitValue += HunterK->Luck * 0.001;		//å‘½ä¸­ã«é‹ãŒå½±éŸ¿ã™ã‚‹å¯èƒ½æ€§ãŒï¼Ÿ
+	HitValue -= HunterK->NonFit();			//ãƒ•ã‚£ãƒƒãƒˆç ²è£œæ­£
+	if(Turn == TURN_NIGHT) HitValue *= 1.5;	//å¤œæˆ¦æ™‚ã«ãŠã‘ã‚‹å‘½ä¸­è£œæ­£(è©¦é¨“å®Ÿè£…)
+	// æœ€çµ‚çš„ãªå‘½ä¸­ç‡ã‚’è¨ˆç®—ã™ã‚‹
 	HitValue -= EvadeValue;
 
-	/* ‘ÎöUŒ‚‚¾‚ÆFX•Ï‚í‚é‚Ì‚Åæ‚É”»’è‚µ‚Ä‚¨‚­ */
+	/* å¯¾æ½œæ”»æ’ƒã ã¨è‰²ã€…å¤‰ã‚ã‚‹ã®ã§å…ˆã«åˆ¤å®šã—ã¦ãŠã */
 	bool isAttackToSub = TargetK->isSubmarine();
 	if((isAttackToSub) && (Turn != TURN_GUN) && (Turn != TURN_NIGHT)) return 0;
 
-	/* ƒLƒƒƒbƒv‘O•â³ */
+	/* ã‚­ãƒ£ãƒƒãƒ—å‰è£œæ­£ */
 	if(Turn != TURN_AIR) {
-		//UŒ‚‘¤wŒ`
+		//äº¤æˆ¦å½¢æ…‹
+		if (Turn != TURN_NIGHT) {
+			switch (BattlePosition) {
+			case BP_SAME:
+				Damage *= 1.0;
+				break;
+			case BP_DIFF:
+				Damage *= 0.8;
+				break;
+			case BP_T_PLUS:
+				Damage *= 1.2;
+				break;
+			case BP_T_MINUS:
+				Damage *= 0.6;
+				break;
+			}
+		}
+		//æ”»æ’ƒå´é™£å½¢
 		if(Turn != TURN_NIGHT) {
 			switch(Friend->Formation) {
 				case FOR_TRAIL:
@@ -1390,24 +1403,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 					break;
 			}
 		}
-		//ŒğíŒ`‘Ô
-		if(Turn != TURN_NIGHT) {
-			switch(BattlePosition) {
-				case BP_SAME:
-					Damage *= 1.0;
-					break;
-				case BP_DIFF:
-					Damage *= 0.8;
-					break;
-				case BP_T_PLUS:
-					Damage *= 1.2;
-					break;
-				case BP_T_MINUS:
-					Damage *= 0.6;
-					break;
-			}
-		}
-		//‘¹ó‘Ô
+		//æå‚·çŠ¶æ…‹
 		switch(HunterK->ShowDamage()) {
 			case MiddleDamage:
 				Damage *= 0.7;
@@ -1416,13 +1412,24 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 				Damage *= 0.4;
 				break;
 		}
-		//–éí
-		if((Turn == TURN_NIGHT) && (isSpecialAttack)) {
-			Damage *= Multiple;
+		//ä¸‰å¼å¼¾ç‰¹åŠ¹
+		if(((Turn == TURN_GUN) || (Turn == TURN_NIGHT)) && TargetK->Kind == SC_AF){
+			bool has_sanshiki = false, has_wg = false;
+			for (auto &it : HunterK->Weapons) {
+				if (it.Name.find("ä¸‰å¼å¼¾") != string::npos) has_sanshiki = true;
+				if (it.Name.find("WG") != string::npos) has_wg = true;
+			}
+			if (has_sanshiki) Damage *= 2.5;
+			if (has_wg) Damage += 75.0;
+		}else {
+			//å¤œæˆ¦
+			if ((Turn == TURN_NIGHT) && (isSpecialAttack)) {
+				Damage *= Multiple;
+			}
 		}
 	}
 
-	/* ƒLƒƒƒbƒv */
+	/* ã‚­ãƒ£ãƒƒãƒ— */
 	if(isAttackToSub) {
 		if(Damage > 100) Damage = 100 + sqrt(Damage - 100);
 	} else {
@@ -1433,36 +1440,36 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		}
 	}
 
-	/* ƒLƒƒƒbƒvŒã•â³ */
-	//ƒNƒŠƒeƒBƒJƒ‹•â³
+	/* ã‚­ãƒ£ãƒƒãƒ—å¾Œè£œæ­£ */
+	//ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«è£œæ­£
 	if(Turn == TURN_AIR) {
 		if(Rand(mt) < 0.025) {
 			Damage *= 1.5;
 		}
-	} else if(Turn == TURN_NIGHT){	//–éí‚É‚¨‚¯‚éƒNƒŠƒeƒBƒJƒ‹•â³(Œ±À‘•)
+	} else if(Turn == TURN_NIGHT){	//å¤œæˆ¦æ™‚ã«ãŠã‘ã‚‹ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«è£œæ­£(è©¦é¨“å®Ÿè£…)
 		if(Rand(mt) < 0.30) {
 			Damage *= 1.5;
 		}
 	}else if(Rand(mt) < 0.15) {
 		Damage *= 1.5;
 	}
-	//GÚ•â³
+	//è§¦æ¥è£œæ­£
 	Damage *= AllAttackPlus;
-	//’e’…ŠÏ‘ªËŒ‚•â³
+	//å¼¾ç€è¦³æ¸¬å°„æ’ƒè£œæ­£
 	if((Turn == TURN_GUN) && (isSpecialAttack)) {
 		Damage *= Multiple;
 	}
-	/* ÅI“I‚Èƒ_ƒ[ƒW—Ê‚ğŒˆ’è */
+	/* æœ€çµ‚çš„ãªãƒ€ãƒ¡ãƒ¼ã‚¸é‡ã‚’æ±ºå®š */
 	Damage = Damage - TargetK->Defense * (Rand(mt) * 2 / 3 + 2.0 / 3);
-	//c‚è’e–ò—Ê•â³
+	//æ®‹ã‚Šå¼¾è–¬é‡è£œæ­£
 	if(HunterK->Ammo < 50) {
 		Damage *= 2 * HunterK->Ammo / 100;
 	}
-	//’e’…ŠÏ‘ªËŒ‚AƒJƒbƒgƒCƒ“‚ª“ü‚é‚Æ–½’†—¦‚ªŒ€“I‚Éã¸‚·‚é
+	//å¼¾ç€è¦³æ¸¬å°„æ’ƒæ™‚ã€ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŒå…¥ã‚‹ã¨å‘½ä¸­ç‡ãŒåŠ‡çš„ã«ä¸Šæ˜‡ã™ã‚‹
 	if((Turn == TURN_GUN) && (isSpecialAttack)){
-		if(HitValue < 0.9) HitValue = 0.9;		//b’è“I‚Èd—l
+		if(HitValue < 0.9) HitValue = 0.9;		//æš«å®šçš„ãªä»•æ§˜
 	}
-	//’e’…ŠÏ‘ªËŒ‚‚¨‚æ‚Ñ–éí‹›—‹ƒJƒbƒgƒCƒ“‚¨‚æ‚Ñ–éí˜AŒ‚‚È‚ç‰ñ”ğ‚µ‚Ä‚àƒJƒXƒ_ƒA‚»‚êˆÈŠO‚Å‚Í0ƒ_ƒ[ƒW
+	//å¼¾ç€è¦³æ¸¬å°„æ’ƒãŠã‚ˆã³å¤œæˆ¦é­šé›·ã‚«ãƒƒãƒˆã‚¤ãƒ³ãŠã‚ˆã³å¤œæˆ¦é€£æ’ƒãªã‚‰å›é¿ã—ã¦ã‚‚ã‚«ã‚¹ãƒ€ãƒ¡ã€ãã‚Œä»¥å¤–ã§ã¯0ãƒ€ãƒ¡ãƒ¼ã‚¸
 	if(HitValue < Rand(mt)) {
 		if(isSpecialAttack) {
 			Damage = 0.0;
@@ -1470,16 +1477,16 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 			return 0;
 		}
 	}
-	//–éí‚Å‚Ì‘ÎöUŒ‚
+	//å¤œæˆ¦ã§ã®å¯¾æ½œæ”»æ’ƒ
 	if((Turn == TURN_NIGHT) && (isAttackToSub)) Damage = 0.0;
-	//ƒJƒXƒ_ƒ‚Í‘Šèc‚è‘Ï‹v‚Ì6`14“‚ğ—^‚¦‚é
+	//ã‚«ã‚¹ãƒ€ãƒ¡æ™‚ã¯ç›¸æ‰‹æ®‹ã‚Šè€ä¹…ã®6ï½14ï¼…ã‚’ä¸ãˆã‚‹
 	if(Damage < 1.0) {
 		Damage = TargetK->HP * (Rand(mt) * 0.08 + 0.06);
 	}
 	return static_cast<int>(Damage);
 }
 
-/* ¶‘¶ŠÍ‚Ì”‚ğƒJƒEƒ“ƒg‚·‚é */
+/* ç”Ÿå­˜è‰¦ã®æ•°ã‚’ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹ */
 int fleets::hasAlived() {
 	int Alived = 0;
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
@@ -1490,7 +1497,7 @@ int fleets::hasAlived() {
 	return Alived;
 }
 
-/* í‰ÊƒQ[ƒW—Ê‚ğŒvZ‚·‚é */
+/* æˆ¦æœã‚²ãƒ¼ã‚¸é‡ã‚’è¨ˆç®—ã™ã‚‹ */
 double fleets::ResultsGauge() {
 	int MaxHPAll = 0, HPAll = 0;
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
@@ -1500,7 +1507,7 @@ double fleets::ResultsGauge() {
 	return static_cast<double>(MaxHPAll - HPAll) / MaxHPAll;
 }
 
-/* ’TÆ“”‚âÆ–¾’e‚ğ‚Á‚Ä‚¢‚é‚©‚ğ”»’è‚·‚é */
+/* æ¢ç…§ç¯ã‚„ç…§æ˜å¼¾ã‚’æŒã£ã¦ã„ã‚‹ã‹ã‚’åˆ¤å®šã™ã‚‹ */
 bool fleets::hasLight(){
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
 		for(vector<weapon>::iterator itWeapon = itKammusu->Weapons.begin(); itWeapon != itKammusu->Weapons.end(); ++itWeapon) {
@@ -1510,146 +1517,79 @@ bool fleets::hasLight(){
 	return false;
 }
 
+/* å¤§ç ´ä»¥ä¸Šã®è‰¦ãŒå­˜åœ¨ã™ã‚‹ã‹ã‚’åˆ¤å®šã™ã‚‹ */
+bool fleets::hasHeavyDamage() {
+	for (auto &it : Kammusues) {
+		if (it.ShowDamage() >= HeavyDamage) {
+			return true;
+		}
+	}
+	return false;
+}
+
 /* ------------------ */
-/* |  ‚»‚Ì‘¼‚ÌŠÖ”  | */
+/* |  ãã®ä»–ã®é–¢æ•°  | */
 /* ------------------ */
 
-/* ŠÍ–º‚ğƒZƒbƒg‚·‚é */
+/* è‰¦å¨˜ã‚’ã‚»ãƒƒãƒˆã™ã‚‹ */
 void fleets::SetKammusu(const kammusu &Kammusu) {
 	Kammusues.push_back(Kammusu);
 	++Members;
 }
 
-/* ó‘Ô‚ğƒŠƒZƒbƒg‚·‚é */
+/* çŠ¶æ…‹ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹ */
 void fleets::Reset() {
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
-		itKammusu->HP = itKammusu->MaxHP;		//–³‚Å‚ ‚é‚Æ‰¼’è
-		itKammusu->cond = 49;					//’è”’l‚Å‚ ‚é‚±‚Æ‚É’ˆÓ
-		itKammusu->Ammo = 100;					//100%‚ªÅ‘å‚¾‚ªAÀ‚Í50%ˆÈã‚ÍŠF“¯‚¶ˆµ‚¢
-		itKammusu->Airs = itKammusu->MaxAirs;	//ŠÍÚ‹@”‚à‰Šú‰»‚·‚é
+		itKammusu->HP = itKammusu->MaxHP;		//ç„¡å‚·ã§ã‚ã‚‹ã¨ä»®å®š
+		itKammusu->cond = 49;					//å®šæ•°å€¤ã§ã‚ã‚‹ã“ã¨ã«æ³¨æ„
+		itKammusu->Ammo = 100;					//100%ãŒæœ€å¤§ã ãŒã€å®Ÿã¯50%ä»¥ä¸Šã¯çš†åŒã˜æ‰±ã„
+		itKammusu->Airs = itKammusu->MaxAirs;	//è‰¦è¼‰æ©Ÿæ•°ã‚‚åˆæœŸåŒ–ã™ã‚‹
 	}
 }
 
-/* ŠÍ‘à‚ÉŠÖ‚·‚éî•ñ‚ğ•\¦‚·‚é */
+/* è‰¦éšŠã«é–¢ã™ã‚‹æƒ…å ±ã‚’è¡¨ç¤ºã™ã‚‹ */
 void fleets::ShowList(const bool isShow) {
 	for(vector<kammusu>::iterator itKammusu = Kammusues.begin(); itKammusu != Kammusues.end(); ++itKammusu) {
-		if(isShow) cout << "@" << itKammusu->Label() << " " << itKammusu->ShowHP() << "\n";
+		if(isShow) cout << "ã€€" << itKammusu->Label() << " " << itKammusu->ShowHP() << "\n";
 	}
 }
 
-/* ƒtƒ@ƒCƒ‹‚©‚ç“Ç‚İ‚Ş */
+/* ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã‚€ */
 void fleets::ReadData(const string Filename){
 	std::locale::global(std::locale("japanese"));
-	/* weapon.txt‚©‚ç‘•”õƒf[ƒ^‚ğ“Ç‚İ‚Ş */
-	fstream fin1("weapon.csv");
-	if(!fin1.is_open()) throw "weapon.txt‚ª³í‚É“Ç‚İ‚ß‚Ü‚¹‚ñ‚Å‚µ‚½.";
-	// 2s–ÚˆÈ~‚ğ‘•”õƒf[ƒ^‚Æ‚µ‚Ä“Ç‚İ‚Ş
-	vector<weapon> WeaponList;
-	string GetLine;
-	getline(fin1, GetLine);
-	while (getline(fin1, GetLine)){
-		//CSV‚ğ‰ğÍ
-		vector<string> WeaponData;
-		string temp;
-		stringstream sin(GetLine);
-		while(getline(sin, temp, ',')){
-			WeaponData.push_back(temp);
-		}
-		if(WeaponData.size() < 13) throw "‘•”õƒf[ƒ^‚Ì€–Ú”‚ªˆÙí‚Å‚·.";
-		//‘•”õƒf[ƒ^‚É•ÏŠ·‚·‚é
-		weapon Weapon;
-		Weapon.Name    = WeaponData[1];
-		Weapon.Type    = ToType(WeaponData[2]);
-		Weapon.Attack  = ToInt(WeaponData[3]);
-		Weapon.Torpedo = ToInt(WeaponData[4]);
-		Weapon.Bomb    = ToInt(WeaponData[5]);
-		Weapon.AntiAir = ToInt(WeaponData[6]);
-		Weapon.AntiSub = ToInt(WeaponData[7]);
-		Weapon.Search  = ToInt(WeaponData[8]);
-		Weapon.Hit     = ToInt(WeaponData[9]);
-		Weapon.Evade   = ToInt(WeaponData[10]);
-		Weapon.Range   = ToRange(WeaponData[11]);
-		Weapon.Defense = ToInt(WeaponData[12]);
-		//ƒŠƒXƒg‚É’Ç‰Á‚·‚é
-		WeaponList.push_back(Weapon);
-	}
-	fin1.close();
+	/* weapon.txtã‹ã‚‰è£…å‚™ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€ */
+	vector<weapon> WeaponList = ReadWeaponData();
 
-	/* kammusu.txt‚©‚çŠÍ–ºƒf[ƒ^‚ğ“Ç‚İ‚Ş */
-	fstream fin2("kammusu.csv");
-	if(!fin2.is_open()) throw "kammusu.txt‚ª³í‚É“Ç‚İ‚ß‚Ü‚¹‚ñ‚Å‚µ‚½.";
-	// 2s–ÚˆÈ~‚ğ‘•”õƒf[ƒ^‚Æ‚µ‚Ä“Ç‚İ‚Ş
-	vector<kammusu> KammusuList;
-	getline(fin2, GetLine);
-	while (getline(fin2, GetLine)){
-		//CSV‚ğ‰ğÍ
-		vector<string> KammusuData;
-		string temp;
-		stringstream sin(GetLine);
-		while(getline(sin, temp, ',')){
-			KammusuData.push_back(temp);
-		}
-		KammusuData.push_back(temp);
-		if(KammusuData.size() < 16) throw "ŠÍ–ºƒf[ƒ^‚Ì€–Ú”‚ªˆÙí‚Å‚·.";
-		//ŠÍ–ºƒf[ƒ^‚É•ÏŠ·‚·‚é
-		kammusu Kammusu;
-		Kammusu.Name    = KammusuData[1];
-		Kammusu.Kind    = ToKind(KammusuData[2]);
-		Kammusu.Level   = ToInt(KammusuData[3]);
-		Kammusu.MaxHP   = ToInt(KammusuData[4]);
-		Kammusu.Attack  = ToInt(KammusuData[5]);
-		Kammusu.Defense = ToInt(KammusuData[6]);
-		Kammusu.Torpedo = ToInt(KammusuData[7]);
-		Kammusu.Evade   = ToInt(KammusuData[8]);
-		Kammusu.AntiAir = ToInt(KammusuData[9]);
-		Kammusu.AntiSub = ToInt(KammusuData[10]);
-		Kammusu.Speed   = ToSpeed(KammusuData[11]);
-		Kammusu.Search  = ToInt(KammusuData[12]);
-		Kammusu.Range   = ToRange(KammusuData[13]);
-		Kammusu.Luck    = ToInt(KammusuData[14]);
-		Kammusu.Slots   = ToInt(KammusuData[15]);
-		Kammusu.Weapons.resize(Kammusu.Slots);
-		Kammusu.MaxAirs.resize(Kammusu.Slots);
-		weapon Weapon_None;
-		for (int i = 0; i < Kammusu.Slots; ++i){
-			Kammusu.Weapons[i] = Weapon_None;
-			Kammusu.MaxAirs[i] = ToInt(KammusuData[16 + i]);
-		}
-		Kammusu.HP = Kammusu.MaxHP;
-		Kammusu.cond = 49;
-		Kammusu.Ammo = 100;
-		Kammusu.Airs = Kammusu.MaxAirs;
-		//ƒŠƒXƒg‚É’Ç‰Á‚·‚é
-		KammusuList.push_back(Kammusu);
-	}
-	fin2.close();
+	/* kammusu.txtã‹ã‚‰è‰¦å¨˜ãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€ */
+	vector<kammusu> KammusuList = ReadKammusuData();
 
-	/* Filename‚©‚çŠÍ‘àƒf[ƒ^‚ğ“Ç‚İ‚Ş */
+	/* Filenameã‹ã‚‰è‰¦éšŠãƒ‡ãƒ¼ã‚¿ã‚’èª­ã¿è¾¼ã‚€ */
 	fstream fin3(Filename);
-	if (!fin3.is_open()) throw "ŠÍ‘àƒf[ƒ^‚ª³í‚É“Ç‚İ‚ß‚Ü‚¹‚ñ‚Å‚µ‚½.";
+	if (!fin3.is_open()) throw "è‰¦éšŠãƒ‡ãƒ¼ã‚¿ãŒæ­£å¸¸ã«èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã§ã—ãŸ.";
 	Members = 0;
 	Kammusues.clear();
+	string GetLine;
 	int Step = 0;
 	while (getline(fin3, GetLine)){
-		// ‹ós‹y‚Ñ#‚©‚çn‚Ü‚és(ƒRƒƒ“ƒgs)‚Í–³‹‚·‚é
+		// ç©ºè¡ŒåŠã³#ã‹ã‚‰å§‹ã¾ã‚‹è¡Œ(ã‚³ãƒ¡ãƒ³ãƒˆè¡Œ)ã¯ç„¡è¦–ã™ã‚‹
 		if (GetLine == "") continue;
 		if (GetLine.substr(0, 1) == "#") continue;
 		if (Step == 0){
-			//i—ß•”ƒŒƒxƒ‹
+			//å¸ä»¤éƒ¨ãƒ¬ãƒ™ãƒ«
 			HQLevel = ToInt(GetLine);
 			++Step;
 		}else if (Step == 1){
-			//ƒƒ“ƒo[(ƒJƒ“ƒ}‹æØ‚è)
+			//ãƒ¡ãƒ³ãƒãƒ¼(ã‚«ãƒ³ãƒåŒºåˆ‡ã‚Š)
 			string temp;
 			stringstream sin(GetLine);
 			while (getline(sin, temp, ',')){
 				int Number = ToInt(temp) - 1;
-				if (Number < 0) throw "ƒƒ“ƒo[w’è‚ªˆÙí‚Å‚·.";
+				if (Number < 0) throw "ãƒ¡ãƒ³ãƒãƒ¼æŒ‡å®šãŒç•°å¸¸ã§ã™.";
 				SetKammusu(KammusuList[Number]);
 			}
 			++Step;
 		}else if (Step < 2 + Members){
-			//‘•”õ(ƒJƒ“ƒ}‹æØ‚è)
+			//è£…å‚™(ã‚«ãƒ³ãƒåŒºåˆ‡ã‚Š)
 			string temp;
 			stringstream sin(GetLine);
 			vector<string> WList;
@@ -1664,7 +1604,7 @@ void fleets::ReadData(const string Filename){
 			}
 			++Step;
 		} else if(Step < 2 + Members * 2) {
-			//ó‘Ô(ƒJƒ“ƒ}‹æØ‚è)
+			//çŠ¶æ…‹(ã‚«ãƒ³ãƒåŒºåˆ‡ã‚Š)
 			int Set = Step - 2 - Members;
 			string temp;
 			stringstream sin(GetLine);
@@ -1676,19 +1616,19 @@ void fleets::ReadData(const string Filename){
 				int Number = ToInt(InfoList[i]);
 				if(Number >= 0) {
 					if((i == 0) && (Number > 0) && (Number <= Kammusues[Set].MaxHP)) {
-						//c‚è‘Ï‹v
+						//æ®‹ã‚Šè€ä¹…
 						Kammusues[Set].HP = Number;
 					}
 					if((i == 1) && (Number <= 100)) {
-						//cond’l
+						//condå€¤
 						Kammusues[Set].cond = Number;
 					}
 					if((i == 2) && (Number <= 100)) {
-						//c‚è’e–ò“
+						//æ®‹ã‚Šå¼¾è–¬ï¼…
 						Kammusues[Set].Ammo = Number;
 					}
 					if((i >= 3) && (i - 3 < Kammusues[Set].Slots) && (Number <= Kammusues[Set].MaxAirs[i - 3])) {
-						//1`4ƒXƒ–Ú‚Ìc‚èŠÍÚ‹@”
+						//1ï½4ã‚¹ãƒ­ç›®ã®æ®‹ã‚Šè‰¦è¼‰æ©Ÿæ•°
 						Kammusues[Set].Airs[i - 3] = Number;
 					}
 				}
@@ -1697,130 +1637,4 @@ void fleets::ReadData(const string Filename){
 		}
 	}
 	return;
-}
-
-/* ‘•”õ‚Ìí—Ş */
-TYPE ToType(const string TypeStr){
-	if(TypeStr == "–³‚µ"){
-		return Type_None;
-	}else if(TypeStr == "å–C"){
-		return Type_Gun;
-	}else if(TypeStr == "•›–C"){
-		return Type_SubGun;
-	}else if(TypeStr == "‹›—‹"){
-		return Type_Torpedo;
-	}else if(TypeStr == "“Áêöq’ø"){
-		return Type_SpecialSS;
-	}else if(TypeStr == "ŠÍãí“¬‹@"){
-		return Type_PF;
-	}else if(TypeStr == "ŠÍã”šŒ‚‹@(”ší)"){
-		return Type_PBF;
-	}else if(TypeStr == "ŠÍã”šŒ‚‹@"){
-		return Type_PB;
-	}else if(TypeStr == "…ã”šŒ‚‹@"){
-		return Type_WB;
-	}else if(TypeStr == "ŠÍãUŒ‚‹@"){
-		return Type_PA;
-	}else if(TypeStr == "ŠÍã’ã@‹@"){
-		return Type_PS;
-	}else if(TypeStr == "ŠÍã’ã@‹@(Ê‰_)"){
-		return Type_PSS;
-	}else if(TypeStr == "…ã’ã@‹@"){
-		return Type_WS;
-	}else if(TypeStr == "–éŠÔ’ã@‹@"){
-		return Type_WSN;
-	}else if(TypeStr == "‘Îö£‰ú‹@"){
-		return Type_ASPP;
-	}else if(TypeStr == "ƒI[ƒgƒWƒƒƒCƒ"){
-		return Type_AJ;
-	}else if(TypeStr == "¬Œ^“d’T"){
-		return Type_SmallS;
-	}else if(TypeStr == "‘åŒ^“d’T"){
-		return Type_LargeS;
-	}else if(TypeStr == "‘Î‹ó‹@e"){
-		return Type_AAG;
-	}else if(TypeStr == "‚Ë‘•’u"){
-		return Type_AAD;
-	}else if(TypeStr == "”š—‹"){
-		return Type_DP;
-	}else if(TypeStr == "ƒ\ƒi["){
-		return Type_Sonar;
-	}else if(TypeStr == "’TÆ“”"){
-		return Type_SLight;
-	}else if(TypeStr == "Æ–¾’e"){
-		return Type_LightB;
-	}else{
-		return Type_Other;
-	}
-}
-
-/* ®”‰» */
-int ToInt(const string String){
-	stringstream ss;
-	ss << String;
-	int Int;
-	ss >> Int;
-	return Int;
-}
-
-/* Ë’ö */
-RANGE ToRange(const string RangeStr){
-	if(RangeStr == "–³"){
-		return NoneRange;
-	}else if(RangeStr == "’Z"){
-		return ShortRange;
-	}else if(RangeStr == "’†"){
-		return MiddleRange;
-	}else if(RangeStr == "’·"){
-		return LongRange;
-	}else if(RangeStr == "’´’·"){
-		return VeryLongRange;
-	}else{
-		throw "‚»‚ÌË’ö‚Í‘¶İ‚µ‚Ü‚¹‚ñ.";
-	}
-}
-
-/* ŠÍí */
-SC ToKind(const string KindStr){
-	if (KindStr == "íŠÍ"){
-		return SC_BB;
-	}else if (KindStr == "q‹óíŠÍ"){
-		return SC_BBV;
-	}else if (KindStr == "³‹K‹ó•ê"){
-		return SC_CV;
-	}else if (KindStr == "‘•b‹ó•ê"){
-		return SC_ACV;
-	}else if (KindStr == "Œy‹ó•ê"){
-		return SC_CVL;
-	}else if (KindStr == "…ã‹@•êŠÍ"){
-		return SC_AV;
-	}else if (KindStr == "d„—mŠÍ"){
-		return SC_CA;
-	}else if (KindStr == "q‹ó„—mŠÍ"){
-		return SC_CAV;
-	}else if (KindStr == "Œy„—mŠÍ"){
-		return SC_CL;
-	}else if (KindStr == "d—‹‘•„—mŠÍ"){
-		return SC_CLT;
-	}else if (KindStr == "‹ì’€ŠÍ"){
-		return SC_DD;
-	}else if (KindStr == "ö…ŠÍ"){
-		return SC_SS;
-	}else if (KindStr == "ö…‹ó•ê"){
-		return SC_SSV;
-	}else{
-		return SC_Other;
-	}
-}
-
-/* ‘¬—Í */
-SPEED ToSpeed(const string SpeedStr){
-	if (SpeedStr == "’á‘¬"){
-		return LowSpeed;
-	}
-	else if (SpeedStr == "‚‘¬"){
-		return HighSpeed;
-	}else{
-		throw "‚»‚Ì‘¬—Í‚Í‘¶İ‚µ‚Ü‚¹‚ñ.";
-	}
 }

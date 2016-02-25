@@ -1,4 +1,4 @@
-/* ƒ‰ƒCƒuƒ‰ƒŠ */
+ï»¿/* ãƒ©ã‚¤ãƒ–ãƒ©ãƒª */
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -6,189 +6,209 @@
 #include <sstream>
 #include <string>
 #include <vector>
-/* ‚»‚Ì‘¼ƒvƒŠƒvƒƒZƒbƒT */
-#define USE_NEW_SEARCH_METHOD	//ƒRƒƒ“ƒgƒAƒEƒg‚·‚é‚ÆAõ“GŒvZ®‚ª(H)‚©‚ç(‹Œ)‚É•Ï‚í‚é
+#include <random>
+/* ãã®ä»–ãƒ—ãƒªãƒ—ãƒ­ã‚»ãƒƒã‚µ */
+#define USE_NEW_SEARCH_METHOD	//ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆã™ã‚‹ã¨ã€ç´¢æ•µè¨ˆç®—å¼ãŒ(ç§‹)ã‹ã‚‰(æ—§)ã«å¤‰ã‚ã‚‹
 
-/* usingéŒ¾ */
+/* usingå®£è¨€ */
 using std::cout;
+using std::fstream;
 using std::getline;
 using std::string;
 using std::stringstream;
 using std::vector;
 
-/* ’è”éŒ¾ */
-// ŠÍí
+/* å®šæ•°å®£è¨€ */
+// è‰¦ç¨®
 enum SC{
-	SC_BB,		//íŠÍ
-	SC_BBV,		//q‹óíŠÍ
-	SC_CV,		//³‹K‹ó•ê
-	SC_ACV,		//‘•b‹ó•ê
-	SC_CVL,		//Œy‹ó•ê
-	SC_AV,		//…ã‹@•êŠÍ
-	SC_CA,		//d„—mŠÍ
-	SC_CAV,		//q‹ó„—mŠÍ
-	SC_CL,		//Œy„—mŠÍ
-	SC_CLT,		//d—‹‘•„—mŠÍ
-	SC_DD,		//‹ì’€ŠÍ
-	SC_SS,		//ö…ŠÍ
-	SC_SSV,		//ö…‹ó•ê
-	SC_Other	//‚»‚Ì‘¼(—g—¤ŠÍ‚Æ‚©HìŠÍ‚Æ‚©ö…•êŠÍ‚Æ‚©‚Í‚Ç‚¤ˆµ‚¤‚Ì‚ñH)
+	SC_BB,		//æˆ¦è‰¦
+	SC_BBV,		//èˆªç©ºæˆ¦è‰¦
+	SC_CV,		//æ­£è¦ç©ºæ¯
+	SC_ACV,		//è£…ç”²ç©ºæ¯
+	SC_CVL,		//è»½ç©ºæ¯
+	SC_AV,		//æ°´ä¸Šæ©Ÿæ¯è‰¦
+	SC_CA,		//é‡å·¡æ´‹è‰¦
+	SC_CAV,		//èˆªç©ºå·¡æ´‹è‰¦
+	SC_CL,		//è»½å·¡æ´‹è‰¦
+	SC_CLT,		//é‡é›·è£…å·¡æ´‹è‰¦
+	SC_DD,		//é§†é€è‰¦
+	SC_SS,		//æ½œæ°´è‰¦
+	SC_SSV,		//æ½œæ°´ç©ºæ¯
+	SC_LST,		//è¼¸é€è‰¦
+	SC_AF,		//é™¸ä¸Šæ£²å§«
+	SC_FT,		//è­·è¡›è¦å¡
+	SC_Other	//ãã®ä»–(æšé™¸è‰¦ã¨ã‹å·¥ä½œè‰¦ã¨ã‹æ½œæ°´æ¯è‰¦ã¨ã‹ã¯ã©ã†æ‰±ã†ã®ã‚“ï¼Ÿ)
 };
-// í•Ê
-// ŠÍ’ã‚ÌÊ‰_E…’ã‚Ì–é’ã‚ª“Á•Êˆµ‚¢‚È‚Ì‚É’ˆÓ
+// ç¨®åˆ¥
+// è‰¦åµã®å½©é›²ãƒ»æ°´åµã®å¤œåµãŒç‰¹åˆ¥æ‰±ã„ãªã®ã«æ³¨æ„
 enum TYPE{
-	Type_None,		//–³‚µ
-	Type_Gun,		//å–C(“Ob’eŠÜ‚Ş)
-	Type_SubGun,	//•›–C
-	Type_Torpedo,	//‹›—‹
-	Type_SpecialSS,	//“Áêöq’ø(—v‚·‚é‚Éb•W“I)
-	Type_PF,		//ŠÍí
-	Type_PBF,		//”ší
-	Type_PB,		//ŠÍ”š
-	Type_WB,		//…”š
-	Type_PA,		//ŠÍU
-	Type_PS,		//ŠÍ’ã(Ê‰_ˆÈŠOB—v‚·‚é‚É“ñ®ŠÍã’ã@‹@)
-	Type_PSS,		//ŠÍ’ã(Ê‰_)
-	Type_WS,		//…’ã
-	Type_WSN,		//–é’ã(—v‚·‚é‚É‹ã”ª®…ã’ã@‹@)
-	Type_ASPP,		//‘Îö£‰ú‹@(—v‚·‚é‚ÉO®wŠö˜A—‹@)
-	Type_AJ,		//ƒI[ƒgƒWƒƒƒCƒ(—v‚·‚é‚ÉƒJ†ŠÏ‘ª‹@)
-	Type_SmallS,	//¬Œ^“d’T
-	Type_LargeS,	//‘åŒ^“d’T
-	Type_AAG,		//‘Î‹ó‹@e(O®’eŠÜ‚Ş)
-	Type_AAD,		//‚Ë‘•’u
-	Type_DP,		//”š—‹
-	Type_Sonar,		//ƒ\ƒi[
-	Type_SLight,	//’TÆ“”
-	Type_LightB,	//Æ–¾’e
-	Type_Other		//‚»‚Ì‘¼(‘å”­‚Æ‚©)
+	Type_None,		//ç„¡ã—
+	Type_Gun,		//ä¸»ç ²(å¾¹ç”²å¼¾å«ã‚€)
+	Type_SubGun,	//å‰¯ç ²
+	Type_Torpedo,	//é­šé›·
+	Type_SpecialSS,	//ç‰¹æ®Šæ½œèˆªè‰‡(è¦ã™ã‚‹ã«ç”²æ¨™çš„)
+	Type_PF,		//è‰¦æˆ¦
+	Type_PBF,		//çˆ†æˆ¦
+	Type_PB,		//è‰¦çˆ†
+	Type_WB,		//æ°´çˆ†
+	Type_PA,		//è‰¦æ”»
+	Type_PS,		//è‰¦åµ(å½©é›²ä»¥å¤–ã€‚è¦ã™ã‚‹ã«äºŒå¼è‰¦ä¸Šåµå¯Ÿæ©Ÿ)
+	Type_PSS,		//è‰¦åµ(å½©é›²)
+	Type_WS,		//æ°´åµ
+	Type_WSN,		//å¤œåµ(è¦ã™ã‚‹ã«ä¹å…«å¼æ°´ä¸Šåµå¯Ÿæ©Ÿ)
+	Type_ASPP,		//å¯¾æ½œå“¨æˆ’æ©Ÿ(è¦ã™ã‚‹ã«ä¸‰å¼æŒ‡æ®é€£çµ¡æ©Ÿ)
+	Type_AJ,		//ã‚ªãƒ¼ãƒˆã‚¸ãƒ£ã‚¤ãƒ­(è¦ã™ã‚‹ã«ã‚«å·è¦³æ¸¬æ©Ÿ)
+	Type_SmallS,	//å°å‹é›»æ¢
+	Type_LargeS,	//å¤§å‹é›»æ¢
+	Type_AAG,		//å¯¾ç©ºæ©ŸéŠƒ(ä¸‰å¼å¼¾å«ã‚€)
+	Type_AAD,		//é«˜å°„è£…ç½®
+	Type_DP,		//çˆ†é›·
+	Type_Sonar,		//ã‚½ãƒŠãƒ¼
+	Type_SLight,	//æ¢ç…§ç¯
+	Type_LightB,	//ç…§æ˜å¼¾
+	Type_Other		//ãã®ä»–(å¤§ç™ºã¨ã‹)
 };
-//wŒ`(’PcwE•¡cwE—ÖŒ`wE’òŒ`wE’P‰¡w)
+//é™£å½¢(å˜ç¸¦é™£ãƒ»è¤‡ç¸¦é™£ãƒ»è¼ªå½¢é™£ãƒ»æ¢¯å½¢é™£ãƒ»å˜æ¨ªé™£)
 enum FORMATION {FOR_TRAIL, FOR_SUBTRAIL, FOR_CIRCLE, FOR_ECHELON, FOR_ABREAST};
-const string FORString[] = {"’Pcw", "•¡cw", "—ÖŒ`w", "’òŒ`w", "’P‰¡w"};
+const string FORString[] = {"å˜ç¸¦é™£", "è¤‡ç¸¦é™£", "è¼ªå½¢é™£", "æ¢¯å½¢é™£", "å˜æ¨ªé™£"};
 const double AntiAirBonusPer[] = {1.0, 1.2, 1.6, 1.0, 1.0};
-//ŒğíŒ`‘Ô(“¯qíE”½qíETš—L—˜ETš•s—˜) BP‚ÍBattlePosition‚ÌˆÓ
+//äº¤æˆ¦å½¢æ…‹(åŒèˆªæˆ¦ãƒ»åèˆªæˆ¦ãƒ»Tå­—æœ‰åˆ©ãƒ»Tå­—ä¸åˆ©) BPã¯BattlePositionã®æ„
 enum BP{BP_SAME, BP_DIFF, BP_T_PLUS, BP_T_MINUS};
-const string BPString[] = {"“¯qí", "”½qí", "Tš—L—˜", "Tš•s—˜"};
-//‘¹ŠQó‹µ(–³EŒ’İE¬”jE’†”jE‘å”jEŒ‚’¾)
+const string BPString[] = {"åŒèˆªæˆ¦", "åèˆªæˆ¦", "Tå­—æœ‰åˆ©", "Tå­—ä¸åˆ©"};
+//æå®³çŠ¶æ³(ç„¡å‚·ãƒ»å¥åœ¨ãƒ»å°ç ´ãƒ»ä¸­ç ´ãƒ»å¤§ç ´ãƒ»æ’ƒæ²ˆ)
 enum DAMAGE {NoDamage, VeryLightDamage, LightDamage, MiddleDamage, HeavyDamage, Lost};
-const string DMString[] = {"–³", "Œ’İ", "¬”j", "’†”j", "‘å”j", "Œ‚’¾"};
-//§‹óŒ (§‹óŒ ‘r¸Eq‹ó—ò¨Eq‹ó‹ÏtEq‹ó—D¨E§‹óŒ Šm•Û)
+const string DMString[] = {"ç„¡å‚·", "å¥åœ¨", "å°ç ´", "ä¸­ç ´", "å¤§ç ´", "æ’ƒæ²ˆ"};
+//åˆ¶ç©ºæ¨©(åˆ¶ç©ºæ¨©å–ªå¤±ãƒ»èˆªç©ºåŠ£å‹¢ãƒ»èˆªç©ºå‡è¡¡ãƒ»èˆªç©ºå„ªå‹¢ãƒ»åˆ¶ç©ºæ¨©ç¢ºä¿)
 enum AIR_MAS {AM_WORST, AM_BAD, AM_NORMAL, AM_GOOD, AM_BEST};
-const string AMString[] = {"§‹óŒ ‘r¸", "q‹ó—ò¨", "q‹ó‹Ït", "q‹ó—D¨", "§‹óŒ Šm•Û"};
-//ó‹µ(q‹óíEŠJ–‹—‹Œ‚E–CŒ‚íE—‹Œ‚íE–éí)
+const string AMString[] = {"åˆ¶ç©ºæ¨©å–ªå¤±", "èˆªç©ºåŠ£å‹¢", "èˆªç©ºå‡è¡¡", "èˆªç©ºå„ªå‹¢", "åˆ¶ç©ºæ¨©ç¢ºä¿"};
+//çŠ¶æ³(èˆªç©ºæˆ¦ãƒ»é–‹å¹•é›·æ’ƒãƒ»ç ²æ’ƒæˆ¦ãƒ»é›·æ’ƒæˆ¦ãƒ»å¤œæˆ¦)
 enum TURN {TURN_AIR, TURN_TOR_FIRST, TURN_GUN, TURN_TOR, TURN_NIGHT};
-//”æ˜Jó‘Ô(Ô”æ˜JEò”æ˜JE•’ÊEƒLƒ‰ƒLƒ‰)
+//ç–²åŠ´çŠ¶æ…‹(èµ¤ç–²åŠ´ãƒ»æ©™ç–²åŠ´ãƒ»æ™®é€šãƒ»ã‚­ãƒ©ã‚­ãƒ©)
 enum COND {RedFatigue, OrangeFatigue, Normal, Happy};
-//UŒ‚•û–@(‹›—‹ƒJƒbƒgƒCƒ“Eå–CƒJƒbƒgƒCƒ“E˜AŒ‚E’Êí)
+//æ”»æ’ƒæ–¹æ³•(é­šé›·ã‚«ãƒƒãƒˆã‚¤ãƒ³ãƒ»ä¸»ç ²ã‚«ãƒƒãƒˆã‚¤ãƒ³ãƒ»é€£æ’ƒãƒ»é€šå¸¸)
 enum AT {CutinAttackT, CutinAttackG, DoubleAttack, NormalAttack};
-//Ÿ—˜”»’è(”s–kDEíp“I”s–kCEíp“IŸ—˜BEŸ—˜AEŸ—˜SEŠ®‘SŸ—˜S)
+//å‹åˆ©åˆ¤å®š(æ•—åŒ—Dãƒ»æˆ¦è¡“çš„æ•—åŒ—Cãƒ»æˆ¦è¡“çš„å‹åˆ©Bãƒ»å‹åˆ©Aãƒ»å‹åˆ©Sãƒ»å®Œå…¨å‹åˆ©S)
 enum WIN {WIN_D, WIN_C, WIN_B, WIN_A, WIN_S, WIN_SS, WIN_Size};
-const string WINString[] = {"”s–kD", "íp“I”s–kC", "íp“IŸ—˜B", "Ÿ—˜A", "Ÿ—˜S", "Š®‘SŸ—˜S"};
-//‚»‚Ì‘¼
-enum SPEED {LowSpeed, HighSpeed};	//‘¬—Í
-enum RANGE {NoneRange, ShortRange, MiddleRange, LongRange, VeryLongRange};	//Ë’ö
+const string WINString[] = {"æ•—åŒ—D", "æˆ¦è¡“çš„æ•—åŒ—C", "æˆ¦è¡“çš„å‹åˆ©B", "å‹åˆ©A", "å‹åˆ©S", "å®Œå…¨å‹åˆ©S"};
+//ãã®ä»–
+enum SPEED {LowSpeed, HighSpeed};	//é€ŸåŠ›
+enum RANGE {NoneRange, ShortRange, MiddleRange, LongRange, VeryLongRange};	//å°„ç¨‹
+enum kSimulateMode {kModeDN, kModeD, kModeN};	//æˆ¦é—˜ãƒ¢ãƒ¼ãƒ‰(æ˜¼æˆ¦ï¼‹å¤œæˆ¦ã€æ˜¼æˆ¦ã®ã¿ã€é–‹å¹•å¤œæˆ¦)
 enum {FriendSide, EnemySide};
-const string Position[] = {"©ŒR", "“GŒR"};
-const int BattleSize = 2;			//í“¬‚ğs‚¤‚Ì‚Í©ŒR‚Æ“GŒR‚Ì2ŠÍ‘à‚Ì‚İ
-const double AttackPlus[] = {1.12, 1.12, 1.17, 1.20};	//GÚ‚É‚æ‚éUŒ‚—Í•â³
-const int MaxKanmusu = 6;			//ŠÍ‘à‚ª•Û—L‚Å‚«‚éÅ‘åŠÍ–º”
+const string Position[] = {"è‡ªè»", "æ•µè»"};
+const int BattleSize = 2;			//æˆ¦é—˜ã‚’è¡Œã†ã®ã¯è‡ªè»ã¨æ•µè»ã®2è‰¦éšŠã®ã¿
+const double AttackPlus[] = {1.12, 1.12, 1.17, 1.20};	//è§¦æ¥ã«ã‚ˆã‚‹æ”»æ’ƒåŠ›è£œæ­£
+const int MaxKanmusu = 6;			//è‰¦éšŠãŒä¿æœ‰ã§ãã‚‹æœ€å¤§è‰¦å¨˜æ•°
 
-/* ƒNƒ‰ƒXéŒ¾ */
+/* ã‚¯ãƒ©ã‚¹å®£è¨€ */
 struct weapon {
-	/* ƒƒ“ƒo•Ï” */
-	string Name;	//–¼‘O
-	TYPE Type;		//í•Ê
-	int Attack;		//‰Î—Í
-	int Torpedo;	//—‹‘•
-	int Bomb;		//”š‘•
-	int AntiAir;	//‘Î‹ó
-	int AntiSub;	//‘Îö
-	int Search;		//õ“G
-	int Hit;		//–½’†
-	int Evade;		//‰ñ”ğ
-	RANGE Range;	//Ë’ö
-	int Defense;	//‘•b
-	/* ƒƒ“ƒoŠÖ” */
-	weapon();			//ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-	bool isAir();		//ŠÍÚ‹@‚©‚ğ”»’è
-	bool isAirWar();	//q‹óí‚ÉQ‰Á‚Å‚«‚é‚©‚ğ”»’è
-	bool isAirPS();		//ŠÍã’ã@‹@‚©‚ğ”»’è
-	bool isAirWar2();	//‘Î‹ó–C‰Î‚ÅŒ‚‚¿—‚Æ‚¹‚é‚©‚ğ”»’è
-	bool isAntiSub();	//‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è
-	bool isAntiSub1();	//‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è(qíEq„E…•ê)
-	bool isAntiSub2();	//‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è(Œy‹ó•ê)
-	bool isAntiSub3();	//‘ÎöUŒ‚‰Â”\‚È‘•”õ‚©‚ğ”»’è(…—‹Œn)
+	/* ãƒ¡ãƒ³ãƒå¤‰æ•° */
+	string Name;	//åå‰
+	TYPE Type;		//ç¨®åˆ¥
+	int Attack;		//ç«åŠ›
+	int Torpedo;	//é›·è£…
+	int Bomb;		//çˆ†è£…
+	int AntiAir;	//å¯¾ç©º
+	int AntiSub;	//å¯¾æ½œ
+	int Search;		//ç´¢æ•µ
+	int Hit;		//å‘½ä¸­
+	int Evade;		//å›é¿
+	RANGE Range;	//å°„ç¨‹
+	int Defense;	//è£…ç”²
+	/* ãƒ¡ãƒ³ãƒé–¢æ•° */
+	weapon();			//ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+	bool isAir();		//è‰¦è¼‰æ©Ÿã‹ã‚’åˆ¤å®š
+	bool isAirWar();	//èˆªç©ºæˆ¦ã«å‚åŠ ã§ãã‚‹ã‹ã‚’åˆ¤å®š
+	bool isAirPS();		//è‰¦ä¸Šåµå¯Ÿæ©Ÿã‹ã‚’åˆ¤å®š
+	bool isAirWar2();	//å¯¾ç©ºç ²ç«ã§æ’ƒã¡è½ã¨ã›ã‚‹ã‹ã‚’åˆ¤å®š
+	bool isAntiSub();	//å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š
+	bool isAntiSub1();	//å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š(èˆªæˆ¦ãƒ»èˆªå·¡ãƒ»æ°´æ¯)
+	bool isAntiSub2();	//å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š(è»½ç©ºæ¯)
+	bool isAntiSub3();	//å¯¾æ½œæ”»æ’ƒå¯èƒ½ãªè£…å‚™ã‹ã‚’åˆ¤å®š(æ°´é›·ç³»)
 };
 struct kammusu {
-	/* ƒƒ“ƒo•Ï” */
-	string Name;	//ŠÍ–¼
-	SC Kind;		//ŠÍí
-	int Level;		//ƒŒƒxƒ‹
-	int MaxHP;		//‘Ï‹v
-	int Attack;		//‰Î—Í
-	int Defense;	//‘•b
-	int Torpedo;	//—‹‘•
-	int Evade;		//‰ñ”ğ
-	int AntiAir;	//‘Î‹ó
-	int AntiSub;	//‘Îö
-	SPEED Speed;	//‘¬—Í
-	int Search;		//õ“G
-	RANGE Range;	//Ë’ö
-	int Luck;		//‰^
-	int Slots;		//‘•”õƒXƒƒbƒg”
-	vector<weapon> Weapons;	//‘•”õ
-	vector<int> MaxAirs;	//ŠÍÚ‹@”
-	int HP;					//Œ»İ‚Ì‘Ï‹v
-	int cond;				//Œ»İ‚Ìcond’l
-	int Ammo;				//Œ»İ‚Ìc’e–ò—ÊŠ„‡
-	vector<int> Airs;		//Œ»İ‚ÌŠÍÚ‹@”
-	/* ƒƒ“ƒoŠÖ” */
-	string ShowHP();					//‘Ï‹vî•ñ‚ğ•Ô‚·
-	string Label(const int pos = -1);	//ŠÈˆÕ“I‚ÈŒ¨‘‚«‚ğ•Ô‚·
-	COND ShowCond();					//”æ˜Jó‘Ô‚ğ•Ô‚·
-	DAMAGE ShowDamage();				//‘¹ŠQó‹µ‚ğ¦‚·
-	int AllAntiAir();					//‘‘Î‹ó’l‚ğ•Ô‚·
-	int AllEvade();						//‘‰ñ”ğ‚ğ•Ô‚·
-	int AllHit();						//‘–½’†‚ğ•Ô‚·
-	int AllTorpedo();					//‘—‹‘•‚ğ•Ô‚·
-	int AllAntiSub();					//‘‘Îö”\—Í‚ğ•Ô‚·
-	int AllAttack();					//‘UŒ‚—Í‚ğ•Ô‚·
-	int AllAttackInNight();				//–éí‰Î—Í‚ğ•Ô‚·
-	double NonFit();					//ƒtƒBƒbƒg‚µ‚È‚¢–C‚É‚æ‚é–½’†—¦‚Ì‹t•â³
-	RANGE MaxRange();					//Å‘åË’ö‚ğ•Ô‚·
-	void ShowAttackType(vector<int>&);				//”­“®‰Â”\‚È’e’…ŠÏ‘ªËŒ‚‚Ìí—Ş‚ğ•Ô‚·
-	AT ShowAttackTypeInNight(int&, double&, bool&);	//–éŠÔ“ÁêUŒ‚‚Ìí—ŞE‚¨‚æ‚Ñ”{—¦‚ğ•Ô‚·
-	bool isSubmarine();				//ö…ŠÍŒn‚©‚ğ”»’è
-	bool isFirstTorpedo();			//ŠJ–‹—‹Œ‚‰Â”\‚©‚ğ”»’è
-	bool isMoveInGun();				//’‹í‚ÅUŒ‚‰Â”\‚©‚ğ”»’è
-	bool isSearchAir();				//’ã@‹@‚ğ‚Á‚Ä‚¢‚é‚©‚ğ”»’è
-	bool isAntiSub();				//‘ÎöUŒ‚‰Â”\‚©‚ğ”»’è
-	bool isTorpedo();				//—‹Œ‚‰Â”\‚©‚ğ”»’è
-	bool isMoveInNight();			//–éí‰Â”\‚©‚ğ”»’è
-	bool isAntiSubInNight();		//–éí‚É‘ÎöUŒ‚‰Â”\‚©‚ğ”»’è
+	/* ãƒ¡ãƒ³ãƒå¤‰æ•° */
+	string Name;	//è‰¦å
+	SC Kind;		//è‰¦ç¨®
+	int Level;		//ãƒ¬ãƒ™ãƒ«
+	int MaxHP;		//è€ä¹…
+	int Attack;		//ç«åŠ›
+	int Defense;	//è£…ç”²
+	int Torpedo;	//é›·è£…
+	int Evade;		//å›é¿
+	int AntiAir;	//å¯¾ç©º
+	int AntiSub;	//å¯¾æ½œ
+	SPEED Speed;	//é€ŸåŠ›
+	int Search;		//ç´¢æ•µ
+	RANGE Range;	//å°„ç¨‹
+	int Luck;		//é‹
+	int Slots;		//è£…å‚™ã‚¹ãƒ­ãƒƒãƒˆæ•°
+	vector<weapon> Weapons;	//è£…å‚™
+	vector<int> MaxAirs;	//è‰¦è¼‰æ©Ÿæ•°
+	int HP;					//ç¾åœ¨ã®è€ä¹…
+	int cond;				//ç¾åœ¨ã®condå€¤
+	int Ammo;				//ç¾åœ¨ã®æ®‹å¼¾è–¬é‡å‰²åˆ
+	vector<int> Airs;		//ç¾åœ¨ã®è‰¦è¼‰æ©Ÿæ•°
+	bool is_kammusu_;		//è‰¦å¨˜ãªã‚‰trueã€æ·±æµ·æ£²è‰¦ãªã‚‰false
+	/* ãƒ¡ãƒ³ãƒé–¢æ•° */
+	string ShowHP();					//è€ä¹…æƒ…å ±ã‚’è¿”ã™
+	string Label(const int pos = -1);	//ç°¡æ˜“çš„ãªè‚©æ›¸ãã‚’è¿”ã™
+	COND ShowCond();					//ç–²åŠ´çŠ¶æ…‹ã‚’è¿”ã™
+	DAMAGE ShowDamage();				//æå®³çŠ¶æ³ã‚’ç¤ºã™
+	int AllAntiAir();					//ç·å¯¾ç©ºå€¤ã‚’è¿”ã™
+	int AllEvade();						//ç·å›é¿ã‚’è¿”ã™
+	int AllHit();						//ç·å‘½ä¸­ã‚’è¿”ã™
+	int AllTorpedo();					//ç·é›·è£…ã‚’è¿”ã™
+	int AllAntiSub();					//ç·å¯¾æ½œèƒ½åŠ›ã‚’è¿”ã™
+	int AllAttack();					//ç·æ”»æ’ƒåŠ›ã‚’è¿”ã™
+	int AllAttackInNight();				//å¤œæˆ¦ç«åŠ›ã‚’è¿”ã™
+	double NonFit();					//ãƒ•ã‚£ãƒƒãƒˆã—ãªã„ç ²ã«ã‚ˆã‚‹å‘½ä¸­ç‡ã®é€†è£œæ­£
+	RANGE MaxRange();					//æœ€å¤§å°„ç¨‹ã‚’è¿”ã™
+	void ShowAttackType(vector<int>&);				//ç™ºå‹•å¯èƒ½ãªå¼¾ç€è¦³æ¸¬å°„æ’ƒã®ç¨®é¡ã‚’è¿”ã™
+	AT ShowAttackTypeInNight(int&, double&, bool&);	//å¤œé–“ç‰¹æ®Šæ”»æ’ƒã®ç¨®é¡ãƒ»ãŠã‚ˆã³å€ç‡ã‚’è¿”ã™
+	bool isSubmarine();				//æ½œæ°´è‰¦ç³»ã‹ã‚’åˆ¤å®š
+	bool isFirstTorpedo();			//é–‹å¹•é›·æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š
+	bool isMoveInGun();				//æ˜¼æˆ¦ã§æ”»æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š
+	bool isSearchAir();				//åµå¯Ÿæ©Ÿã‚’æŒã£ã¦ã„ã‚‹ã‹ã‚’åˆ¤å®š
+	bool isAntiSub();				//å¯¾æ½œæ”»æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š
+	bool isTorpedo();				//é›·æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š
+	bool isMoveInNight();			//å¤œæˆ¦å¯èƒ½ã‹ã‚’åˆ¤å®š
+	bool isAntiSubInNight();		//å¤œæˆ¦æ™‚ã«å¯¾æ½œæ”»æ’ƒå¯èƒ½ã‹ã‚’åˆ¤å®š
+	bool kammusu::hasBomb();		//è‰¦çˆ†ã‚’æŒã£ã¦ã„ã‚‹ã‹ã‚’åˆ¤å®š
 };
 struct fleets{
-	/* ƒƒ“ƒo•Ï” */
+	/* ãƒ¡ãƒ³ãƒå¤‰æ•° */
 	vector<kammusu> Kammusues;
-	int HQLevel;			//i—ß•”ƒŒƒxƒ‹(õ“G‚ÉŠÖŒW‚ ‚é‚Æ‚©ƒ}ƒW‚È‚Ì‚©‚æccH)
-	int Members;			//Š‘®‚·‚éŠÍ–º‚Ì”
-	FORMATION Formation;	//wŒ`
-	/* ƒƒ“ƒoŠÖ” */
-	//ƒVƒ~ƒ…ƒŒ[ƒgŠÖŒW(ƒƒCƒ“‚Æ‚È‚éŠÖ”)
-	WIN Simulate(fleets&, const bool isShow = true);	//í“¬‚ğƒVƒ~ƒ…ƒŒ[ƒg‚·‚é
-	//ƒVƒ~ƒ…ƒŒ[ƒgŠÖŒW(•â•‚Æ‚È‚éŠÖ”)
-	double CalcSearchPower();			//õ“G’l‚ğŒvZ‚·‚é
-	bool hasSaiun();					//Ê‰_‚ª‚¢‚é‚©‚Ç‚¤‚©‚ğ”»’è‚·‚é
-	bool hasLight();					//’TÆ“”‚âÆ–¾’e‚ğ‚Á‚Ä‚¢‚é‚©‚ğ”»’è‚·‚é
-	int RandomKammsu();					//¶‚«c‚Á‚Ä‚éŠÍ–º‚©‚çƒ‰ƒ“ƒ_ƒ€‚É‘I‘ğ‚·‚é
-	int RandomKammsuWithSS();			//¶‚«c‚Á‚Ä‚éŠÍ–º(ö…ŠÍŒn)‚©‚çƒ‰ƒ“ƒ_ƒ€‚É‘I‘ğ‚·‚é
-	int RandomKammsuWithoutSS();		//¶‚«c‚Á‚Ä‚éŠÍ–º(…ã‹@Œn)‚©‚çƒ‰ƒ“ƒ_ƒ€‚É‘I‘ğ‚·‚é
-	int hasAlived();					//¶‘¶ŠÍ‚Ì”‚ğƒJƒEƒ“ƒg‚·‚é
-	double ResultsGauge();				//í‰ÊƒQ[ƒW—Ê‚ğŒvZ‚·‚é
-	//‚»‚Ì‘¼
-	void SetKammusu(const kammusu&);	//ŠÍ–º‚ğƒZƒbƒg‚·‚é
-	void Reset();						//ó‘Ô‚ğƒŠƒZƒbƒg‚·‚é
-	void ShowList(const bool isShow = true);	//ŠÍ‘à‚ÉŠÖ‚·‚éî•ñ‚ğ•\¦‚·‚é
-	void ReadData(const string);		//ƒtƒ@ƒCƒ‹‚©‚ç“Ç‚İ‚Ş
+	int HQLevel;			//å¸ä»¤éƒ¨ãƒ¬ãƒ™ãƒ«(ç´¢æ•µã«é–¢ä¿‚ã‚ã‚‹ã¨ã‹ãƒã‚¸ãªã®ã‹ã‚ˆâ€¦â€¦ï¼Ÿ)
+	int Members;			//æ‰€å±ã™ã‚‹è‰¦å¨˜ã®æ•°
+	FORMATION Formation;	//é™£å½¢
+	/* ãƒ¡ãƒ³ãƒé–¢æ•° */
+	//ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆé–¢ä¿‚(ãƒ¡ã‚¤ãƒ³ã¨ãªã‚‹é–¢æ•°)
+	WIN Simulate(fleets&, const bool, const kSimulateMode);	//æˆ¦é—˜ã‚’ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆã™ã‚‹
+	//ã‚·ãƒŸãƒ¥ãƒ¬ãƒ¼ãƒˆé–¢ä¿‚(è£œåŠ©ã¨ãªã‚‹é–¢æ•°)
+	double CalcSearchPower();			//ç´¢æ•µå€¤ã‚’è¨ˆç®—ã™ã‚‹
+	bool hasSaiun();					//å½©é›²ãŒã„ã‚‹ã‹ã©ã†ã‹ã‚’åˆ¤å®šã™ã‚‹
+	bool hasLight();					//æ¢ç…§ç¯ã‚„ç…§æ˜å¼¾ã‚’æŒã£ã¦ã„ã‚‹ã‹ã‚’åˆ¤å®šã™ã‚‹
+	bool hasHeavyDamage();				//å¤§ç ´ä»¥ä¸Šã®è‰¦ãŒå­˜åœ¨ã™ã‚‹ã‹ã‚’åˆ¤å®šã™ã‚‹
+	int RandomKammsu();					//ç”Ÿãæ®‹ã£ã¦ã‚‹è‰¦å¨˜ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«é¸æŠã™ã‚‹
+	int RandomKammsuWithSS();			//ç”Ÿãæ®‹ã£ã¦ã‚‹è‰¦å¨˜(æ½œæ°´è‰¦ç³»)ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«é¸æŠã™ã‚‹
+	int RandomKammsuWithoutSS(const bool);	//ç”Ÿãæ®‹ã£ã¦ã‚‹è‰¦å¨˜(æ°´ä¸Šæ©Ÿç³»)ã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«é¸æŠã™ã‚‹
+	int hasAlived();					//ç”Ÿå­˜è‰¦ã®æ•°ã‚’ã‚«ã‚¦ãƒ³ãƒˆã™ã‚‹
+	double ResultsGauge();				//æˆ¦æœã‚²ãƒ¼ã‚¸é‡ã‚’è¨ˆç®—ã™ã‚‹
+	//ãã®ä»–
+	void SetKammusu(const kammusu&);	//è‰¦å¨˜ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
+	void Reset();						//çŠ¶æ…‹ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹
+	void ShowList(const bool isShow = true);	//è‰¦éšŠã«é–¢ã™ã‚‹æƒ…å ±ã‚’è¡¨ç¤ºã™ã‚‹
+	void ReadData(const string);		//ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰èª­ã¿è¾¼ã‚€
 };
+
+/* ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€ */
+/* ä¹±æ•°ã®å®šç¾© */
+extern std::random_device rd;
+extern std::mt19937 mt;
+extern std::uniform_real_distribution<> Rand;
+
+extern int RandInt(const int);
+extern void ReadMapData(vector<vector<fleets>>&, const string);
+extern vector<weapon> ReadWeaponData();
+extern vector<kammusu> ReadKammusuData();

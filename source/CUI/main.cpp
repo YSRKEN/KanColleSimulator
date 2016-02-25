@@ -1,190 +1,257 @@
-/* ---------------------------- */
-/*  �͂���V�~�����[�^ Ver.0.2  */
+﻿/* ---------------------------- */
+/*  艦これシミュレータ Ver.0.6  */
 /* ---------------------------- */
 
 /*
-   �ŏI�X�V�����F2014/12/04 03:17
-   ����ҁF��RoVKHyEYUtVB
-   �R�}���h���C�������F
-     �uKanColleSim ���s�� �͑��f�[�^(��U) �͑��f�[�^(��U) �w�`(��U) �w�`(��U)�v
-     �E���s�񐔁c�c�V�~�����[�g�����(���R��)�B�u1�v���w�肷��ƁA�퓬�̓r���o�߂��\������邪�A
-                   2�ȏ���w�肷��Ɠr���o�ߕ\���������Ȃ�A����ɕ�����̃V�~�����[�g�ɂ�����
-                   �͖��̎c��ϋv(����)�ƁA�퓬����(���S����S�`�s�kD)�̊������\�������B
-     �E�͑��f�[�^�c�c�T���v����fleet1.txt��fleet2.txt�Ɏ������B��U�͂��̖��̒ʂ�A
-                     ����ɐ�ɍU��������ɂȂ�B�d�l��A��U�̕����L���ł͂���B
-     �E�w�`�c�c�P�c�w�E���c�w�E�֌`�w�E��`�w�E�P���w����1�I���B
-     �Ȃ��A�R�}���h���C��������5�Ƃ��S�Ďw�肷��K�v������B
-   �Ăяo����F
-     �uKanColleSim 10000 fleet1.txt fleet2.txt �P�c�w �P�c�w�v
-   ���ӁF
-   �Ekammusu.txt��weapon.txt�͖���K���ǂݍ��܂��̂Œ���
-   �E���͂ɃG���[������ꍇ���̎|���G���[���b�Z�[�W�Ƃ��Ēm�点��
-   �E�ܘ_kammusu.txt��weapon.txt�A����ъ͑��f�[�^�͎��R�ɕҏW�ł��邪
-   ���ꂮ������@�~�X���Ȃ��悤�ɁI
+   最終更新日時：2016/02/10
+   製作者：@YSRKEN
+   コマンドライン引数：
+     「KanColleSim 試行回数 艦隊データ(先攻) 艦隊データ(後攻) 陣形(先攻) 陣形(後攻)」
+     ・試行回数……シミュレートする回数(自然数)。「1」を指定すると、戦闘の途中経過も表示されるが、
+                   2以上を指定すると途中経過表示が無くなり、代わりに複数回のシミュレートにおける
+                   艦娘の残り耐久(平均)と、戦闘結果(完全勝利S～敗北D)の割合が表示される。
+     ・艦隊データ……サンプルをfleet1.txt～fleet3.txtに示した。先攻はその名の通り、
+                     相手に先に攻撃する方になる。仕様上、先攻の方が有利ではある。
+                     ちなみに後攻に限り、「*.map」を読み込むとマップモードとなる。
+     ・陣形……単縦陣・複縦陣・輪形陣・梯形陣・単横陣から1つ選択。マップモードだと後攻は無視され、
+               自陣形は対潜マスは単横陣・開幕夜戦は指定・通常は単縦陣となる。
+     なお、コマンドライン引数は5つとも全て指定する必要がある。
+   呼び出し例：
+     「KanColleSim 10000 fleet1.txt fleet2.txt 単縦陣 単縦陣」
+     「KanColleSim 10000 fleet1.txt 1-5_high.map 梯形陣 ほげ」
+   注意：
+   ・kammusu.txtとweapon.txtは毎回必ず読み込まれるので注意
+   ・入力にエラーがある場合その旨をエラーメッセージとして知らせる
+   ・勿論kammusu.txtとweapon.txt、および艦隊データは自由に編集できるが
+   くれぐれも文法ミスがないように！
 */
 
 #include "header.h"
 #include <chrono>
 
 int main(const int argc, const char *argv[]) {
-	/* �����ݒ� */
+	/* 初期設定 */
 	try{
-		if(argc < 5) throw "�������s���ł�.";
-		// ���s��
+		if(argc < 5) throw "引数が不正です.";
+		// 試行回数
 		stringstream sin;
 		sin << argv[1];
 		int BattleCount;
 		sin >> BattleCount;
-		if(BattleCount < 1) throw "���s�񐔂͎��R���̂ݎ�邱�Ƃ��ł��܂�.";
-		// �͑��f�[�^
-		fleets FleetsData[BattleSize];
+		if(BattleCount < 1) throw "試行回数は自然数のみ取ることができます.";
+		// 艦隊データ
+		string FleetsDataName[2];
 		for(int i = 0; i < BattleSize; ++i){
-			string FleetsDataName(argv[i + 2]);
-			FleetsData[i].ReadData(FleetsDataName);
+			FleetsDataName[i] = argv[i + 2];
 		}
-		// �w�`
-		for(int i = 0; i < BattleSize; ++i){
-			string FormationString(argv[i + 4]);
-			if(FormationString == "�P�c�w"){
-				FleetsData[i].Formation = FOR_TRAIL;
-			}else if(FormationString == "���c�w"){
-				FleetsData[i].Formation = FOR_SUBTRAIL;
-			}else if(FormationString == "�֌`�w"){
-				FleetsData[i].Formation = FOR_CIRCLE;
-			}else if(FormationString == "��`�w"){
-				FleetsData[i].Formation = FOR_ECHELON;
-			}else if(FormationString == "�P���w"){
-				FleetsData[i].Formation = FOR_ABREAST;
-			}else{
-				throw "���̐w�`�͑��݂��܂���";
+		if (FleetsDataName[1].substr(FleetsDataName[1].size() - 3, 3) != "map") {	// 通常モード
+			fleets FleetsData[BattleSize];
+			for (int i = 0; i < BattleSize; ++i) {
+				FleetsData[i].ReadData(FleetsDataName[i]);
 			}
-		}
-		/* ��1����2�͑��ւ̍U�� */
-		if(BattleCount == 1) {
-			// 1��̂�
-			FleetsData[FriendSide].Simulate(FleetsData[EnemySide]);
-		} else {
-			// ������(���v���[�h)
-			//����
-			fleets FleetsData_[BattleSize];
-			vector< vector<int> > HPSum(BattleSize);
-			vector< vector<int> > HeavyDamageCount(BattleSize);
-			for(int i = 0; i < BattleSize; ++i) {
-				HPSum[i].resize(FleetsData[i].Members, 0);
-				HeavyDamageCount[i].resize(FleetsData[i].Members, 0);
-			}
-			//�����񎎍s���ďW�v����
-			vector<int> WinReason(WIN_Size, 0);
-			for(int n = 0; n < BattleCount; ++n) {
-				for(int i = 0; i < BattleSize; ++i) {
-					FleetsData_[i] = FleetsData[i];
+			// 陣形
+			for (int i = 0; i < BattleSize; ++i) {
+				string FormationString(argv[i + 4]);
+				if (FormationString == "単縦陣") {
+					FleetsData[i].Formation = FOR_TRAIL;
 				}
-				++WinReason[FleetsData_[FriendSide].Simulate(FleetsData_[EnemySide], false)];
-				for(int i = 0; i < BattleSize; ++i) {
-					for(int j = 0; j < FleetsData[i].Members; ++j) {
-						if(FleetsData_[i].Kammusues[j].ShowDamage() >= HeavyDamage){
-							HeavyDamageCount[i][j]++;
+				else if (FormationString == "複縦陣") {
+					FleetsData[i].Formation = FOR_SUBTRAIL;
+				}
+				else if (FormationString == "輪形陣") {
+					FleetsData[i].Formation = FOR_CIRCLE;
+				}
+				else if (FormationString == "梯形陣") {
+					FleetsData[i].Formation = FOR_ECHELON;
+				}
+				else if (FormationString == "単横陣") {
+					FleetsData[i].Formation = FOR_ABREAST;
+				}
+				else {
+					throw "その陣形は存在しません";
+				}
+			}
+			/* 第1→第2艦隊への攻撃 */
+			if (BattleCount == 1) {
+				// 1回のみ
+				FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeDN);
+			}
+			else {
+				// 複数回(統計モード)
+				//準備
+				fleets FleetsData_[BattleSize];
+				vector< vector<int> > HPSum(BattleSize);
+				vector< vector<int> > HeavyDamageCount(BattleSize);
+				vector< vector<int> > LostCount(BattleSize);
+				for (int i = 0; i < BattleSize; ++i) {
+					HPSum[i].resize(FleetsData[i].Members, 0);
+					HeavyDamageCount[i].resize(FleetsData[i].Members, 0);
+					LostCount[i].resize(FleetsData[i].Members, 0);
+				}
+				//複数回試行して集計する
+				vector<int> WinReason(WIN_Size, 0);
+				for (int n = 0; n < BattleCount; ++n) {
+					for (int i = 0; i < BattleSize; ++i) {
+						FleetsData_[i] = FleetsData[i];
+					}
+					++WinReason[FleetsData_[FriendSide].Simulate(FleetsData_[EnemySide], false, kModeDN)];
+					for (int i = 0; i < BattleSize; ++i) {
+						for (int j = 0; j < FleetsData[i].Members; ++j) {
+							if (FleetsData_[i].Kammusues[j].ShowDamage() == HeavyDamage) {
+								HeavyDamageCount[i][j]++;
+							}
+							if (FleetsData_[i].Kammusues[j].ShowDamage() == Lost) {
+								LostCount[i][j]++;
+							}
+							HPSum[i][j] += FleetsData_[i].Kammusues[j].HP;
 						}
-						HPSum[i][j] += FleetsData_[i].Kammusues[j].HP;
 					}
 				}
-			}
-			//���ʂ�\������
-			cout << "�y���ʕ\���z\n";
-			for(int i = 0; i < BattleSize; ++i) {
-				cout << "��" << Position[i] << "\n";
-				for(int j = 0; j < FleetsData[i].Members; ++j) {
-					FleetsData[i].Kammusues[j].HP = static_cast<int>(1.0 * HPSum[i][j] / BattleCount);
-					cout << "�@" << FleetsData[i].Kammusues[j].Label() << " "
-						<< 1.0 * HPSum[i][j] / BattleCount << "/" << FleetsData[i].Kammusues[j].MaxHP
-						<< "(" << DMString[FleetsData[i].Kammusues[j].ShowDamage()] << ") ";
-					cout << "��j���F" << (100.0 * HeavyDamageCount[i][j] / BattleCount) << "��\n";
+				//結果を表示する
+				cout << "【結果表示】\n";
+				for (int i = 0; i < BattleSize; ++i) {
+					cout << "○" << Position[i] << "\n";
+					for (int j = 0; j < FleetsData[i].Members; ++j) {
+						FleetsData[i].Kammusues[j].HP = static_cast<int>(1.0 * HPSum[i][j] / BattleCount);
+						cout << "　" << FleetsData[i].Kammusues[j].Label() << " "
+							<< 1.0 * HPSum[i][j] / BattleCount << "/" << FleetsData[i].Kammusues[j].MaxHP
+							<< "(" << DMString[FleetsData[i].Kammusues[j].ShowDamage()] << ") ";
+						cout << "大破率：" << (100.0 * HeavyDamageCount[i][j] / BattleCount) << "％ ";
+						cout << "撃沈率：" << (100.0 * LostCount[i][j] / BattleCount) << "％\n";
+					}
+				}
+				double WinPer = 100.0 * (WinReason[WIN_SS] + WinReason[WIN_S] + WinReason[WIN_A] + WinReason[WIN_B]) / BattleCount;
+				cout << "○勝利判定の分布(勝率：" << WinPer << "％)\n";
+				for (int i = WIN_Size - 1; i >= 0; --i) {
+					cout << "　" << WINString[i] << "：" << WinReason[i] << "回(" << 100.0 * WinReason[i] / BattleCount << "％)\n";
 				}
 			}
-			double WinPer = 100.0 * (WinReason[WIN_SS] + WinReason[WIN_S] + WinReason[WIN_A] + WinReason[WIN_B]) / BattleCount;
-			cout << "����������̕��z(�����F" << WinPer << "��)\n";
-			for(int i = WIN_Size - 1; i >= 0; --i) {
-				cout << "�@" << WINString[i] << "�F" << WinReason[i] << "��(" << 100.0 * WinReason[i] / BattleCount << "��)\n";
+		}
+		else {	// マップモード
+			// 自艦隊の情報を読み込む
+			fleets MyFleetsData;
+			MyFleetsData.ReadData(FleetsDataName[0]);
+			// マップの情報を読み込む
+			vector<vector<fleets>> MapData;
+			ReadMapData(MapData, FleetsDataName[1]);
+			// 夜戦用陣形を読み込む
+			string temp(argv[4]);
+			FORMATION night_formation;
+			if (temp == "単縦陣") {
+				night_formation = FOR_TRAIL;
+			}
+			else if (temp == "複縦陣") {
+				night_formation = FOR_SUBTRAIL;
+			}
+			else if (temp == "輪形陣") {
+				night_formation = FOR_CIRCLE;
+			}
+			else if (temp == "梯形陣") {
+				night_formation = FOR_ECHELON;
+			}
+			else if (temp == "単横陣") {
+				night_formation = FOR_ABREAST;
+			}
+			else {
+				throw "その陣形は存在しません";
+			}
+			// 戦闘をシミュレートする
+			fleets FleetsData[BattleSize];
+			if (BattleCount == 1) {
+				// 1回のみ
+				FleetsData[0] = MyFleetsData;
+				for (rsize_t i = 0; i < MapData.size(); ++i) {
+					cout << "《" << (i + 1) << "戦目》\n";
+					// 1戦毎にランダムに編成を選び、あてがう
+					FleetsData[1] = MapData[i][RandInt(MapData[i].size())];
+					// 自陣形を敵編成から判断する
+					FleetsData[FriendSide].Formation = FOR_TRAIL;
+						// 敵旗艦が潜水艦ならば単横陣
+					if (FleetsData[EnemySide].Kammusues[0].isSubmarine()) {
+						FleetsData[FriendSide].Formation = FOR_ABREAST;
+					}
+					if(i != MapData.size() - 1){
+						// 道中
+						FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeD);
+						// 誰も大破していないかを調べる
+						if (FleetsData[FriendSide].hasHeavyDamage()) {
+							cout << "●道中撤退！●\n";
+							break;
+						}
+					}else {
+						// ボス
+						FleetsData[FriendSide].Simulate(FleetsData[EnemySide], true, kModeDN);
+					}
+				}
+				cout << "●終了！●\n";
+			}else {
+				// 複数回行う
+				//準備
+				fleets FleetsData[BattleSize];
+				rsize_t areas = MapData.size(), members = MyFleetsData.Members;
+				vector<vector<int>> WinReason(areas, vector<int>(WIN_Size, 0));
+				vector<vector<int>> LossReason(areas - 1, vector<int>(members, 0));
+				//複数回試行して集計する
+				for (int n = 0; n < BattleCount; ++n) {
+					FleetsData[0] = MyFleetsData;
+					for (rsize_t i = 0; i < areas; ++i) {
+						// 1戦毎にランダムに編成を選び、あてがう
+						FleetsData[1] = MapData[i][RandInt(MapData[i].size())];
+						// 自陣形を敵編成から判断する
+						FleetsData[FriendSide].Formation = FOR_TRAIL;
+						// 敵旗艦が潜水艦ならば単横陣
+						if (FleetsData[EnemySide].Kammusues[0].isSubmarine()) {
+							FleetsData[FriendSide].Formation = FOR_ABREAST;
+						}
+						// シミュレート(勝利判定をカウント)
+						if (i != MapData.size() - 1) {
+							// 道中
+							++WinReason[i][FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, kModeD)];
+						}else {
+							// ボス
+							++WinReason[i][FleetsData[FriendSide].Simulate(FleetsData[EnemySide], false, kModeDN)];
+						}
+						// 誰も大破していないかを調べる
+						if (i != areas - 1) {
+							bool loss_flg = false;
+							for (rsize_t j = 0; j < members; ++j) {
+								if (FleetsData[FriendSide].Kammusues[j].ShowDamage() >= HeavyDamage) {
+									++LossReason[i][j];
+									loss_flg = true;
+								}
+							}
+							if (loss_flg) {
+								break;
+							}
+						}
+					}
+				}
+				// 結果を出力する
+				cout << "【結果表示】\n";
+				vector<int> sum(areas, 0);
+				for (rsize_t i = 0; i < areas; ++i) {
+					for (auto &it : WinReason[i]) {
+						sum[i] += it;
+					}
+				}
+				for (rsize_t i = 0; i < areas; ++i) {
+					cout << "《" << (i + 1) << "戦目》到達率：" << (100.0 * sum[i] / BattleCount) << "％\n";
+					if (i != areas - 1) {
+						cout << "○撤退要因(撤退率：" << (100.0 * (sum[i] - sum[i + 1]) / sum[i]) << "％)\n";
+						for (rsize_t j = 0; j < members; ++j) {
+							cout << "　" << FleetsData[0].Kammusues[j].Label() << "：" << LossReason[i][j] << "回(" << (100.0 * LossReason[i][j] / sum[i]) << "％)\n";
+						}
+					}
+					double WinPer = 100.0 * (WinReason[i][WIN_SS] + WinReason[i][WIN_S] + WinReason[i][WIN_A] + WinReason[i][WIN_B]) / sum[i];
+					cout << "○勝利判定の分布(勝率：" << WinPer << "％)\n";
+					for (int j = WIN_Size - 1; j >= 0; --j) {
+						cout << "　" << WINString[j] << "：" << WinReason[i][j] << "回(" << (100.0 * WinReason[i][j] / sum[i]) << "％)\n";
+					}
+				}
 			}
 		}
 	}
 	catch(char *e){
-		cout << "�G���[�F" << e << std::endl;
+		cout << "エラー：" << e << std::endl;
 	}
 }
-/*
-	//���� �ϐ���           ���O,                   ���,           ��, ��,��,��,��,��,��,��, �˒�,        ���b
-	weapon Gun_127_Multi   {"12.7cm�A���C",         Type_Gun,        2,  0, 0, 2, 0, 0, 0, 0, ShortRange,  0};
-	weapon Gun_140_Single  {"14cm�P���C",           Type_Gun,        2,  0, 0, 0, 0, 0, 1, 0, MiddleRange, 0};
-	weapon Gun_203_Multi   {"20.3cm�A���C",         Type_Gun,        8,  0, 0, 3, 0, 0, 0, 0, MiddleRange, 0};
-	weapon Gun_356_Multi   {"35.6cm�A���C",         Type_Gun,       15,  0, 0, 4, 0, 0, 0, 0, LongRange,   0};
-	weapon Gun_152_Single  {"15.2cm�P���C",         Type_SubGun,     2,  0, 0, 0, 0, 0, 1, 0, MiddleRange, 0};
-	weapon Torpedo_61_3    {"61cm�O�A������",       Type_Torpedo,    0,  5, 0, 0, 0, 0, 0, 0, ShortRange,  0};
-	weapon Torpedo_61_4_Oxy{"61cm�l�A��(�_�f)����", Type_Torpedo,    0, 10, 0, 0, 0, 0, 0, 0, ShortRange,  0};
-	weapon SpecialSS_Kou   {"�b�W�I �b",            Type_SpecialSS,  0, 12, 0, 0, 0, 0, 0, 0, NoneRange,   0};
-	weapon WB_Zuiun        {"���_",                 Type_WB,         0,  0, 4, 2, 4, 6, 1, 0, NoneRange,   0};
-	weapon WS_Zero         {"�뎮�����@�@",       Type_WS,         0,  0, 1, 1, 2, 5, 1, 0, NoneRange,   0};
-	weapon PF_21           {"�뎮�͐�21�^",         Type_PF,         0,  0, 0, 5, 0, 0, 0, 0, NoneRange,   0};
-	weapon PBF_62          {"�뎮�͐�62�^(����)",   Type_PBF,        0,  0, 4, 4, 3, 0, 0, 0, NoneRange,   0};
-	weapon PB_99           {"��㎮�͔�",           Type_PB,         0,  0, 5, 0, 3, 0, 0, 0, NoneRange,   0};
-	weapon PB_SuiSei       {"�a��",                 Type_PB,         0,  0, 8, 0, 3, 0, 0, 0, NoneRange,   0};
-	weapon PA_97           {"�㎵���͍U",           Type_PA,         0,  5, 0, 0, 4, 1, 0, 0, NoneRange,   0};
-	weapon PA_Tenzan       {"�V�R",                 Type_PA,         0,  7, 0, 0, 3, 1, 0, 0, NoneRange,   0};
-	weapon AAG_77_Single   {"7.7mm�@�e",            Type_AAG,        0,  0, 0, 2, 0, 0, 0, 1, NoneRange,   0};
-	//�͖�  �ϐ���              �͖�,     �͎�,   Lv, ��, ��, ��, ��, ��, ��, ��, ����,      ��, �˒�,        �^, �X,��1,��2,��3,��4
-	kammusu Fubuki_Fubuki_0    ("����",   SC_DD,   1, 15, 10,  5, 27, 40, 10, 20, HighSpeed,  5, ShortRange,  17, 2);
-	kammusu Kuma_Oi_1          ("����", SC_CLT, 10, 32,  8, 14, 80, 37, 13, 28, HighSpeed, 11, MiddleRange, 10, 2);
-	kammusu Mogami_Mogami_1    ("�ŏ��", SC_CAV, 10, 50, 28, 39, 23, 38, 24,  0, HighSpeed, 25, MiddleRange, 10, 4,  5,  6,  5,  3);
-	kammusu Akagi_Akagi_0      ("�ԏ�",   SC_CV,   1, 69,  0, 28,  0, 28, 32,  0, HighSpeed, 44, ShortRange,  12, 4, 18, 18, 27, 10);
-	kammusu Ise_Ise_1          ("�ɐ���", SC_BBV, 10, 77, 63, 75,  0, 36, 45,  0, LowSpeed,  22, LongRange,   30, 4, 11, 11, 11, 14);
-	kammusu E_E401_0           ("��401",  SC_SSV,  1, 20,  2,  5, 36, 13,  0,  0, LowSpeed,  15, ShortRange,  20, 1,  3);
-	kammusu Kongoh_Kongoh_0    ("����",   SC_BB,   1, 63, 63, 52,  0, 30, 24,  0, HighSpeed, 13, LongRange,   12, 3,  3,  3,  3);
-	kammusu Taihoh_Taihoh_0    ("��P",   SC_ACV,  1, 67,  0, 40,  0, 33, 42,  0, HighSpeed, 47, ShortRange,   2, 4, 18, 18, 18,  7);
-	kammusu HohShoh_HohShoh_0  ("�P��",   SC_CVL,  1, 30,  0, 15,  0, 24, 10,  0, LowSpeed,  32, ShortRange,  20, 2,  8, 11);
-	kammusu Chitose_Chitose_2  ("��΍b", SC_AV,  12, 42, 10, 22, 18, 29, 19,  0, HighSpeed, 34, ShortRange,  10, 3, 12,  6,  6);
-	kammusu Hurutaka_Hurutaka_0("�Ñ�",   SC_CA,   1, 36, 30, 25, 12, 33, 16,  0, HighSpeed, 10, MiddleRange, 10, 3,  2,  2,  2);
-	kammusu Tenryuu_Tenryuu_0  ("�V��",   SC_CL,   1, 23, 11,  7, 18, 35,  8, 18, HighSpeed,  7, MiddleRange, 17, 2);
-	//�͑� �ϐ���
-	fleets First_Fleets(10), Second_Fleets(10);
-	//����
-	Fubuki_Fubuki_0.Weapons[0] = Gun_127_Multi;
-	Fubuki_Fubuki_0.Weapons[1] = Torpedo_61_3;
-	Kuma_Oi_1.Weapons[0] = Torpedo_61_4_Oxy;
-	Kuma_Oi_1.Weapons[1] = Torpedo_61_4_Oxy;
-	Mogami_Mogami_1.Weapons[0] = Gun_203_Multi;
-	Mogami_Mogami_1.Weapons[1] = WB_Zuiun;
-	Mogami_Mogami_1.Weapons[2] = WS_Zero;
-	Akagi_Akagi_0.Weapons[0] = PF_21;
-	Akagi_Akagi_0.Weapons[1] = PB_99;
-	Akagi_Akagi_0.Weapons[2] = PA_97;
-	Ise_Ise_1.Weapons[0] = Gun_356_Multi;
-	Ise_Ise_1.Weapons[1] = WB_Zuiun;
-	Ise_Ise_1.Weapons[2] = Gun_356_Multi;
-	Kongoh_Kongoh_0.Weapons[0] = Gun_356_Multi;
-	Kongoh_Kongoh_0.Weapons[1] = Gun_152_Single;
-	Kongoh_Kongoh_0.Weapons[2] = AAG_77_Single;
-	Taihoh_Taihoh_0.Weapons[0] = PBF_62;
-	Taihoh_Taihoh_0.Weapons[1] = PB_SuiSei;
-	Taihoh_Taihoh_0.Weapons[2] = PA_Tenzan;
-	HohShoh_HohShoh_0.Weapons[0] = PB_99;
-	Chitose_Chitose_2.Weapons[0] = WS_Zero;
-	Chitose_Chitose_2.Weapons[1] = SpecialSS_Kou;
-	Chitose_Chitose_2.Weapons[2] = SpecialSS_Kou;
-	Hurutaka_Hurutaka_0.Weapons[0] = Gun_203_Multi;
-	Hurutaka_Hurutaka_0.Weapons[1] = AAG_77_Single;
-	Tenryuu_Tenryuu_0.Weapons[0] = Gun_140_Single;
-	Tenryuu_Tenryuu_0.Weapons[1] = AAG_77_Single;
-	//�Ґ�
-	First_Fleets.SetKammusu(Fubuki_Fubuki_0);
-	First_Fleets.SetKammusu(Kuma_Oi_1);
-	First_Fleets.SetKammusu(Mogami_Mogami_1);
-	First_Fleets.SetKammusu(Akagi_Akagi_0);
-	First_Fleets.SetKammusu(Ise_Ise_1);
-	First_Fleets.SetKammusu(E_E401_0);
-	Second_Fleets.SetKammusu(Kongoh_Kongoh_0);
-	Second_Fleets.SetKammusu(Taihoh_Taihoh_0);
-	Second_Fleets.SetKammusu(HohShoh_HohShoh_0);
-	Second_Fleets.SetKammusu(Chitose_Chitose_2);
-	Second_Fleets.SetKammusu(Hurutaka_Hurutaka_0);
-	Second_Fleets.SetKammusu(Tenryuu_Tenryuu_0);
-}*/
