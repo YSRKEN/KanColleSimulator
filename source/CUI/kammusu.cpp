@@ -559,3 +559,13 @@ void kammusu::changeCond(const int new_cond) {
 	if (cond < 0) cond = 0;
 	if (cond > 100) cond = 100;
 }
+
+/* 装備欄をクリアする */
+void kammusu::clear_weapons() {
+	Weapons.clear();
+	Weapons.resize(Slots);
+	weapon Weapon_None;
+	for (int i = 0; i < Slots; ++i) {
+		Weapons[i] = Weapon_None;
+	}
+}

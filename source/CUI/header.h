@@ -9,6 +9,8 @@
 #include <tuple>
 #include <vector>
 #include <random>
+#include <unordered_map>
+#include "picojson.h"
 /* その他プリプロセッサ */
 #define USE_NEW_SEARCH_METHOD	//コメントアウトすると、索敵計算式が(秋)から(旧)に変わる
 
@@ -21,6 +23,8 @@ using std::stringstream;
 using std::vector;
 using std::tuple;
 using std::get;
+using std::unordered_map;
+using picojson::object;
 
 /* 定数宣言 */
 // 艦種
@@ -186,6 +190,7 @@ struct kammusu {
 	bool hasBomb();					//艦爆を持っているかを判定
 	bool hasWatch();				//熟練見張員を所持しているかを判定
 	void changeCond(const int);		//cond値を修正する
+	void clear_weapons();			//装備欄をクリアする
 };
 struct fleets{
 	/* メンバ変数 */
@@ -226,3 +231,6 @@ extern void ReadMapData(vector<vector<fleets>>&, vector<vector<kSimulateMode>>&,
 extern vector<weapon> ReadWeaponData();
 extern vector<kammusu> ReadKammusuData();
 extern vector<string> split(const string);
+extern void ReadWeaponData2(unordered_map<int, weapon>&);
+extern void ReadKammusuData2(unordered_map<size_t, kammusu>&, unordered_map<size_t, kammusu>&, const unordered_map<int, weapon>&);
+extern kammusu calc_param(const kammusu&, const kammusu&, int);

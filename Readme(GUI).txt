@@ -1,8 +1,8 @@
-KanColleSimulator(KCS) Ver.0.8
+KanColleSimulator(KCS) Ver.0.85
 ※等幅フォントで閲覧することを推奨します
 
 【最終更新日時】
-　2016/02/22
+　2016/02/24
 
 【製作者】
 　おーぷん2ch：◆RoVKHyEYUtVB
@@ -30,11 +30,6 @@ KanColleSimulator(KCS) Ver.0.8
 　KanColleSimGUI.exe……Visual Studio 2015で作成された実行ファイル。
 　Readme(GUI).txt……フロントエンドアプリケーションについての説明が書かれています。
 　source\GUI……Visual Studio 2015で記述されたソースコードが入ってあります。
-　ネタ……ネタをネタとわかる大人な提督のみ使用可能なファイル群です。中にはネタ
-　　　　　ありのweapon.csvとkammusu.csv、そしてネタを仕込んだfleetsX.txtが
-　　　　　含まれています。使用する際は、これらのファイルすべてを
-　　　　　KanColleSimGUI.exeと同じフォルダにコピー(上書き)して下さい。
-　　　　　(Format.txtを熟読すれば、上書きせずとも導入できます)
 
 【操作説明】
 ○装備データタブ
@@ -94,6 +89,7 @@ KanColleSimulator(KCS) Ver.0.8
 【注意事項】
 ※Readme(CUI).txtからの追加分です
 　・例外処理はロクに考えていませんのでご了承ください
+　・デッキビルダー形式(*.json)の入出力にまだ対応していません。ご了承ください。
 
 【参考】
 ※Readme(CUI).txtからの追加分です

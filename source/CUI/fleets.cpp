@@ -1593,13 +1593,15 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		}
 		//三式弾特効
 		if(((Turn == TURN_GUN) || (Turn == TURN_NIGHT)) && TargetK->Kind == SC_AF){
-			bool has_sanshiki = false, has_wg = false;
+			bool has_sanshiki = false;
+			size_t has_wg = 0;
 			for (auto &it : HunterK->Weapons) {
 				if (it.Name.find("三式弾") != string::npos) has_sanshiki = true;
-				if (it.Name.find("WG") != string::npos) has_wg = true;
+				if(it.Name.find("WG") != string::npos) ++has_wg;
 			}
 			if (has_sanshiki) Damage *= 2.5;
-			if (has_wg) Damage += 75.0;
+			const double wg_plus[] = {75, 109, 142, 162};
+			Damage += wg_plus[has_wg];
 		}else {
 			//夜戦
 			if ((Turn == TURN_NIGHT) && (isSpecialAttack)) {
@@ -1671,7 +1673,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 			Damage *= 1.5;
 			cl_flg = true;
 		}
-	}else if(Rand(mt) < 0.24 * HitValue / (HitValue + 0.75) + cl_per_plus) {
+	}else if(Rand(mt) < (0.25 * HitValue / (HitValue + 1) + 0.0125) + cl_per_plus) {
 		Damage *= 1.5;
 		cl_flg = true;
 	}
@@ -1797,89 +1799,146 @@ void fleets::ShowList(const bool isShow) {
 
 /* ファイルから読み込む */
 void fleets::ReadData(const string Filename){
-	std::locale::global(std::locale("japanese"));
-	/* weapon.txtから装備データを読み込む */
-	vector<weapon> WeaponList = ReadWeaponData();
+	/* 拡張子を抽出する */
+	size_t pos1 = Filename.rfind('.');
+	if (pos1 == string::npos) throw "艦隊データが正常に読み込めませんでした.";
+	string ext = Filename.substr(pos1 + 1, Filename.size() - pos1);
+	if (ext == "txt") {
+		std::locale::global(std::locale("japanese"));
+		/* weapon.txtから装備データを読み込む */
+		vector<weapon> WeaponList = ReadWeaponData();
 
-	/* kammusu.txtから艦娘データを読み込む */
-	vector<kammusu> KammusuList = ReadKammusuData();
+		/* kammusu.txtから艦娘データを読み込む */
+		vector<kammusu> KammusuList = ReadKammusuData();
 
-	/* Filenameから艦隊データを読み込む */
-	fstream fin3(Filename);
-	if (!fin3.is_open()) throw "艦隊データが正常に読み込めませんでした.";
-	Members = 0;
-	Kammusues.clear();
-	string GetLine;
-	int Step = 0;
-	while (getline(fin3, GetLine)){
-		// 空行及び#から始まる行(コメント行)は無視する
-		if (GetLine == "") continue;
-		if (GetLine.substr(0, 1) == "#") continue;
-		if (Step == 0){
-			//司令部レベル
-			HQLevel = ToInt(GetLine);
-			++Step;
-		}else if (Step == 1){
-			//メンバー(カンマ区切り)
-			string temp;
-			stringstream sin(GetLine);
-			while (getline(sin, temp, ',')){
-				int Number = ToInt(temp) - 1;
-				if (Number < 0) throw "メンバー指定が異常です.";
-				SetKammusu(KammusuList[Number]);
+		/* Filenameから艦隊データを読み込む */
+		fstream fin3(Filename);
+		if (!fin3.is_open()) throw "艦隊データが正常に読み込めませんでした.";
+		Members = 0;
+		Kammusues.clear();
+		string GetLine;
+		int Step = 0;
+		while (getline(fin3, GetLine)) {
+			// 空行及び#から始まる行(コメント行)は無視する
+			if (GetLine == "") continue;
+			if (GetLine.substr(0, 1) == "#") continue;
+			if (Step == 0) {
+				//司令部レベル
+				HQLevel = ToInt(GetLine);
+				++Step;
 			}
-			++Step;
-		}else if (Step < 2 + Members){
-			//装備(カンマ区切り)
-			int set = Step - 2;
-			vector<string> WList = split(GetLine);
-			for (size_t i = 0; i < WList.size(); ++i){
-				int Number = ToInt(WList[i]) - 1;
-				if (Number < 0) break;
-				if (i >= (size_t)Kammusues[set].Slots) break;
-				Kammusues[set].Weapons[i] = WeaponList[Number];
+			else if (Step == 1) {
+				//メンバー(カンマ区切り)
+				string temp;
+				stringstream sin(GetLine);
+				while (getline(sin, temp, ',')) {
+					int Number = ToInt(temp) - 1;
+					if (Number < 0) throw "メンバー指定が異常です.";
+					SetKammusu(KammusuList[Number]);
+				}
+				++Step;
 			}
-			++Step;
-		} else if(Step < 2 + Members * 2) {
-			//状態(カンマ区切り)
-			int Set = Step - 2 - Members;
-			string temp;
-			stringstream sin(GetLine);
-			vector<string> InfoList;
-			while(getline(sin, temp, ',')) {
-				InfoList.push_back(temp);
+			else if (Step < 2 + Members) {
+				//装備(カンマ区切り)
+				int set = Step - 2;
+				vector<string> WList = split(GetLine);
+				for (size_t i = 0; i < WList.size(); ++i) {
+					int Number = ToInt(WList[i]) - 1;
+					if (Number < 0) break;
+					if (i >= (size_t)Kammusues[set].Slots) break;
+					Kammusues[set].Weapons[i] = WeaponList[Number];
+				}
+				++Step;
 			}
-			for(int i = 0; i < static_cast<int>(InfoList.size()); ++i) {
-				int Number = ToInt(InfoList[i]);
-				if(Number >= 0) {
-					if((i == 0) && (Number > 0) && (Number <= Kammusues[Set].MaxHP)) {
-						//残り耐久
-						Kammusues[Set].HP = Number;
-					}
-					if((i == 1) && (Number <= 100)) {
-						//cond値
-						Kammusues[Set].cond = Number;
-					}
-					if((i == 2) && (Number <= 100)) {
-						//残り弾薬％
-						Kammusues[Set].Ammo = Number;
-					}
-					if((i >= 3) && (i - 3 < Kammusues[Set].Slots) && (Number <= Kammusues[Set].MaxAirs[i - 3])) {
-						//1～4スロ目の残り艦載機数
-						Kammusues[Set].Airs[i - 3] = Number;
+			else if (Step < 2 + Members * 2) {
+				//状態(カンマ区切り)
+				int Set = Step - 2 - Members;
+				string temp;
+				stringstream sin(GetLine);
+				vector<string> InfoList;
+				while (getline(sin, temp, ',')) {
+					InfoList.push_back(temp);
+				}
+				for (int i = 0; i < static_cast<int>(InfoList.size()); ++i) {
+					int Number = ToInt(InfoList[i]);
+					if (Number >= 0) {
+						if ((i == 0) && (Number > 0) && (Number <= Kammusues[Set].MaxHP)) {
+							//残り耐久
+							Kammusues[Set].HP = Number;
+						}
+						if ((i == 1) && (Number <= 100)) {
+							//cond値
+							Kammusues[Set].cond = Number;
+						}
+						if ((i == 2) && (Number <= 100)) {
+							//残り弾薬％
+							Kammusues[Set].Ammo = Number;
+						}
+						if ((i >= 3) && (i - 3 < Kammusues[Set].Slots) && (Number <= Kammusues[Set].MaxAirs[i - 3])) {
+							//1～4スロ目の残り艦載機数
+							Kammusues[Set].Airs[i - 3] = Number;
+						}
 					}
 				}
+				++Step;
 			}
-			++Step;
-		}else if (Step < 2 + Members * 3) {
-			int set = Step - 2 - Members * 2;
-			//装備改修度・艦載機熟練度
-			vector<string> weapon_level_list = split(GetLine);
-			for (int i = 0; i < Kammusues[set].Slots; ++i) {
-				Kammusues[set].Weapons[i].level_ = std::stoi(weapon_level_list[i]);
+			else if (Step < 2 + Members * 3) {
+				int set = Step - 2 - Members * 2;
+				//装備改修度・艦載機熟練度
+				vector<string> weapon_level_list = split(GetLine);
+				for (int i = 0; i < Kammusues[set].Slots; ++i) {
+					Kammusues[set].Weapons[i].level_ = std::stoi(weapon_level_list[i]);
+				}
+				++Step;
 			}
-			++Step;
 		}
+	}
+	else if (ext == "json") {
+		std::locale::global(std::locale("japanese"));
+		/* slotitems.csvから兵装データを読み込む */
+		unordered_map<int, weapon> weapon_list;
+		ReadWeaponData2(weapon_list);
+		/* ships.csvから艦娘データを読み込む */
+		/* (リスク回避のため、nullが含まれるものは読まないようにする) */
+		unordered_map<size_t, kammusu> kammusu_list_1, kammusu_list_99;
+		ReadKammusuData2(kammusu_list_1, kammusu_list_99, weapon_list);
+		/* Filenameから艦隊データを読み込む */
+		fstream fin3(Filename);
+		if (!fin3.is_open()) throw "艦隊データが正常に読み込めませんでした.";
+		string json((std::istreambuf_iterator<char>(fin3)),std::istreambuf_iterator<char>());
+		picojson::value v;
+		string err = picojson::parse(v, json);
+		if (err.empty()) {
+			// 第1艦隊を読み込む
+			auto& o = v.get<object>();
+			auto& fleet = o["f1"].get<object>();
+			// 諸情報はざっくり決める
+			HQLevel = 120;
+			Members = fleet.size();
+			Kammusues.resize(Members);
+			for (int i = 0; i < Members; ++i) {
+				auto& unit = fleet["s" + std::to_string(i + 1)].get<object>();
+				int id = ToInt(unit["id"].get<string>());
+				Kammusues[i] = calc_param(kammusu_list_1.at(id), kammusu_list_99.at(id), stoi(unit["lv"].to_str()));
+				int luck = stoi(unit["luck"].to_str());
+				if (luck != -1) Kammusues[i].Luck = luck;
+				Kammusues[i].clear_weapons();
+				auto& weapons = unit["items"].get<object>();
+				size_t weapons_size = weapons.size();
+				for (size_t j = 0; j < weapons_size; ++j) {
+					auto& weapon = weapons["i" + std::to_string(j + 1)].get<object>();
+					auto id2 = stoi(weapon["id"].to_str());
+					Kammusues[i].Weapons[j] = weapon_list.at(id2);
+					Kammusues[i].Weapons[j].level_ = stoi(weapon["rf"].to_str());
+				}
+			}
+		}
+		else {
+			throw "艦隊データが正常に読み込めませんでした.";
+		}
+	}
+	else {
+		throw "艦隊データが正常に読み込めませんでした.";
 	}
 	return;
 }

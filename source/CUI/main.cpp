@@ -1,9 +1,8 @@
-﻿/* ---------------------------- */
-/*  艦これシミュレータ Ver.0.8  */
-/* ---------------------------- */
+﻿/* ----------------------------- */
+/*  艦これシミュレータ Ver.0.85  */
+/* ----------------------------- */
 
 #include "header.h"
-#include <chrono>
 
 int main(const int argc, const char *argv[]) {
 	/* 初期設定 */
@@ -163,10 +162,11 @@ int main(const int argc, const char *argv[]) {
 					//敵旗艦が潜水艦ならば単横陣
 					if (FleetsData[EnemySide].Kammusues[0].isSubmarine()) {
 						FleetsData[FriendSide].Formation = FOR_ABREAST;
-					}
-					//夜戦マスなら指定した陣形にする
-					if (MapSim[i][j] == kModeN) {
-						FleetsData[FriendSide].Formation = night_formation;
+					} else{
+						//夜戦マスなら指定した陣形にする
+						if(MapSim[i][j] == kModeN) {
+							FleetsData[FriendSide].Formation = night_formation;
+						}
 					}
 					if(i != MapData.size() - 1){
 						// 道中
