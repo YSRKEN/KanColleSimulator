@@ -197,6 +197,7 @@ struct kammusu {
 	size_t getAAC();				//対空カットインの種類を判別する
 	double getAACPer(const size_t);	//対空カットインの発動率を計算する
 	bool hasPA();					//艦攻を持っているかを判定
+	int AllDefense();				//総装甲を返す
 };
 struct fleets{
 	/* メンバ変数 */

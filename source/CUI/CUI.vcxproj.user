@@ -2,22 +2,22 @@
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerCommandArguments>11000 sample\fleets10.txt sample\16冬E1削り_甲.map 単縦陣 マップ &gt; log_.txt</LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\old\WithGUI版\GUI版\KCS090</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\old\repository</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommandArguments>11000 sample\fleets10.txt sample\16冬E1削り_甲.map 単縦陣 マップ &gt; log_.txt</LocalDebuggerCommandArguments>
-    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\old\WithGUI版\GUI版\KCS090</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\old\repository</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>1100 sample\fleets8.txt sample\16冬ラスダン_第二艦隊想定_甲.map 単縦陣 マップ &gt; log_.txt</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>1100 sample\fleets8.txt sample\16冬ラスダン_第二艦隊想定_甲.map 単縦陣 マップ &gt; log.txt</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KCS080\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\old\repository</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerCommandArguments>1100 sample\fleets8.txt sample\16冬ラスダン_第二艦隊想定_甲.map 単縦陣 マップ &gt; log_.txt</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>1100 sample\fleets8.txt sample\16冬ラスダン_第二艦隊想定_甲.map 単縦陣 マップ &gt; log.txt</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\WithGUI版\GUI版\KCS080\</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerWorkingDirectory>F:\ソフトウェア\パズル・ゲーム\PC\・シミュレーションゲーム\・艦これ\・自作物\艦これシミュレータ\old\repository</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
 </Project>

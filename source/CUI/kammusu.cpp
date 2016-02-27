@@ -380,7 +380,8 @@ bool kammusu::isMoveInNight() {
 		if (Name.find("グラーフ") != string::npos) return true;
 		return false;
 	}
-	if (Kind == SC_AO && hasPA()) return false;	//艦攻装備速吸は空母扱いとする
+	//if (Kind == SC_AO && hasPA()) return false;	//艦攻装備速吸は空母扱いとする
+	//艦攻装備速吸の夜戦火力は検証中だが、攻撃できないわけではないそうなので修正した
 	return true;
 }
 
@@ -775,4 +776,13 @@ bool kammusu::hasPA() {
 		if (it.Type == Type_PA) return true;
 	}
 	return false;
+}
+
+/* 総装甲を返す */
+int kammusu::AllDefense() {
+	int DSum = Defense;
+	for (auto &it : Weapons) {
+		DSum += it.Defense;
+	}
+	return DSum;
 }

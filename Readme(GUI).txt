@@ -1,8 +1,8 @@
-KanColleSimulator(KCS) Ver.0.9
+KanColleSimulator(KCS) Ver.0.91
 ※等幅フォントで閲覧することを推奨します
 
 【最終更新日時】
-　2016/02/25
+　2016/02/27
 
 【製作者】
 　おーぷん2ch：◆RoVKHyEYUtVB

@@ -1715,15 +1715,29 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 			}
 		}
 		//損傷状態
-		switch(HunterK->ShowDamage()) {
-		case MiddleDamage:
-			Damage *= 0.7;
-			break;
-		case HeavyDamage:
-			Damage *= 0.4;
-			break;
-		default:
-			break;
+		if (Turn != TURN_TOR_FIRST) {
+			switch (HunterK->ShowDamage()) {
+			case MiddleDamage:
+				Damage *= 0.7;
+				break;
+			case HeavyDamage:
+				Damage *= 0.4;
+				break;
+			default:
+				break;
+			}
+		}
+		else {
+			switch (HunterK->ShowDamage()) {
+			case MiddleDamage:
+				Damage *= 0.8;
+				break;
+			case HeavyDamage:
+				Damage *= 0.0;
+				break;
+			default:
+				break;
+			}
 		}
 		//三式弾特効
 		if(((Turn == TURN_GUN) || (Turn == TURN_NIGHT)) && TargetK->Kind == SC_AF){
@@ -1836,7 +1850,7 @@ int AttackAction(fleets *Friend, fleets *Enemy, const int Hunter, int &Target, c
 		Damage *= Multiple;
 	}
 	/* 最終的なダメージ量を決定 */
-	double defense2 = 0.7 * TargetK->Defense + 0.6 * RandInt(TargetK->Defense);
+	double defense2 = 0.7 * TargetK->AllDefense() + 0.6 * RandInt(TargetK->AllDefense());
 	Damage = Damage - defense2;
 	//残り弾薬量補正
 	if(HunterK->Ammo < 50) {
