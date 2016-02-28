@@ -649,7 +649,7 @@ void FirePhase(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRes
 	for(unsigned int i = 0; i < MaxKanmusu; ++i){
 		for(int j = 0; j < BattleSize; ++j){
 			if(ShotList[j].size() <= i) continue;
-			if(!Fleets[j]->Kammusues[ShotList[j][i]].isMoveInGun()) continue;
+			if(!Fleets[j]->Kammusues[ShotList[j][i]].isMoveInGun2()) continue;
 			// ダメージ計算
 			kammusu *MovedKammusu = &(Fleets[j]->Kammusues[ShotList[j][i]]);
 			int OtherSide = BattleSize - j - 1;
@@ -827,7 +827,7 @@ void FirePhase2(fleets **Fleets, const BP BattlePosition, const AIR_MAS AirWarRe
 	for(unsigned int i = 0; i < MaxKanmusu; ++i) {
 		for(int j = 0; j < BattleSize; ++j) {
 			if(ShotList[j].size() <= i) continue;
-			if(!Fleets[j]->Kammusues[ShotList[j][i]].isMoveInGun()) continue;
+			if(!Fleets[j]->Kammusues[ShotList[j][i]].isMoveInGun2()) continue;
 			// ダメージ計算
 			kammusu *MovedKammusu = &(Fleets[j]->Kammusues[ShotList[j][i]]);
 			int OtherSide = BattleSize - j - 1;

@@ -160,10 +160,8 @@ int kammusu::AllTorpedo(const bool is_torpedo_phase) {
 
 /* 昼戦で攻撃可能かを判定 */
 bool kammusu::isMoveInGun() {
-	//昼戦で攻撃不可能……撃沈済、中破空母、大破装甲空母、艦載機切れ空母、潜水艦系
+	//昼戦で攻撃順に含まれない……撃沈済、艦載機切れ空母、潜水艦系
 	if(ShowDamage() == Lost) return false;
-	if((ShowDamage() == HeavyDamage)  &&  (Kind == SC_ACV)) return false;
-	if((ShowDamage() >= MiddleDamage) && ((Kind == SC_CV) || (Kind == SC_CVL))) return false;
 	if((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL)){
 		bool isAttackAirs = false;
 		for(int i = 0; i < Slots; ++i){
@@ -175,6 +173,25 @@ bool kammusu::isMoveInGun() {
 		if(!isAttackAirs) return false;
 	}
 	if(isSubmarine()) return false;
+	if (Kind == SC_AO && hasPA() && ShowDamage() >= MiddleDamage) return false;
+	return true;
+}
+bool kammusu::isMoveInGun2() {
+	//昼戦で攻撃不可能……撃沈済、中破空母、大破装甲空母、艦載機切れ空母、潜水艦系
+	if (ShowDamage() == Lost) return false;
+	if ((ShowDamage() == HeavyDamage) && (Kind == SC_ACV)) return false;
+	if ((ShowDamage() >= MiddleDamage) && ((Kind == SC_CV) || (Kind == SC_CVL))) return false;
+	if ((Kind == SC_ACV) || (Kind == SC_CV) || (Kind == SC_CVL)) {
+		bool isAttackAirs = false;
+		for (int i = 0; i < Slots; ++i) {
+			if ((Weapons[i].isAirWar2()) && (Airs[i] != 0)) {
+				isAttackAirs = true;
+				break;
+			}
+		}
+		if (!isAttackAirs) return false;
+	}
+	if (isSubmarine()) return false;
 	if (Kind == SC_AO && hasPA() && ShowDamage() >= MiddleDamage) return false;
 	return true;
 }

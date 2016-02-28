@@ -184,7 +184,8 @@ struct kammusu {
 	AT ShowAttackTypeInNight(int&, double&, bool&);	//夜間特殊攻撃の種類・および倍率を返す
 	bool isSubmarine();				//潜水艦系かを判定
 	bool isFirstTorpedo();			//開幕雷撃可能かを判定
-	bool isMoveInGun();				//昼戦で攻撃可能かを判定
+	bool isMoveInGun();				//昼戦で攻撃可能かを判定(中大破空母の場合もtrue)
+	bool isMoveInGun2();			//昼戦で攻撃可能かを判定(中大破空母の場合はfalse)
 	bool isSearchAir();				//偵察機を持っているかを判定
 	bool isAntiSub();				//対潜攻撃可能かを判定
 	bool isTorpedo();				//雷撃可能かを判定
